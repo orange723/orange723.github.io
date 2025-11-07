@@ -110,18 +110,20 @@
 <h2><a id="%E5%88%9B%E5%BB%BA%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>创建连接</h2>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp.pcap">vm-1-tcp.pcap</a></p>
 <p><img src="media/17622389809452/17623353881103.png" alt="" /></p>
 <p>当时碰到个问题，在 vm-1 用 &quot;nc -k -l vm-1 9527&quot;，vm-2 连接 vm-1 时 vm-1 窗口收不到消息</p>
 <p>在两台 vm 里 hosts 文件加了对端的机器名和 ip</p>
-<p>vm-1</p>
-<pre><code class="language-plain_text">198.19.249.151 vm-2
-</code></pre>
-<p>vm-2</p>
-<pre><code class="language-plain_text">198.19.249.111 vm-1
+<pre><code class="language-plain_text">vm-1
+198.19.249.151 vm-2
+
+vm-2
+198.19.249.111 vm-1
 </code></pre>
 <p>vm-1 上抓包看下</p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost.pcap">vm-1-tcp-nc-localhost.pcap</a></p>
 <p><img src="media/17622389809452/17623363981311.png" alt="" /></p>
 <p>在看 vm-1 监听的情况</p>
 <pre><code class="language-plain_text">sudo netstat -anpt
@@ -137,6 +139,7 @@ net.ipv4.tcp_syn_retries = 6
 <p>再次抓包验证</p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries.pcap">vm-1-tcp-nc-localhost-retries.pcap</a></p>
 <p><img src="media/17622389809452/17623427565466.png" alt="" /></p>
 <p>很奇怪，和 net.ipv4.tcp_syn_linear_timeouts=6 的现象不一样，正常只应该有 7 个包，一个正常 syn 和 6 个重试</p>
 <p>这时还有一个现象，正常来说 “指数退避” 应该是 1 2 4 8，但抓包前 4 次均是相隔 1s，第5个重试包才相隔 2s，根据这个现象和当前内核版本查询到</p>
@@ -152,6 +155,7 @@ With an initial RTO of 1 and tcp_syn_linear_timeouts = 4 we would expect SYN RTO
 <p>正常是 10 次，现在应该是 7 次</p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries-syn-linear.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries-syn-linear.pcap">vm-1-tcp-nc-localhost-retries-syn-linear.pcap</a></p>
 <p><img src="media/17622389809452/17623435601644.png" alt="" /></p>
 <pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
 </code></pre>
@@ -164,6 +168,7 @@ With an initial RTO of 1 and tcp_syn_linear_timeouts = 4 we would expect SYN RTO
 </code></pre>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-drop-9527.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-drop-9527.pcap">vm-1-tcp-iptables-drop-9527.pcap</a></p>
 <p><img src="media/17622389809452/17623444619210.png" alt="" /></p>
 <p>能看到这回是 tcp retransmission，重传了 10 次 依旧是这两个参数控制</p>
 <pre><code class="language-plain_text">net.ipv4.tcp_syn_retries
@@ -184,6 +189,7 @@ net.ipv4.tcp_syn_linear_timeouts
 <p><img src="media/17622389809452/17623451288025.png" alt="" /></p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527.pcap">vm-1-tcp-iptables-vm2-drop-9527.pcap</a></p>
 <p><img src="media/17622389809452/17623452557499.png" alt="" /></p>
 <p>能看到 vm-2 &gt;(SYN) vm-1，vm-1 &gt;(SYN+ACK) vm-2，然后 vm-1 一直在重试，试了5次</p>
 <p>net.ipv4.tcp_synack_retries 默认是5</p>
@@ -196,6 +202,7 @@ Number of times SYNACKs for a passive TCP connection attempt will be retransmitt
 <p>复现下 用 nc 然后抓包</p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527-nc.pcap --print
 </code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527-nc.pcap">vm-1-tcp-iptables-vm2-drop-9527-nc.pcap</a></p>
 <p><img src="media/17622389809452/17623462984652.png" alt="" /></p>
 <p>果然 vm-2 在重传</p>
 <h2><a id="syn-queue" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>SYN Queue</h2>
