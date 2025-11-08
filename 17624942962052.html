@@ -75,6 +75,12 @@
           <div class="columns is-variable bd-klmn-columns is-4 is-centered">
               <div class="column is-four-fifths">
                   <div class="post-body single-content">
+                              
+                    <div class="card-image">
+                        <figure class="image">
+                          <img src="media/17624942962052/tcp-close.png">
+                        </figure>
+                    </div>
                     
                     <h1 class="title">
                             TCP 连接的关闭   
@@ -194,8 +200,8 @@ $ sudo netstat -anpo|grep 9527|grep timewait|wc -l
 1000
 1000
 </code></pre>
-<p>基本相同，TIME_WAIT 大部分是 1000，监测一会会出现 900 多的状况，我猜测是超过了 2 * MSL 后本地可用地址被释放出来，继续被使用 因为关闭了 tw_reuse 不会被重用</p>
-<p>连接脚本中是 14000 个连接，也就是有 11353 个连接没进入 TIME_WAIT 直接关闭了</p>
+<p>基本相同，TIME_WAIT 大部分是 1000，监测一会会出现 900 多的状况，我猜测是超过了 2 * MSL 后本地可用地址被释放出来，继续被使用 因为关闭了 tw_reuse 不会被重用，只会等待有可用的地址在继续使用</p>
+<p>连接脚本中是 14000 个连接，也就是有 11353 个连接没等待 TIME_WAIT 的 60s 直接被系统处理了</p>
 <pre><code class="language-plain_text">$ sudo netstat -s|grep TCPTimeWaitOverflow
     TCPTimeWaitOverflow: 11353
 </code></pre>
@@ -411,6 +417,9 @@ $ sudo netstat -anpo|grep 9527
 tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (23.06/0/0)
 
 </code></pre>
+<h2><a id="tcp-close%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP_CLOSE 状态</h2>
+<p>没找到合适的，自己画了个</p>
+<p><img src="media/17624942962052/tcp-close.png" alt="tcp-close" /></p>
 
                   </article>
                   <div class="comments-wrap">
