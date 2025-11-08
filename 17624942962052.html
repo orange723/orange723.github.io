@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+      
+    TCP 连接的关闭 - orange723
+    
+    </title>
+    
+
+    
+    
+    <link href="atom.xml" rel="alternate" title="orange723" type="application/atom+xml">
+    <link rel="stylesheet" href="asset/css/style.min.css">
+    <link rel="stylesheet" href="asset/css/doc.css">
+    <script src="asset/app.js"></script>
+</head>
+  <body>
+    <section class="hero">
+      <div class="hero-head">
+          <nav class="navbar" role="navigation" aria-label="main navigation">
+              <div class="container">
+              <div class="navbar-brand">
+                
+                <a target="_self" class="navbar-item " href="index.html">Home</a>
+                
+                <a target="_self" class="navbar-item " href="archives.html">Archives</a>
+                
+
+                <a role="button" id="navbarSNSRssSwitchBtn" class="navbar-burger burger" aria-label="menu" aria-expanded="false" data-target="navbarSNSRssButtons">
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                </a>
+              </div>
+            
+              <div id="navbarSNSRssButtons" class="navbar-menu">
+                <div class="navbar-start">
+                  
+                </div>
+            
+                <div class="navbar-end">
+                  <div class="navbar-item">
+                    <!--buttons start-->
+                    <div class="buttons">
+                      
+                        
+                        
+                        
+                        
+                      
+                      <a href="atom.xml" target="_blank" title="RSS">
+                          <span class="icon is-large has-text-black-bis">
+                              <svg class="svg-inline--fa fa-rss fa-w-14 fa-lg" aria-hidden="true" focusable="false" data-prefix="fas" data-icon="rss" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" data-fa-i2svg=""><path fill="currentColor" d="M128.081 415.959c0 35.369-28.672 64.041-64.041 64.041S0 451.328 0 415.959s28.672-64.041 64.041-64.041 64.04 28.673 64.04 64.041zm175.66 47.25c-8.354-154.6-132.185-278.587-286.95-286.95C7.656 175.765 0 183.105 0 192.253v48.069c0 8.415 6.49 15.472 14.887 16.018 111.832 7.284 201.473 96.702 208.772 208.772.547 8.397 7.604 14.887 16.018 14.887h48.069c9.149.001 16.489-7.655 15.995-16.79zm144.249.288C439.596 229.677 251.465 40.445 16.503 32.01 7.473 31.686 0 38.981 0 48.016v48.068c0 8.625 6.835 15.645 15.453 15.999 191.179 7.839 344.627 161.316 352.465 352.465.353 8.618 7.373 15.453 15.999 15.453h48.068c9.034-.001 16.329-7.474 16.005-16.504z"></path></svg><!-- <i class="fas fa-rss fa-lg"></i> -->
+                          </span>
+                      </a>
+                    </div>
+                    <!--buttons end-->
+
+                  </div>
+                </div>
+                </div>
+              </div>
+            </nav>
+      </div>
+
+ <div class="hero-body ct-body"></div>
+      
+    </section>
+    <section class="ct-body">
+      <div class="container">
+          <div class="columns is-variable bd-klmn-columns is-4 is-centered">
+              <div class="column is-four-fifths">
+                  <div class="post-body single-content">
+                    
+                    <h1 class="title">
+                            TCP 连接的关闭   
+                      </h1>
+                     
+                    
+                      <div class="media">
+                            
+                            <div class="media-content">
+                              <div class="content">
+                                <p>
+                                 <span class="date">2025/11/07</span>
+                                  
+                                         
+                                  
+
+                                   
+                                      
+                                  <br />
+                                  <span class="tran-tags">Tags:</span>&nbsp;
+                                  
+                                    <a class="tag is-link is-light" href='tag_tcp.html'>#tcp</a>
+                                     
+
+                                </p>
+                              </div>
+                            </div>
+                         
+                    </div>
+                </div>
+                  <article class="markdown-body single-content">
+                    <p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+<h2><a id="%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>断开连接</h2>
+<p>同样 vm-2 连接 vm-1，然后 vm-2 做为客户端断开连接</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close.pcap">vm-1-tcp_close.pcap</a></p>
+<p><img src="media/17624942962052/17625124682457.png" alt="" /></p>
+<p>很正常的三次握手连接之后四次挥手关闭连接，一切正常</p>
+<p>在看 vm-2 上的连接状态，正常进入 TIME_WAIT 等待 2 * MSL 时间是 60s，没有重试就是在等待</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    ESTABLISHED 34043/nc             off (0.00/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (57.43/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (46.88/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (39.88/0/0)
+</code></pre>
+<h2><a id="%E7%9F%AD%E8%BF%9E%E6%8E%A5%E5%92%8Ctime-wait%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>短连接和 TIME_WAIT 状态</h2>
+<h3><a id="%E8%B0%83%E5%A4%A7tw-buckets%E5%85%B3%E9%97%AD-tw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>调大 tw_buckets 关闭 tw_reuse 测试</h3>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000000
+net.ipv4.tcp_max_tw_buckets = 1000000
+
+$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
+net.ipv4.tcp_tw_reuse = 0
+</code></pre>
+<pre><code class="language-plain_text">$ cat loopconnect.py
+import socket
+
+def connect_and_immediately_disconnect(host, port, count):
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.connect((host, port))
+            cli.close()
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+if __name__ == '__main__':
+    connect_and_immediately_disconnect('192.168.139.111', 9527, 70000)
+</code></pre>
+<p>然后测试发现机器的 TIME_WAIT 到 5000 左右就上不去了，无法复现无可用地址的错误，尝试将参数缩小5倍，在将本地可用端口范围变小，能看到达到 233 个 TIME_WAIT 提示无可用地址</p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.ip_local_port_range=&quot;32768 33000&quot;
+net.ipv4.ip_local_port_range = 32768 33000
+
+$ python3 loopconnect.py
+Failed to connect: [Errno 99] Cannot assign requested address
+
+$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+233
+</code></pre>
+<h3><a id="%E5%BC%80%E5%90%AFtw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>开启 tw_reuse 测试</h3>
+<p>然后开启 net.ipv4.tcp_tw_reuse 参数，将本地可用端口扩大些</p>
+<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range net.ipv4.tcp_max_tw_buckets
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.ip_local_port_range = 32768	38414
+net.ipv4.tcp_max_tw_buckets = 200000
+</code></pre>
+<p>查看 TIME_WAIT 数量，稳定在 2000 多，脚本正常跑完退出</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+2287
+2301
+2303
+2303
+2269
+2291
+2292
+2322
+</code></pre>
+<h3><a id="%E5%85%B3%E9%97%ADtw-reuse%E4%BF%AE%E6%94%B9-tw-buckets%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>关闭 tw_reuse 修改 tw_buckets 测试</h3>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
+net.ipv4.tcp_tw_reuse = 0
+
+$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000
+net.ipv4.tcp_max_tw_buckets = 1000
+
+$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+1000
+1000
+1000
+</code></pre>
+<p>基本相同，TIME_WAIT 大部分是 1000，监测一会会出现 900 多的状况，我猜测是超过了 2 * MSL 后本地可用地址被释放出来，继续被使用 因为关闭了 tw_reuse 不会被重用</p>
+<p>连接脚本中是 14000 个连接，也就是有 11353 个连接没进入 TIME_WAIT 直接关闭了</p>
+<pre><code class="language-plain_text">$ sudo netstat -s|grep TCPTimeWaitOverflow
+    TCPTimeWaitOverflow: 11353
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bfin1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN1</h2>
+<p>vm-2 连接 vm-1，连接后在 vm-1 drop vm-2 发送过来的 FIN，vm-2 发送一个 FIN 后就会进入 FIN1 状态</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --dport 9527 --tcp-flags FIN FIN -j DROP
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin1.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin1.pcap">vm-1-tcp_close-iptables-fin1.pcap</a></p>
+<p><img src="media/17624942962052/17625154704413.png" alt="" /></p>
+<p>vm-2 向 vm-1 发送 FIN，vm-1 直接 drop，vm-2 因为收不到 vm-1 发送的 FIN+ACK 就会重传</p>
+<p>能看到 vm-2 的网络状态</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (2.52/4/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (34.57/8/0)
+</code></pre>
+<p>这 9 次的重传受 net.ipv4.tcp_orphan_retries 影响，默认是 8</p>
+<pre><code class="language-plain_text">tcp_orphan_retries - INTEGER
+This value influences the timeout of a locally closed TCP connection, when RTO retransmissions remain unacknowledged. See tcp_retries2 for more details.
+
+The default value is 8.
+
+If your machine is a loaded WEB server, you should think about lowering this value, such sockets may consume significant resources. Cf. tcp_max_orphans.
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bfin2%E5%92%8C-last-ack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN2 和 LAST_ACK</h2>
+<p>还是 vm-2 连接 vm-1 后，在 vm-2 使用 iptables 拦截 FIN，断开 vm-2的连接，FIN1 是 vm-2 发送 FIN 后直接就会进入 FIN1 状态，然后 vm-1 发送 ACK 过来 vm-2 就会进入 FIN2 状态，因为我们拦截了 FIN 所以就能观测到 vm-2 的 FIN2 和 vm-1 的 LAST_ACK</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 --tcp-flags FIN FIN -j DROP
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin2.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin2.pcap">vm-1-tcp_close-iptables-fin2.pcap</a></p>
+<p><img src="media/17624942962052/17625167883689.png" alt="" /></p>
+<p>能看到 vm-2 这个连接进入了 FIN2 状态，最后的值显示 timewait (多少s/0/0)，这个 s 是 60，通过 tcp_fin_timeout 控制，这并不是重传 就是 FIN2 的超时时间，过了 60s 连接就会消失</p>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep tcp_fin_timeout
+net.ipv4.tcp_fin_timeout = 60
+</code></pre>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (57.45/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (54.12/0/0)
+</code></pre>
+<p>vm-1 的 LAST_ACK，能看到也是在重传 9 次</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:36456   ESTABLISHED 1091/nc              off (0.00/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
+tcp        0      1 192.168.139.111:9527    192.168.139.151:36456   LAST_ACK    -                    on (23.09/7/0)
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bclose-wait" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 CLOSE_WAIT</h2>
+<p>使用 python 连接</p>
+<pre><code class="language-plain_text">import socket
+
+c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c.connect(('192.168.139.111', 9527))
+c.shutdown(socket.SHUT_WR)
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py.pcap">vm-1-tcp_close-iptables-closewait-py.pcap</a></p>
+<p><img src="media/17624942962052/17625175596738.png" alt="" /></p>
+<p>能看到 vm-2 发送 FIN 后进入 FIN1 状态，vm-2 回复 ACK 就结束了，vm-2 收到 ACK 会进入到 FIN2，而 vm-1 只发送 ACK 自己进入 CLOSE_WAIT</p>
+<p><del>同样 FIN2 等待 60s 后不进入 TIME_WAIT 直接结束状态</del> 此状态和文中是对不上的，发送请求后 vm-2 FIN2 会进入 60s 的等待时间，而文中确不会，目前能看到 vm-1 的 CLOSE_WAIT 是一直存在的</p>
+<pre><code class="language-plain_text">vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (55.39/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (31.64/0/0)
+
+-----------------------------------------------------------------
+vm-1
+
+$ sudo netstat -anpo|grep 9527
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
+</code></pre>
+<p>修改 net.ipv4.tcp_fin_timeout 测试</p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_fin_timeout=30
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap">vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap</a></p>
+<p><img src="media/17624942962052/17625184396227.png" alt="" /></p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        2      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:37626   CLOSE_WAIT  -                    off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.30/0/0)
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (0.49/0/0)
+</code></pre>
+<p>看样子是没法豁免的，时间只会随着 net.ipv4.tcp_fin_timeout 变动，可能和内核也有关系贴一下我的系统内核</p>
+<pre><code class="language-plain_text">Linux vm-2 6.17.4-orbstack-00308-g195e9689a04f #1 SMP PREEMPT Fri Oct 24 07:22:34 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
+</code></pre>
+<h2><a id="%E8%BF%9E%E6%8E%A5%E4%BF%9D%E6%B4%BB" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>连接保活</h2>
+<p>默认 keepalive 相关参数</p>
+<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_keepalive_time net.ipv4.tcp_keepalive_probes net.ipv4.tcp_keepalive_intvl
+net.ipv4.tcp_keepalive_time = 7200
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_intvl = 75
+</code></pre>
+<pre><code class="language-plain_text">import socket
+import time
+
+def connect_and_hold(host, port, count):
+    cli_list = []
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            cli.connect((host, port))
+            cli_list.append(cli)
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    connect_and_hold('192.168.139.111', 9527, 1)
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive.pcap">vm-1-tcp_close-vm-2-keepalive.pcap</a></p>
+<p><img src="media/17624942962052/17625859186424.png" alt="" /></p>
+<p>连接后没数据传输，vm-2 每隔 75s 给 vm-1 发送 TCP Keep-Alive，走的 net.ipv4.tcp_keepalive_intvl</p>
+<pre><code class="language-plain_text">vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (71.33/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (70.62/0/0)
+</code></pre>
+<p>叫 grok 改了 python 脚本</p>
+<pre><code class="language-plain_text">import socket
+import time  # 添加 time 模块以便暂停脚本查看连接状态
+
+c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+# 设置 keepalive 参数：TCP_KEEPIDLE 为空闲时间（相当于 net.ipv4.tcp_keepalive_time），单位秒
+
+c.connect(('192.168.139.111', 9527))
+
+# 暂停脚本以便用 netstat -anpo 或 ss -anto 查看连接状态（会显示 keepalive timer 如 timer:keepalive (10.000 sec)）
+print(&quot;连接已建立，按 Enter 退出...&quot;)
+input()  # 或用 time.sleep(60) 自动等待 60 秒
+c.close()
+</code></pre>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep keep
+net.ipv4.tcp_keepalive_intvl = 20
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_time = 10
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive-10s.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive-10s.pcap">vm-1-tcp_close-vm-2-keepalive-10s.pcap</a></p>
+<p><img src="media/17624942962052/17625901214384.png" alt="" /></p>
+<p>正常三次握手，然后 vm-2 发了 Keep-Alive vm-1 回复，3和4的包之间隔了 10s 也就是 net.ipv4.tcp_keepalive_time，然后 vm-1 和 vm-2 之间没发送数据，相隔 20s 第6个包 vm-2 发了 Keep-Alive 也就是 net.ipv4.tcp_keepalive_intvl，最后 vm-2 enter 直接断开 发了 FIN+ACK vm-1 回了 ACK 但是没回 FIN vm-1 状态就是 CLOSE_WAIT，vm-2 则是 FIN2 然后根据 fin_time 30s 过去就消失</p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:33360   ESTABLISHED -                    off (0.00/0/0)
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:33360   CLOSE_WAIT  -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (7.38/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (17.59/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.96/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (23.06/0/0)
+
+</code></pre>
+
+                  </article>
+                  <div class="comments-wrap">
+                    <div class="share-comments">
+                      
+
+                      
+
+                      
+                    </div>
+                  </div><!-- end comments wrap -->
+              </div>
+            </div><!-- end columns -->
+      </div><!-- end container -->
+    </section>
+
+
+
+    <footer class="footer">
+        <div class="content has-text-centered">
+          <p>
+              Copyright &copy; 2019
+              Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a>,&nbsp; 
+              Theme used <a target="_blank" href="https://bulma.io/">Bulma CSS</a>.
+          </p>
+        </div>
+      </footer>
+
+<script>(n=>{"use strict";let s,r,e;const l=["cdn.jsdelivr.net","fastly.jsdelivr.net","gcore.jsdelivr.net","cdn.zenless.top","testingcf.jsdelivr.net"],t="//",i=l[0],o=Date.now(),a=2e3,c="jsdelivr-auto-fallback",f="/gh/PipecraftNet/jsdelivr-auto-fallback@main/empty.css?",d=e=>e&&e.includes(t+i),m=e=>e.replace(t+i,t+s),u=window.setTimeout,v=n.querySelectorAll.bind(n),b=()=>{let e,t;for(e of v('link[rel="stylesheet"]'))t=e.href,d(t)&&!t.includes(f)&&(e.href=m(t));for(e of v("script"))if(t=e.src,d(t)){const s=n.createElement("script");s.src=m(t),e.defer=!0,e.src="",e.before(s),e.remove()}for(e of v("img"))t=e.src,d(t)&&(e.src="",e.src=m(t));for(e of v("*[style]"))t=e.getAttribute("style"),d(t)&&e.setAttribute("style",m(t));for(e of v("style"))t=e.innerHTML,d(t)&&(e.innerHTML=m(t))},h=()=>{!e&&r&&s&&(console.warn(i+" is not available. Use "+s),e=!0,u(b,0),u(b,20),setInterval(b,500))},g=(()=>{try{return Object.assign({},JSON.parse(localStorage.getItem(c)||"{}"))}catch{return{}}})(),y=()=>{g.time=o,g.failed=!1,g.fastNode=null;for(const t of l)((e,t)=>{let s;const r=n.createElement("link"),l=e=>{s&&(clearTimeout(s),s=0,e||(r.href="data:text/css;base64,"),r.remove(),t(e))};s=u(l,a),r.addEventListener("error",()=>l(!1)),r.addEventListener("load",()=>l(!0)),r.rel="stylesheet",r.text="text/css",r.href=e+f+o,n.head.insertAdjacentElement("afterbegin",r)})("https://"+t,e=>{e||t!==i||(r=!0,g.failed=!0),e&&!s&&(s=t),e&&!g.fastNode&&(g.fastNode=t),h()});u(()=>{r&&!s&&(s=l[1],h()),localStorage.setItem(c,JSON.stringify(g))},a+100)};if(g.time&&o-g.time<36e5&&g.failed&&g.fastNode)r=!0,s=g.fastNode,h(),u(y,1e3);else if(n.head)y();else{const j=new MutationObserver(()=>{n.head&&(j.disconnect(),y())});j.observe(n,{childList:!0,subtree:!0})}})(document);</script>
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+}
+
+
+
+div.code-toolbar {
+  position: relative;
+}
+
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
+
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
+
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
+
+
+  
+    
+
+
+
+
+  </body>
+</html>

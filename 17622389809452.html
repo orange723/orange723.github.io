@@ -75,6 +75,12 @@
           <div class="columns is-variable bd-klmn-columns is-4 is-centered">
               <div class="column is-four-fifths">
                   <div class="post-body single-content">
+                              
+                    <div class="card-image">
+                        <figure class="image">
+                          <img src="media/17622389809452/17623467697593.jpg">
+                        </figure>
+                    </div>
                     
                     <h1 class="title">
                             TCP 连接的建立   
@@ -175,7 +181,6 @@ With an initial RTO of 1 and tcp_syn_linear_timeouts = 4 we would expect SYN RTO
 net.ipv4.tcp_syn_linear_timeouts
 </code></pre>
 <p>能看到 vm-2 连接状态 SYN_SENT</p>
-<p><img src="media/17622389809452/17623447718189.png" alt="" /></p>
 <h2><a id="%E8%A7%82%E6%B5%8Bsyn-recv" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 SYN_RECV</h2>
 <p>需要在 vm-2 drop 从 vm-1 传过来的 SYN+ACK 包，这样 vm-2 收不到 SYN+ACK 就没办法回 ACK，vm-1 也没办法将三次握手完成</p>
 <pre><code class="language-plain_text">sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
@@ -186,7 +191,6 @@ net.ipv4.tcp_syn_linear_timeouts
 <p>vm-1 查看连接状态</p>
 <pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
 </code></pre>
-<p><img src="media/17622389809452/17623451288025.png" alt="" /></p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527.pcap --print
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527.pcap">vm-1-tcp-iptables-vm2-drop-9527.pcap</a></p>
@@ -392,7 +396,7 @@ tcp        0      0 192.168.139.111:9527    192.168.139.151:51450   ESTABLISHED 
 
 $ nc 192.168.139.111 9527
 </code></pre>
-<p>vm-1 能看到这个 SYN_RECV 在重试，也就是进了半连接队列，因为 vm-2 拦截了 vm-1 过来的包，vm-2 不会给 vm-1 发送 ack，vm-1就会一直重试</p>
+<p>vm-1 能看到这个 SYN_RECV 在重试，也就是进了半连接队列，因为 vm-2 拦截了 vm-1 过来的包，vm-2 不会给 vm-1 发送 ack，vm-1 就会一直重试</p>
 <pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
 tcp        6      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      463/python3          off (0.00/0/0)
@@ -472,7 +476,7 @@ LISTEN    0         511                   [::]:80                 [::]:*
 <li>监听了正确的网卡 iptables 或安全组都放行，全连接没满半连接也没满。但这台机器的基本指标都异常比如CPU内存使用100%，这样全连接就会一直堆积 accept 很慢，导致半连接也满了。你的机器最终也就不可用了</li>
 </ol>
 <p>4 问题测试 会异常 从 server 观测到 vm-2 发送了大量的 tcp 重试，同时半连接队列从系统层又drop掉很多请求</p>
-<p>我发现这个抓包少了不全，但也不碍事，系统层drop掉请求是对的</p>
+<p>我发现这个抓包少了并不全，但也不碍事，系统层drop掉请求是对的</p>
 <p><img src="media/17622389809452/17624262484616.png" alt="" /></p>
 <pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_syncookies=0 net.ipv4.tcp_max_syn_backlog=4 net.core.somaxconn=8
 net.ipv4.tcp_syncookies = 0
