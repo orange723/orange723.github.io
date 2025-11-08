@@ -1,0 +1,753 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[orange723]]></title>
+  <link href="https://orange723.github.io/atom.xml" rel="self"/>
+  <link href="https://orange723.github.io/"/>
+  <updated>2025-11-08T17:45:15+08:00</updated>
+  <id>https://orange723.github.io/</id>
+  <author>
+    <name><![CDATA[]]></name>
+    
+  </author>
+  <generator uri="http://www.mweb.im/">MWeb</generator>
+  
+  <entry>
+    <title type="html"><![CDATA[TCP 连接的关闭]]></title>
+    <link href="https://orange723.github.io/17624942962052.html"/>
+    <updated>2025-11-07T13:44:56+08:00</updated>
+    <id>https://orange723.github.io/17624942962052.html</id>
+    <content type="html"><![CDATA[
+<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+<h2><a id="%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>断开连接</h2>
+<p>同样 vm-2 连接 vm-1，然后 vm-2 做为客户端断开连接</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close.pcap">vm-1-tcp_close.pcap</a></p>
+<p><img src="media/17624942962052/17625124682457.png" alt="" /></p>
+<p>很正常的三次握手连接之后四次挥手关闭连接，一切正常</p>
+<p>在看 vm-2 上的连接状态，正常进入 TIME_WAIT 等待 2 * MSL 时间是 60s，没有重试就是在等待</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    ESTABLISHED 34043/nc             off (0.00/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (57.43/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (46.88/0/0)
+
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (39.88/0/0)
+</code></pre>
+<h2><a id="%E7%9F%AD%E8%BF%9E%E6%8E%A5%E5%92%8Ctime-wait%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>短连接和 TIME_WAIT 状态</h2>
+<h3><a id="%E8%B0%83%E5%A4%A7tw-buckets%E5%85%B3%E9%97%AD-tw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>调大 tw_buckets 关闭 tw_reuse 测试</h3>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000000
+net.ipv4.tcp_max_tw_buckets = 1000000
+
+$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
+net.ipv4.tcp_tw_reuse = 0
+</code></pre>
+<pre><code class="language-plain_text">$ cat loopconnect.py
+import socket
+
+def connect_and_immediately_disconnect(host, port, count):
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.connect((host, port))
+            cli.close()
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+if __name__ == '__main__':
+    connect_and_immediately_disconnect('192.168.139.111', 9527, 70000)
+</code></pre>
+<p>然后测试发现机器的 TIME_WAIT 到 5000 左右就上不去了，无法复现无可用地址的错误，尝试将参数缩小5倍，在将本地可用端口范围变小，能看到达到 233 个 TIME_WAIT 提示无可用地址</p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.ip_local_port_range=&quot;32768 33000&quot;
+net.ipv4.ip_local_port_range = 32768 33000
+
+$ python3 loopconnect.py
+Failed to connect: [Errno 99] Cannot assign requested address
+
+$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+233
+</code></pre>
+<h3><a id="%E5%BC%80%E5%90%AFtw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>开启 tw_reuse 测试</h3>
+<p>然后开启 net.ipv4.tcp_tw_reuse 参数，将本地可用端口扩大些</p>
+<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range net.ipv4.tcp_max_tw_buckets
+net.ipv4.tcp_tw_reuse = 1
+net.ipv4.ip_local_port_range = 32768	38414
+net.ipv4.tcp_max_tw_buckets = 200000
+</code></pre>
+<p>查看 TIME_WAIT 数量，稳定在 2000 多，脚本正常跑完退出</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+2287
+2301
+2303
+2303
+2269
+2291
+2292
+2322
+</code></pre>
+<h3><a id="%E5%85%B3%E9%97%ADtw-reuse%E4%BF%AE%E6%94%B9-tw-buckets%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>关闭 tw_reuse 修改 tw_buckets 测试</h3>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
+net.ipv4.tcp_tw_reuse = 0
+
+$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000
+net.ipv4.tcp_max_tw_buckets = 1000
+
+$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
+1000
+1000
+1000
+</code></pre>
+<p>基本相同，TIME_WAIT 大部分是 1000，监测一会会出现 900 多的状况，我猜测是超过了 2 * MSL 后本地可用地址被释放出来，继续被使用 因为关闭了 tw_reuse 不会被重用，只会等待有可用的地址在继续使用</p>
+<p>连接脚本中是 14000 个连接，也就是有 11353 个连接没等待 TIME_WAIT 的 60s 直接被系统处理了</p>
+<pre><code class="language-plain_text">$ sudo netstat -s|grep TCPTimeWaitOverflow
+    TCPTimeWaitOverflow: 11353
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bfin1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN1</h2>
+<p>vm-2 连接 vm-1，连接后在 vm-1 drop vm-2 发送过来的 FIN，vm-2 发送一个 FIN 后就会进入 FIN1 状态</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --dport 9527 --tcp-flags FIN FIN -j DROP
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin1.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin1.pcap">vm-1-tcp_close-iptables-fin1.pcap</a></p>
+<p><img src="media/17624942962052/17625154704413.png" alt="" /></p>
+<p>vm-2 向 vm-1 发送 FIN，vm-1 直接 drop，vm-2 因为收不到 vm-1 发送的 FIN+ACK 就会重传</p>
+<p>能看到 vm-2 的网络状态</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (2.52/4/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (34.57/8/0)
+</code></pre>
+<p>这 9 次的重传受 net.ipv4.tcp_orphan_retries 影响，默认是 8</p>
+<pre><code class="language-plain_text">tcp_orphan_retries - INTEGER
+This value influences the timeout of a locally closed TCP connection, when RTO retransmissions remain unacknowledged. See tcp_retries2 for more details.
+
+The default value is 8.
+
+If your machine is a loaded WEB server, you should think about lowering this value, such sockets may consume significant resources. Cf. tcp_max_orphans.
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bfin2%E5%92%8C-last-ack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN2 和 LAST_ACK</h2>
+<p>还是 vm-2 连接 vm-1 后，在 vm-2 使用 iptables 拦截 FIN，断开 vm-2的连接，FIN1 是 vm-2 发送 FIN 后直接就会进入 FIN1 状态，然后 vm-1 发送 ACK 过来 vm-2 就会进入 FIN2 状态，因为我们拦截了 FIN 所以就能观测到 vm-2 的 FIN2 和 vm-1 的 LAST_ACK</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 --tcp-flags FIN FIN -j DROP
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin2.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin2.pcap">vm-1-tcp_close-iptables-fin2.pcap</a></p>
+<p><img src="media/17624942962052/17625167883689.png" alt="" /></p>
+<p>能看到 vm-2 这个连接进入了 FIN2 状态，最后的值显示 timewait (多少s/0/0)，这个 s 是 60，通过 tcp_fin_timeout 控制，这并不是重传 就是 FIN2 的超时时间，过了 60s 连接就会消失</p>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep tcp_fin_timeout
+net.ipv4.tcp_fin_timeout = 60
+</code></pre>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (57.45/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (54.12/0/0)
+</code></pre>
+<p>vm-1 的 LAST_ACK，能看到也是在重传 9 次</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:36456   ESTABLISHED 1091/nc              off (0.00/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
+tcp        0      1 192.168.139.111:9527    192.168.139.151:36456   LAST_ACK    -                    on (23.09/7/0)
+</code></pre>
+<h2><a id="%E8%A7%82%E6%B5%8Bclose-wait" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 CLOSE_WAIT</h2>
+<p>使用 python 连接</p>
+<pre><code class="language-plain_text">import socket
+
+c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c.connect(('192.168.139.111', 9527))
+c.shutdown(socket.SHUT_WR)
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py.pcap">vm-1-tcp_close-iptables-closewait-py.pcap</a></p>
+<p><img src="media/17624942962052/17625175596738.png" alt="" /></p>
+<p>能看到 vm-2 发送 FIN 后进入 FIN1 状态，vm-2 回复 ACK 就结束了，vm-2 收到 ACK 会进入到 FIN2，而 vm-1 只发送 ACK 自己进入 CLOSE_WAIT</p>
+<p><del>同样 FIN2 等待 60s 后不进入 TIME_WAIT 直接结束状态</del> 此状态和文中是对不上的，发送请求后 vm-2 FIN2 会进入 60s 的等待时间，而文中确不会，目前能看到 vm-1 的 CLOSE_WAIT 是一直存在的</p>
+<pre><code class="language-plain_text">vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (55.39/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (31.64/0/0)
+
+-----------------------------------------------------------------
+vm-1
+
+$ sudo netstat -anpo|grep 9527
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
+</code></pre>
+<p>修改 net.ipv4.tcp_fin_timeout 测试</p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_fin_timeout=30
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap">vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap</a></p>
+<p><img src="media/17624942962052/17625184396227.png" alt="" /></p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        2      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:37626   CLOSE_WAIT  -                    off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.30/0/0)
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (0.49/0/0)
+</code></pre>
+<p>看样子是没法豁免的，时间只会随着 net.ipv4.tcp_fin_timeout 变动，可能和内核也有关系贴一下我的系统内核</p>
+<pre><code class="language-plain_text">Linux vm-2 6.17.4-orbstack-00308-g195e9689a04f #1 SMP PREEMPT Fri Oct 24 07:22:34 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
+</code></pre>
+<h2><a id="%E8%BF%9E%E6%8E%A5%E4%BF%9D%E6%B4%BB" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>连接保活</h2>
+<p>默认 keepalive 相关参数</p>
+<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_keepalive_time net.ipv4.tcp_keepalive_probes net.ipv4.tcp_keepalive_intvl
+net.ipv4.tcp_keepalive_time = 7200
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_intvl = 75
+</code></pre>
+<pre><code class="language-plain_text">import socket
+import time
+
+def connect_and_hold(host, port, count):
+    cli_list = []
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            cli.connect((host, port))
+            cli_list.append(cli)
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    connect_and_hold('192.168.139.111', 9527, 1)
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive.pcap">vm-1-tcp_close-vm-2-keepalive.pcap</a></p>
+<p><img src="media/17624942962052/17625859186424.png" alt="" /></p>
+<p>连接后没数据传输，vm-2 每隔 75s 给 vm-1 发送 TCP Keep-Alive，走的 net.ipv4.tcp_keepalive_intvl</p>
+<pre><code class="language-plain_text">vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (71.33/0/0)
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (70.62/0/0)
+</code></pre>
+<p>叫 grok 改了 python 脚本</p>
+<pre><code class="language-plain_text">import socket
+import time  # 添加 time 模块以便暂停脚本查看连接状态
+
+c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+c.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+# 设置 keepalive 参数：TCP_KEEPIDLE 为空闲时间（相当于 net.ipv4.tcp_keepalive_time），单位秒
+
+c.connect(('192.168.139.111', 9527))
+
+# 暂停脚本以便用 netstat -anpo 或 ss -anto 查看连接状态（会显示 keepalive timer 如 timer:keepalive (10.000 sec)）
+print(&quot;连接已建立，按 Enter 退出...&quot;)
+input()  # 或用 time.sleep(60) 自动等待 60 秒
+c.close()
+</code></pre>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep keep
+net.ipv4.tcp_keepalive_intvl = 20
+net.ipv4.tcp_keepalive_probes = 9
+net.ipv4.tcp_keepalive_time = 10
+</code></pre>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive-10s.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive-10s.pcap">vm-1-tcp_close-vm-2-keepalive-10s.pcap</a></p>
+<p><img src="media/17624942962052/17625901214384.png" alt="" /></p>
+<p>正常三次握手，然后 vm-2 发了 Keep-Alive vm-1 回复，3和4的包之间隔了 10s 也就是 net.ipv4.tcp_keepalive_time，然后 vm-1 和 vm-2 之间没发送数据，相隔 20s 第6个包 vm-2 发了 Keep-Alive 也就是 net.ipv4.tcp_keepalive_intvl，最后 vm-2 enter 直接断开 发了 FIN+ACK vm-1 回了 ACK 但是没回 FIN vm-1 状态就是 CLOSE_WAIT，vm-2 则是 FIN2 然后根据 fin_time 30s 过去就消失</p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:33360   ESTABLISHED -                    off (0.00/0/0)
+
+$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
+tcp        1      0 192.168.139.111:9527    192.168.139.151:33360   CLOSE_WAIT  -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (7.38/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (17.59/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.96/0/0)
+
+$ sudo netstat -anpo|grep 9527
+tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (23.06/0/0)
+
+</code></pre>
+<h2><a id="tcp-close%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP_CLOSE 状态</h2>
+<p>没找到合适的，自己画了个</p>
+<p><img src="media/17624942962052/tcp-close.png" alt="tcp-close" /></p>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[TCP 连接的建立]]></title>
+    <link href="https://orange723.github.io/17622389809452.html"/>
+    <updated>2025-11-04T14:49:40+08:00</updated>
+    <id>https://orange723.github.io/17622389809452.html</id>
+    <content type="html"><![CDATA[
+<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+<h2><a id="%E5%88%9B%E5%BB%BA%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>创建连接</h2>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp.pcap">vm-1-tcp.pcap</a></p>
+<p><img src="media/17622389809452/17623353881103.png" alt="" /></p>
+<p>当时碰到个问题，在 vm-1 用 &quot;nc -k -l vm-1 9527&quot;，vm-2 连接 vm-1 时 vm-1 窗口收不到消息</p>
+<p>在两台 vm 里 hosts 文件加了对端的机器名和 ip</p>
+<pre><code class="language-plain_text">vm-1
+198.19.249.151 vm-2
+
+vm-2
+198.19.249.111 vm-1
+</code></pre>
+<p>vm-1 上抓包看下</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost.pcap">vm-1-tcp-nc-localhost.pcap</a></p>
+<p><img src="media/17622389809452/17623363981311.png" alt="" /></p>
+<p>在看 vm-1 监听的情况</p>
+<pre><code class="language-plain_text">sudo netstat -anpt
+</code></pre>
+<p><img src="media/17622389809452/17623364790719.png" alt="" /></p>
+<p>监听 127.0.0.1 去了，另外一块网卡没监听</p>
+<p><img src="media/17622389809452/17623365606789.png" alt="" /></p>
+<p>vm-2 发 syn 给 vm-1，vm-1 直接回了个 rst，然后 vm-1 根据 net.ipv4.tcp_syn_retries 不停的重试</p>
+<pre><code class="language-plain_text">sudo sysctl -a|grep net.ipv4.tcp_syn_retries
+net.ipv4.tcp_syn_retries = 6
+</code></pre>
+<p>但是我抓包发现会重传 10 次 共 11 个包</p>
+<p>再次抓包验证</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries.pcap">vm-1-tcp-nc-localhost-retries.pcap</a></p>
+<p><img src="media/17622389809452/17623427565466.png" alt="" /></p>
+<p>很奇怪，和 net.ipv4.tcp_syn_linear_timeouts=6 的现象不一样，正常只应该有 7 个包，一个正常 syn 和 6 个重试</p>
+<p>这时还有一个现象，正常来说 “指数退避” 应该是 1 2 4 8，但抓包前 4 次均是相隔 1s，第5个重试包才相隔 2s，根据这个现象和当前内核版本查询到</p>
+<p><a href="https://docs.kernel.org/networking/ip-sysctl.html">net.ipv4.tcp_syn_linear_timeouts</a></p>
+<pre><code class="language-plain_text">tcp_syn_linear_timeouts - INTEGER
+The number of times for an active TCP connection to retransmit SYNs with a linear backoff timeout before defaulting to an exponential backoff timeout. This has no effect on SYNACK at the passive TCP side.
+
+With an initial RTO of 1 and tcp_syn_linear_timeouts = 4 we would expect SYN RTOs to be: 1，1，1，1，1，2，4，... (4 linear timeouts，and the first exponential backoff using 2^0 * initial_RTO). Default: 4
+</code></pre>
+<p>这就对了，后面更改 net.ipv4.tcp_syn_linear_timeouts 在继续测试</p>
+<pre><code class="language-plain_text">sudo sysctl -w net.ipv4.tcp_syn_retries=6 net.ipv4.tcp_syn_linear_timeouts=1
+</code></pre>
+<p>正常是 10 次，现在应该是 7 次</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries-syn-linear.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries-syn-linear.pcap">vm-1-tcp-nc-localhost-retries-syn-linear.pcap</a></p>
+<p><img src="media/17622389809452/17623435601644.png" alt="" /></p>
+<pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
+</code></pre>
+<p><img src="media/17622389809452/17623436245867.png" alt="" /></p>
+<p>没错到7次自动停了</p>
+<p>后面改成 nc -k -l 192.168.139.111 9527 直接就通了</p>
+<h2><a id="%E8%A7%82%E6%B5%8Bsyn-sent" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 SYN_SENT</h2>
+<p>vm-1 使用 iptables drop vm-2 发来的 syn 包</p>
+<pre><code class="language-plain_text">sudo iptables -A INPUT -p tcp --dport 9527 -j DROP
+</code></pre>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-drop-9527.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-drop-9527.pcap">vm-1-tcp-iptables-drop-9527.pcap</a></p>
+<p><img src="media/17622389809452/17623444619210.png" alt="" /></p>
+<p>能看到这回是 tcp retransmission，重传了 10 次 依旧是这两个参数控制</p>
+<pre><code class="language-plain_text">net.ipv4.tcp_syn_retries
+net.ipv4.tcp_syn_linear_timeouts
+</code></pre>
+<p>能看到 vm-2 连接状态 SYN_SENT</p>
+<h2><a id="%E8%A7%82%E6%B5%8Bsyn-recv" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 SYN_RECV</h2>
+<p>需要在 vm-2 drop 从 vm-1 传过来的 SYN+ACK 包，这样 vm-2 收不到 SYN+ACK 就没办法回 ACK，vm-1 也没办法将三次握手完成</p>
+<pre><code class="language-plain_text">sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
+</code></pre>
+<p>改用 nmap 测试连接</p>
+<pre><code class="language-plain_text">sudo nmap -sS 192.168.139.111 -p 9527
+</code></pre>
+<p>vm-1 查看连接状态</p>
+<pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
+</code></pre>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527.pcap">vm-1-tcp-iptables-vm2-drop-9527.pcap</a></p>
+<p><img src="media/17622389809452/17623452557499.png" alt="" /></p>
+<p>能看到 vm-2 &gt;(SYN) vm-1，vm-1 &gt;(SYN+ACK) vm-2，然后 vm-1 一直在重试，试了5次</p>
+<p>net.ipv4.tcp_synack_retries 默认是5</p>
+<pre><code class="language-plain_text">tcp_synack_retries - INTEGER
+Number of times SYNACKs for a passive TCP connection attempt will be retransmitted. Should not be higher than 255. Default value is 5, which corresponds to 31seconds till the last retransmission with the current initial RTO of 1second. With this the final timeout for a passive TCP connection will happen after 63seconds.
+</code></pre>
+<p>文中提到：<a href="https://en.wikipedia.org/wiki/SYN_flood">SYN FLOOD</a></p>
+<p>客户端发了 1 个 SYN 到服务端，如果客户端不响应那服务端就会重试 5 次，一台机器是 5 次如果机器多服务端资源很快就会被消耗</p>
+<p>文中提到：<strong>如果只使用 iptables 拦截第二次握手包的话，会导致源端协议栈 SYN 重传的，这样就没法测试 SYN+ACK 重传了。所以发送端在发完 SYN 包后不能有其他逻辑。nc 做不到只发送 SYN 包就退出，改用 nmap 来进行实验。</strong></p>
+<p>复现下 用 nc 然后抓包</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527-nc.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527-nc.pcap">vm-1-tcp-iptables-vm2-drop-9527-nc.pcap</a></p>
+<p><img src="media/17622389809452/17623462984652.png" alt="" /></p>
+<p>果然 vm-2 在重传</p>
+<h2><a id="syn-queue" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>SYN Queue</h2>
+<p>借用下文中的图</p>
+<p><img src="media/17622389809452/17623467697593.jpg" alt="" /></p>
+<p>（图片来自：<a href="https://www.emqx.com/en/blog/emqx-performance-tuning-tcp-syn-queue-and-accept-queue%EF%BC%89">https://www.emqx.com/en/blog/emqx-performance-tuning-tcp-syn-queue-and-accept-queue）</a></p>
+<p>验证下半连接队列长度，修改相关的内核参数</p>
+<pre><code class="language-plain_text">sudo sysctl -w net.ipv4.tcp_syncookies=0 net.ipv4.tcp_max_syn_backlog=4 net.core.somaxconn=8
+</code></pre>
+<p>vm-2 测试</p>
+<pre><code class="language-plain_text">while true;do sudo nmap -sS 192.168.139.111 -p 9527;done
+</code></pre>
+<p>vm-1 查看状态，又和修改的内核参数对应不上</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep RECV
+tcp        0      0 192.168.139.111:9527    192.168.139.151:35013   SYN_RECV    -                    on (1.82/2/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:57984   SYN_RECV    -                    on (1.76/2/0)
+</code></pre>
+<p>半连接取值的规则是这样</p>
+<pre><code class="language-plain_text">min(backlog, net.core.somaxconn, net.ipv4.tcp_max_syn_backlog)
+</code></pre>
+<p>syn_backlog 和 somaxconn 设置的都不是 2，唯一有关系的就是 backlog，backlog没有改直接用的 nc</p>
+<pre><code class="language-plain_text">nc -k -l 192.168.139.111 9527
+</code></pre>
+<pre><code class="language-plain_text">$ sudo ss -anpt
+State     Recv-Q    Send-Q         Local Address:Port       Peer Address:Port   Process
+LISTEN    0         1            192.168.139.111:9527            0.0.0.0:*       users:((&quot;nc&quot;,pid=37710,fd=3))
+</code></pre>
+<p><a href="https://www.ibm.com/support/pages/whats-meaning-recv-q-and-send-q-netstat">关于 ss 的 Send-Q 解释</a></p>
+<p>High Send-Q means the data is put on TCP/IP send buffer, but it is not sent or it is sent but not ACKed</p>
+<p>表示数据在 tcp/ip 发送缓存中，但未发送或已发送但未 ack</p>
+<p>对比我们情况就是 vm-2 拦截了 vm-1 发过来的 syn+ack，未回复 ack</p>
+<p>也就是 nc 的 backlog 设置的是 1，server 的半连接队列只允许有1个等待</p>
+<p>用 go 写一个</p>
+<pre><code class="language-plain_text">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;log&quot;
+	&quot;net&quot;
+	&quot;time&quot;
+)
+
+func main() {
+	fmt.Print(&quot;h&quot;)
+	conn，err := net.Listen(&quot;tcp4&quot;，&quot;0.0.0.0:9527&quot;)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	log.Println(&quot;listen :9527 success&quot;)
+
+	for {
+		time.Sleep(time.Second * 10)
+	}
+}
+</code></pre>
+<pre><code class="language-plain_text">$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          8                    0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=37717,fd=4))
+</code></pre>
+<p>能看到 send-q 是 8，根据公示 min(backlog, net.core.somaxconn, net.ipv4.tcp_max_syn_backlog)，somaxconn 是 8，syn_backlog 是 4</p>
+<p>我们把内核参数恢复默认看下 go server 的默认 backlog</p>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep tcp_syncookies;sudo sysctl -a|grep max_syn_backlog;sudo sysctl -a|grep net.core.somaxconn
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_max_syn_backlog = 512
+net.core.somaxconn = 4096
+
+$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          4096                 0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=318,fd=4))
+</code></pre>
+<p>现在唯一的问题是最小应是4，通过 ss -anpt 查看显示是8，我们访问测试下，改完内核参数记得重新运行服务</p>
+<pre><code class="language-plain_text">$ while true;do sudo nmap -sS 192.168.139.111 -p 9527;done
+
+$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          8                    0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=344,fd=4))
+
+$ sudo netstat -anpo | grep SYN_RECV | wc -l
+4
+
+$ sudo ss -anpt|grep 9527
+LISTEN   0      8              0.0.0.0:9527         0.0.0.0:*     users:((&quot;s&quot;,pid=344,fd=4))
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:53165
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:33241
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:50404
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:46060
+</code></pre>
+<p>能看到队列里是4，那上面的就是取值问题</p>
+<p>netstat -s 能看到丢弃了多少 syn</p>
+<pre><code class="language-plain_text">$ sudo netstat -s | grep -E &quot;LISTEN|overflowed&quot;
+    85 SYNs to LISTEN sockets dropped
+</code></pre>
+<h2><a id="accept-queue" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Accept Queue</h2>
+<pre><code class="language-plain_text">全连接队列最大长度
+min(backlog, net.core.somaxconn)
+</code></pre>
+<p>vm-1</p>
+<pre><code class="language-plain_text">import socket
+import time
+
+def start_server(host, port, backlog):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen(backlog)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    start_server('192.168.139.111', 9527, 8)
+</code></pre>
+<p>vm-2</p>
+<pre><code class="language-plain_text">import socket
+import time
+
+def connect_and_hold(host, port, count):
+    cli_list = []
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.connect((host, port))
+            cli_list.append(cli)
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    connect_and_hold('192.168.139.111', 9527, 10)
+</code></pre>
+<p>清理掉之前的 iptables 规则，分别启动测试</p>
+<pre><code class="language-plain_text">$ sudo netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    6 times the listen queue of a socket overflowed # 全连接丢弃的包
+    91 SYNs to LISTEN sockets dropped
+</code></pre>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        9      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      407/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54468   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54524   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54516   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54478   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54464   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54494   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54508   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54536   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54496   ESTABLISHED -                    off (0.00/0/0)
+
+vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:54464   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54468   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54478   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54494   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54496   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54508   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54516   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54524   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54536   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      1 192.168.139.151:54538   192.168.139.111:9527    SYN_SENT    33260/python3        on (0.81/7/0)
+</code></pre>
+<p>没错，vm-2 的第10个包 SYN_SENT 在重传</p>
+<p><strong>也就是全连接满了 半连接是不接收直接drop掉的</strong></p>
+<p>观测下全连接不满，半连接什么情况</p>
+<p>vm-2 的连接改成6</p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        6      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      463/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51454   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51402   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51440   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51426   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51418   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51450   ESTABLISHED -                    off (0.00/0/0)
+</code></pre>
+<p>vm-2 拦截 vm-1 过来的 syn+ack</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
+
+$ nc 192.168.139.111 9527
+</code></pre>
+<p>vm-1 能看到这个 SYN_RECV 在重试，也就是进了半连接队列，因为 vm-2 拦截了 vm-1 过来的包，vm-2 不会给 vm-1 发送 ack，vm-1 就会一直重试</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        6      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      463/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51454   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:40638   SYN_RECV    -                    on (12.04/4/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51402   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51440   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51426   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51418   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51450   ESTABLISHED -                    off (0.00/0/0)
+</code></pre>
+<p><strong>当全连接没满，半连接是可以接收的</strong></p>
+<p>文中描述</p>
+<pre><code class="language-plain_text">net.ipv4.tcp_abort_on_overflow
+此值为 0 表示握手到第三步时全连接队列满时则扔掉客户端发过来的 ACK 包。但是客户端那边因为握手包已经发出，已经自动进入 ESTABLISHED 状态准备传输数据了。服务端丢弃了 ACK 包后这个链接还是处于 SYN_RECV 状态的（如果此时客户端发数据，服务端会直接丢弃。客户端就开始重传，此时的重传次数受内核的 net.ipv4.tcp_retries2 参数控制）；
+
+此值为 1 则直接给客户端发送 RST 包直接断开连接。
+
+这里强调下，这个参数只在半连接队列往全连接队列移动时才有效。而全连接队列已经满的情况下，内核的默认行为只是丢弃新的 SYN 包（而且目前没有参数可以控制这个行为），这会导致客户端 SYN 不断重传。
+</code></pre>
+<p>默认 net.ipv4.tcp_abort_on_overflow 是 0，要想测试很难，只在半连接向全连接移动时有效。</p>
+<p>另外握手到第三步，就是 vm-2 向 vm-1 发 ack，既要满足发送 ack 又要叫全连接是满的，也就是发送 syn+ack 时候全连接还没满，回 ack 时 vm-1 恰巧有一个比当前请求还快的握手，让 vm-1 的全连接队列满。</p>
+<p>我尝试在 vm-1 全连接队列满的时候，发送一个正常包到 vm-1，看看 vm-1 和 vm-2 的状态</p>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_abort_on_overflow.pcap --print
+</code></pre>
+<p><img src="media/17622389809452/17624093182775.png" alt="" /></p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        9      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      538/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56822   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56802   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56786   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56840   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56838   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56796   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56790   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56780   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56818   ESTABLISHED -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:42424   192.168.139.111:9527    SYN_SENT    33284/nc             on (1.58/6/0)
+tcp        0      0 192.168.139.151:56780   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56786   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56790   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56796   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56802   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56818   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56822   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56838   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56840   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      1 192.168.139.151:56844   192.168.139.111:9527    SYN_SENT    33283/python3        on (48.94/7/0)
+</code></pre>
+<p>能看到 vm-1 建立9个连接后这边就停止了，没有 SYN_RECV，也就是全连接满了 半连接的请求直接被 drop</p>
+<p>而 vm-2 通过抓包能看到 56844 python 在发送 SYN_SENT</p>
+<p><img src="media/17622389809452/17624097018293.png" alt="" /></p>
+<p>nc 的 42424 也是，全部都在重试，试了7次，正常现象 我的 net.ipv4.tcp_syn_retries = 6 net.ipv4.tcp_syn_linear_timeouts = 1</p>
+<p><img src="media/17622389809452/17624097278656.png" alt="" /></p>
+<p>重传这里还能看到个现象：vm-1 使用 iptables 拒绝 vm-2 过来的 syn 包和全连接满了直接拒绝半连接反应的抓包是一样的，区别是一个是用户行为一个是系统行为</p>
+<p>我将 vm-1 重启内核参数恢复默认，又启动一个nginx，能看到默认半连接 511</p>
+<pre><code class="language-plain_text">$ sudo ss -lnt
+State     Recv-Q    Send-Q       Local Address:Port       Peer Address:Port    Process
+LISTEN    0         511                0.0.0.0:80              0.0.0.0:*
+LISTEN    0         511                   [::]:80                 [::]:*
+</code></pre>
+<p>这时候如果你的nginx无法处理连接，状况大致可分为几种</p>
+<ol>
+<li>监听了lo网卡，导致无法处理外部请求，访问会拒绝。客户端走tcp重试</li>
+<li>监听了正确的网卡，但有 iptables 或安全组等拦截。客户端走tcp重试</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接满了。系统级别直接drop连接</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接没满半连接也没满。但新机器上来就把内核参数改了，导致半连接过小，高并发情况下 系统基本指标都正常 这会让请求处理异常吗？（这一点存在疑问后面测试下）</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接没满半连接也没满。但这台机器的基本指标都异常比如CPU内存使用100%，这样全连接就会一直堆积 accept 很慢，导致半连接也满了。你的机器最终也就不可用了</li>
+</ol>
+<p>4 问题测试 会异常 从 server 观测到 vm-2 发送了大量的 tcp 重试，同时半连接队列从系统层又drop掉很多请求</p>
+<p>我发现这个抓包少了并不全，但也不碍事，系统层drop掉请求是对的</p>
+<p><img src="media/17622389809452/17624262484616.png" alt="" /></p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_syncookies=0 net.ipv4.tcp_max_syn_backlog=4 net.core.somaxconn=8
+net.ipv4.tcp_syncookies = 0
+net.ipv4.tcp_max_syn_backlog = 4
+net.core.somaxconn = 8
+</code></pre>
+<pre><code class="language-plain_text">vm-2
+
+$ wrk -t4 -c400 -d60s http://101.200.150.26
+</code></pre>
+<pre><code class="language-plain_text">$ netstat -anpo|grep -E &quot;Recv|80&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      28539/nginx: master  off (0.00/0/0)
+tcp        0    862 172.22.7.89:80          x.x.x.x:55481    ESTABLISHED 28540/nginx: worker  on (0.31/0/0)
+tcp        0    862 172.22.7.89:80          x.x.x.x:56121    ESTABLISHED 28541/nginx: worker  on (6.32/6/0)
+
+$ netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    5517 times the listen queue of a socket overflowed
+    78079 SYNs to LISTEN sockets dropped
+$ netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    5517 times the listen queue of a socket overflowed
+    78388 SYNs to LISTEN sockets dropped
+</code></pre>
+<p>还能看到在tcp连接建立以后 nginx 也做了重传，同时 Send-Q 部分为 862 byte，通过抓包分析862 恰好是 tcp 层的 tcp segment len，这个请求是 server 发往 vm-2 的响应请求，server 发给了 vm-2 还在等待 vm-2 的 ack，所以能看到 Send-Q 是 862</p>
+<p><img src="media/17622389809452/17624258673307.png" alt="" /></p>
+<p><img src="media/17622389809452/17624257640262.png" alt="" /></p>
+<p>不设置内核参数，在压测下</p>
+<pre><code class="language-plain_text">tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w cloudserver-wrk-no-sysctl.pcap --print
+</code></pre>
+<p>这个包是全的</p>
+<p><img src="media/17622389809452/17624273202569.png" alt="" /></p>
+<p>再来看系统是否有drop请求，空的 netstat -s|grep -E &quot;LISTEN|overflow&quot; 过滤直接没有</p>
+<pre><code class="language-plain_text">TcpExt:
+    2 invalid SYN cookies received
+    10 resets received for embryonic SYN_RECV sockets
+    42 TCP sockets finished time wait in fast timer
+    273 packets rejected in established connections because of timestamp
+    19 delayed acks sent
+    Quick ack mode was activated 13960 times
+    630 packet headers predicted
+    64905 acknowledgments not containing data payload received
+    16255 predicted acknowledgments
+    TCPSackRecovery: 1741
+    18 congestion windows recovered without slow start after partial ack
+</code></pre>
+
+]]></content>
+  </entry>
+  
+</feed>
