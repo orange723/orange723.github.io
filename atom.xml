@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-11-08T17:45:15+08:00</updated>
+  <updated>2025-11-09T23:03:54+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -325,7 +325,7 @@ tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   
 </code></pre>
 <h2><a id="tcp-close%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP_CLOSE 状态</h2>
 <p>没找到合适的，自己画了个</p>
-<p><img src="media/17624942962052/tcp-close.png" alt="tcp-close" /></p>
+<p><img src="media/17624942962052/tcp-close-1.png" alt="tcp-close" /></p>
 
 ]]></content>
   </entry>
