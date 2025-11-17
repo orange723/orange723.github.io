@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
       
-    tcp - orange723
+    Kubeadm 部署 - orange723
     
     </title>
     
@@ -67,145 +67,79 @@
             </nav>
       </div>
 
- 
- <div class="hero-body ct-body">
-    <div class="container">
-          <h1 class="title-only">
-                <span>#tcp</span>
-          </h1>
-    </div>
-  </div>
-</section>
-<section class="ct-body">
+ <div class="hero-body ct-body"></div>
+      
+    </section>
+    <section class="ct-body">
       <div class="container">
-          <div class="columns is-variable bd-klmn-columns is-4">
-              <div class="column is-two-thirds">
-               <div class="post-body">
-                  <div class="card archives">
+          <div class="columns is-variable bd-klmn-columns is-4 is-centered">
+              <div class="column is-four-fifths">
+                  <div class="post-body single-content">
                     
-                    
-                        
-                       <div class="card-content">
-                         <div class="content">
-                          <a href="17627609182209.html">
-                            <h2 class="title">TCP 数据的发送和接收</h2>
-                          </a>
-                             <p class="des">
-                             <span class="date">2025/11/10</span>
-                              
-                                     
-                             
-                                  
-                              <span class="tran-tags">Tags:</span>&nbsp;
-                              
-                                <a href='tag_tcp.html'>#tcp</a>
-                                
-                           </p>
-                          </div>
-                       </div>
-                    
-                    
-                        
-                       <div class="card-content">
-                         <div class="content">
-                          <a href="17624942962052.html">
-                            <h2 class="title">TCP 连接的关闭</h2>
-                          </a>
-                             <p class="des">
-                             <span class="date">2025/11/07</span>
-                              
-                                     
-                             
-                                  
-                              <span class="tran-tags">Tags:</span>&nbsp;
-                              
-                                <a href='tag_tcp.html'>#tcp</a>
-                                
-                           </p>
-                          </div>
-                       </div>
-                    
-                    
-                        
-                       <div class="card-content">
-                         <div class="content">
-                          <a href="17622389809452.html">
-                            <h2 class="title">TCP 连接的建立</h2>
-                          </a>
-                             <p class="des">
-                             <span class="date">2025/11/04</span>
-                              
-                                     
-                             
-                                  
-                              <span class="tran-tags">Tags:</span>&nbsp;
-                              
-                                <a href='tag_tcp.html'>#tcp</a>
-                                
-                           </p>
-                          </div>
-                       </div>
+                    <h1 class="title">
+                            Kubeadm 部署   
+                      </h1>
                      
-          </div><!-- end card -->
-        </div><!-- end post body -->
+                    
+                      <div class="media">
+                            
+                            <div class="media-content">
+                              <div class="content">
+                                <p>
+                                 <span class="date">2025/11/17</span>
+                                  
+                                         
+                                  
 
-              </div><!-- end column -->
-              <div class="column">
-                    <div class="card">
-                      <header class="card-header">
-                        <p class="card-header-title">
-                           <span class="tran-site-categories">Categories</span> 
-                        </p>
-                     
-                      </header>
-                      <div class="card-content site-categories">
-                        <div class="content"> 
-                          <ul>
-                          
+                                   
+                                      
+                                  <br />
+                                  <span class="tran-tags">Tags:</span>&nbsp;
                                   
-                                </li> 
-                          
-                          </ul>
-                        </div>
-                      </div>
-                     
+                                    <a class="tag is-link is-light" href='tag_kubernetes.html'>#kubernetes</a>
+                                     
+
+                                </p>
+                              </div>
+                            </div>
+                         
                     </div>
+                </div>
+                  <article class="markdown-body single-content">
+                    <h2><a id="docker-cri-docker" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>docker + cri-docker</h2>
+<p><a href="https://docs.docker.com/engine/install/ubuntu/">docker</a></p>
+<p><a href="https://github.com/Mirantis/cri-dockerd">cri-docker</a></p>
+<p><a href="https://mirantis.github.io/cri-dockerd/usage/install-manually/">install cri-docker</a></p>
+<p><a href="https://github.com/dongyubin/DockerHub">docker proxy</a></p>
+<h2><a id="kubeadm" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>kubeadm</h2>
+<p><a href="https://kubernetes.io/zh-cn/docs/setup/production-environment/tools/kubeadm/install-kubeadm/">install kubeadm</a></p>
+<h2><a id="flannal" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>flannal</h2>
+<pre><code class="language-plain_text">$ sudo modprobe br_netfilter
+$ sudo apt update
+$ sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
+</code></pre>
+<p><a href="https://github.com/flannel-io/flannel">flannel deployment</a></p>
+<p><a href="https://www.google.com/search?q=Failed+to+check+br_netfilter%3A+stat+%2Fproc%2Fsys%2Fnet%2Fbridge%2Fbridge-nf-call-iptables%3A+no+such+file+or+directory&amp;rlz=1C5BAPC_en__1171__1171&amp;ie=UTF-8">Failed to check br_netfilter: stat /proc/sys/net/bridge/bridge-nf-call-iptables: no such file or directory</a></p>
+<p><a href="https://github.com/flannel-io/flannel/issues/728#issuecomment-325347810">pod cidr not assgned</a></p>
 
-                    <div class="card">
-                        <header class="card-header">
-                          <p class="card-header-title">
-                              <span class="tran-site-tags">Tags</span> 
-                          </p>
-                       
-                        </header>
-                        <div class="card-content site-tags">
-                          <div class="content">
-                           <div class="tags">
-                            
-                              <a class="tag is-link is-light" href="tag_flannel.html">#flannel</a> 
-                            
-                              <a class="tag is-link is-light" href="tag_host-gw.html">#host-gw</a> 
-                            
-                              <a class="tag is-link is-light" href="tag_kubernetes.html">#kubernetes</a> 
-                            
-                              <a class="tag is-link is-light" href="tag_service.html">#service</a> 
-                            
-                              <a class="tag is-link is-light" href="tag_tcp.html">#tcp</a> 
-                            
-                              <a class="tag is-link is-light" href="tag_vxlan.html">#vxlan</a> 
-                            
-                           </div>
-                             
-                          </div>
-                        </div>
-                       
-                      </div>
+                  </article>
+                  <div class="comments-wrap">
+                    <div class="share-comments">
+                      
+
+                      
+
+                      
+                    </div>
+                  </div><!-- end comments wrap -->
               </div>
-            </div>
+            </div><!-- end columns -->
+      </div><!-- end container -->
+    </section>
 
-          
-      </div>
-    </section>    <footer class="footer">
+
+
+    <footer class="footer">
         <div class="content has-text-centered">
           <p>
               Copyright &copy; 2019
