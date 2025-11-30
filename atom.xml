@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-11-28T18:32:39+08:00</updated>
+  <updated>2025-11-30T19:18:04+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -43,6 +43,7 @@
     <id>https://orange723.github.io/17634557278324.html</id>
     <content type="html"><![CDATA[
 <p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
+<p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
 <h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
 <pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
 </code></pre>
@@ -165,6 +166,67 @@ traceroute to example.com (23.220.75.232), 30 hops max, 60 byte packets
 14  23.220.75.232  186.684 ms  186.577 ms  260.319 ms
 </code></pre>
 <p>推荐使用 <a href="https://github.com/nxtrace/NTrace-core">NextTrace</a></p>
+<p>在服务器上测试中间设备会响应 icmp 协议，可能是个人住址经过的设备屏蔽了 icmp</p>
+<pre><code class="language-plain_text">$ traceroute -I -n -m 50 example.com
+traceroute to example.com (23.220.75.245), 50 hops max, 60 byte packets
+ 1  10.59.252.86  1.378 ms  1.446 ms  1.442 ms
+ 2  11.73.60.253  1.937 ms * *
+ 3  26.25.187.33  1.519 ms  1.529 ms  1.630 ms
+ 4  10.216.220.118  3.104 ms  3.179 ms  3.160 ms
+ 5  10.216.229.106  3.177 ms  3.178 ms  3.232 ms
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  219.158.5.174  178.130 ms  178.125 ms  178.145 ms
+13  * * *
+14  154.54.77.53  162.103 ms  162.088 ms  162.185 ms
+15  154.54.63.70  157.864 ms  157.916 ms  157.911 ms
+16  154.54.47.165  238.095 ms  238.125 ms  243.526 ms
+17  154.54.169.178  260.650 ms  260.635 ms  260.638 ms
+18  154.54.29.134  249.462 ms  249.394 ms  248.589 ms
+19  154.54.40.249  249.505 ms  249.495 ms *
+20  154.54.165.26  247.671 ms  249.877 ms  250.234 ms
+21  154.54.166.58  251.909 ms  252.616 ms  252.628 ms
+22  154.54.44.86  254.282 ms  254.289 ms  254.572 ms
+23  154.54.27.118  250.352 ms  252.829 ms  252.919 ms
+24  38.104.84.101  236.554 ms  236.499 ms  236.548 ms
+25  218.30.54.6  242.952 ms  242.911 ms  242.916 ms
+26  * * *
+27  * * *
+28  * * *
+29  23.220.75.245  239.147 ms  236.590 ms  239.235 ms
+</code></pre>
+<h2><a id="%E6%8E%A8%E8%8D%90%E6%A1%88%E4%BE%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐案例</h2>
+<p>分析了下此篇文章的问题，很有趣 <a href="https://www.kawabangga.com/posts/7066">0.01% 的概率超时问题</a></p>
+<p>我的回答是：</p>
+<pre><code class="language-plain_text">两个包还有个区别
+
+正常的：server 会给 client 发 zerowindow 随后又发 window update，server 处理的慢但节奏在 server 这里。
+
+超时的：没看到窗口更新的包 都是 client 给 server 发送，2136 包到 2149包能看到重试 15次。
+
+要说 server 处理的慢，只看到一次超时后面全部正常，你说中间设备处理的有问题吧 它还只有0.01的超时概率
+</code></pre>
+<p>作者给了回复：</p>
+<pre><code class="language-plain_text">zero window 在这里其实是一个好的现象。
+
+数据进入的处理路径是：
+
+NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
+
+正常的：
+
+正是因为 kernel 处理的速度够快，才能填满 buffer，应用程序处理的不够快，导致 buffer 填满了，接收端发送 zero window 让发送端暂停发送。
+
+超时的：
+
+因为 kernel 处理的带宽（由于没有开启 LRO）变慢，导致无法填满 buffer，所以不会出现 zero window。同时，由于 NIC 收包比较快，很可呢是 kernel 处理不过来，导致了丢包。
+</code></pre>
+<p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
+<p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
 
 ]]></content>
   </entry>
