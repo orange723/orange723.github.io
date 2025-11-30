@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-11-30T19:18:04+08:00</updated>
+  <updated>2025-11-30T19:27:00+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -22,8 +22,13 @@
 <h2><a id="devops" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>devops</h2>
 <p><a href="https://roadmap.sh/devops">roadmap devops</a></p>
 <p><a href="https://github.com/Pradumnasaraf/DevOps">learning devops</a></p>
+<p><a href="https://www.ruanyifeng.com/blog/2023/03/platform-engineering.html">运维的未来是平台工程</a></p>
+<p><a href="https://coolshell.cn/articles/17459.html">关于高可用的系统</a></p>
+<p><a href="https://www.cloudflare.com/zh-cn/learning/ddos/what-is-a-ddos-attack/">什么是 DDoS 攻击?</a></p>
+<p><a href="https://cloud.google.com/blog/topics/developers-practitioners/microservices-architecture-google-cloud">Microservices architecture on Google Cloud</a></p>
 <h2><a id="terraform" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>terraform</h2>
 <p><a href="https://bgiri-gcloud.medium.com/directory-structure-and-modules-terraform-on-gcp-organize-your-terraform-configurations-using-a-7d604b3da52b">Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and modules for different environments(Dev, Staging&amp;Prod).</a></p>
+<p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
 <h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
 <p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
 <h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
