@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>
       
-    文章链接 - orange723
+    ssh 使用 - orange723
     
     </title>
     
@@ -77,7 +77,7 @@
                   <div class="post-body single-content">
                     
                     <h1 class="title">
-                            文章链接   
+                            ssh 使用   
                       </h1>
                      
                     
@@ -86,7 +86,7 @@
                             <div class="media-content">
                               <div class="content">
                                 <p>
-                                 <span class="date">2025/11/28</span>
+                                 <span class="date">2025/11/04</span>
                                   
                                          
                                   
@@ -95,10 +95,6 @@
                                       
                                   <br />
                                   <span class="tran-tags">Tags:</span>&nbsp;
-                                  
-                                    <a class="tag is-link is-light" href='tag_terraform.html'>#terraform</a>
-                                  
-                                    <a class="tag is-link is-light" href='tag_devops.html'>#devops</a>
                                      
 
                                 </p>
@@ -108,26 +104,35 @@
                     </div>
                 </div>
                   <article class="markdown-body single-content">
-                    <p>放一些工作当中借鉴过的文档。</p>
-<h2><a id="devops" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>devops</h2>
-<p><a href="https://roadmap.sh/devops">roadmap devops</a></p>
-<p><a href="https://github.com/Pradumnasaraf/DevOps">learning devops</a></p>
-<p><a href="https://www.ruanyifeng.com/blog/2023/03/platform-engineering.html">运维的未来是平台工程</a></p>
-<p><a href="https://coolshell.cn/articles/17459.html">关于高可用的系统</a></p>
-<p><a href="https://www.cloudflare.com/zh-cn/learning/ddos/what-is-a-ddos-attack/">什么是 DDoS 攻击?</a></p>
-<p><a href="https://cloud.google.com/blog/topics/developers-practitioners/microservices-architecture-google-cloud">Microservices architecture on Google Cloud</a></p>
-<p><a href="https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port">Using SSH over the HTTPS port</a></p>
-<h2><a id="terraform" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>terraform</h2>
-<p><a href="https://bgiri-gcloud.medium.com/directory-structure-and-modules-terraform-on-gcp-organize-your-terraform-configurations-using-a-7d604b3da52b">Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and modules for different environments(Dev, Staging&amp;Prod).</a></p>
-<p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
-<h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
-<p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
-<h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
-<p><a href="https://samber.github.io/awesome-prometheus-alerts/rules">awesome-prometheus-alerts</a></p>
-<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
-<p><a href="https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands">iptables-essentials-common-firewall-rules-and-commands</a></p>
-<h2><a id="machine-price" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>machine price</h2>
-<p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
+                    <h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
+<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
+<p>~/.ssh/config</p>
+<pre><code class="language-plain_text"># 通过跳板机做转发
+Host beszel
+  Hostname localhost
+  User root
+  ProxyJump orange723
+  LocalForward 8090 localhost:8090
+
+Host *
+  IdentityAgent agent.sock
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  ServerAliveInterval 15
+</code></pre>
+<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
+<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
+<p>client 会每隔多少s 发送一个 packet 到 server</p>
+<p>抓包看看</p>
+<p>no-time</p>
+<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
+<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
+<p>time</p>
+<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
+<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
+<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
+<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
+</code></pre>
 
                   </article>
                   <div class="comments-wrap">
@@ -156,6 +161,7 @@
         </div>
       </footer>
 
+<script>(n=>{"use strict";let s,r,e;const l=["cdn.jsdelivr.net","fastly.jsdelivr.net","gcore.jsdelivr.net","cdn.zenless.top","testingcf.jsdelivr.net"],t="//",i=l[0],o=Date.now(),a=2e3,c="jsdelivr-auto-fallback",f="/gh/PipecraftNet/jsdelivr-auto-fallback@main/empty.css?",d=e=>e&&e.includes(t+i),m=e=>e.replace(t+i,t+s),u=window.setTimeout,v=n.querySelectorAll.bind(n),b=()=>{let e,t;for(e of v('link[rel="stylesheet"]'))t=e.href,d(t)&&!t.includes(f)&&(e.href=m(t));for(e of v("script"))if(t=e.src,d(t)){const s=n.createElement("script");s.src=m(t),e.defer=!0,e.src="",e.before(s),e.remove()}for(e of v("img"))t=e.src,d(t)&&(e.src="",e.src=m(t));for(e of v("*[style]"))t=e.getAttribute("style"),d(t)&&e.setAttribute("style",m(t));for(e of v("style"))t=e.innerHTML,d(t)&&(e.innerHTML=m(t))},h=()=>{!e&&r&&s&&(console.warn(i+" is not available. Use "+s),e=!0,u(b,0),u(b,20),setInterval(b,500))},g=(()=>{try{return Object.assign({},JSON.parse(localStorage.getItem(c)||"{}"))}catch{return{}}})(),y=()=>{g.time=o,g.failed=!1,g.fastNode=null;for(const t of l)((e,t)=>{let s;const r=n.createElement("link"),l=e=>{s&&(clearTimeout(s),s=0,e||(r.href="data:text/css;base64,"),r.remove(),t(e))};s=u(l,a),r.addEventListener("error",()=>l(!1)),r.addEventListener("load",()=>l(!0)),r.rel="stylesheet",r.text="text/css",r.href=e+f+o,n.head.insertAdjacentElement("afterbegin",r)})("https://"+t,e=>{e||t!==i||(r=!0,g.failed=!0),e&&!s&&(s=t),e&&!g.fastNode&&(g.fastNode=t),h()});u(()=>{r&&!s&&(s=l[1],h()),localStorage.setItem(c,JSON.stringify(g))},a+100)};if(g.time&&o-g.time<36e5&&g.failed&&g.fastNode)r=!0,s=g.fastNode,h(),u(y,1e3);else if(n.head)y();else{const j=new MutationObserver(()=>{n.head&&(j.disconnect(),y())});j.observe(n,{childList:!0,subtree:!0})}})(document);</script>
 <style>.mweb-charts{background:#fff;}
 body{ box-sizing: border-box;
     margin: 0 auto;}
@@ -239,7 +245,7 @@ div.code-toolbar > .toolbar > .toolbar-item > span:focus {
   color: inherit;
   text-decoration: none;
 }
-</style>
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
 
 
   

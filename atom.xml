@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-11-30T19:27:00+08:00</updated>
+  <updated>2025-12-13T22:40:36+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -26,6 +26,7 @@
 <p><a href="https://coolshell.cn/articles/17459.html">关于高可用的系统</a></p>
 <p><a href="https://www.cloudflare.com/zh-cn/learning/ddos/what-is-a-ddos-attack/">什么是 DDoS 攻击?</a></p>
 <p><a href="https://cloud.google.com/blog/topics/developers-practitioners/microservices-architecture-google-cloud">Microservices architecture on Google Cloud</a></p>
+<p><a href="https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port">Using SSH over the HTTPS port</a></p>
 <h2><a id="terraform" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>terraform</h2>
 <p><a href="https://bgiri-gcloud.medium.com/directory-structure-and-modules-terraform-on-gcp-organize-your-terraform-configurations-using-a-7d604b3da52b">Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and modules for different environments(Dev, Staging&amp;Prod).</a></p>
 <p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
@@ -1866,6 +1867,45 @@ $ netstat -s|grep -E &quot;LISTEN|overflow&quot;
     16255 predicted acknowledgments
     TCPSackRecovery: 1741
     18 congestion windows recovered without slow start after partial ack
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[ssh 使用]]></title>
+    <link href="https://orange723.github.io/17622327813502.html"/>
+    <updated>2025-11-04T13:06:21+08:00</updated>
+    <id>https://orange723.github.io/17622327813502.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
+<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
+<p>~/.ssh/config</p>
+<pre><code class="language-plain_text"># 通过跳板机做转发
+Host beszel
+  Hostname localhost
+  User root
+  ProxyJump orange723
+  LocalForward 8090 localhost:8090
+
+Host *
+  IdentityAgent agent.sock
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  ServerAliveInterval 15
+</code></pre>
+<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
+<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
+<p>client 会每隔多少s 发送一个 packet 到 server</p>
+<p>抓包看看</p>
+<p>no-time</p>
+<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
+<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
+<p>time</p>
+<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
+<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
+<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
+<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
 </code></pre>
 
 ]]></content>
