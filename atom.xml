@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-12-14T17:44:13+08:00</updated>
+  <updated>2025-12-21T23:53:06+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -12,6 +12,144 @@
   </author>
   <generator uri="http://www.coderforart.com/">CoderForArt</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[uncloud 初体验]]></title>
+    <link href="https://orange723.github.io/17659794748401.html"/>
+    <updated>2025-12-17T21:51:14+08:00</updated>
+    <id>https://orange723.github.io/17659794748401.html</id>
+    <content type="html"><![CDATA[
+<p><a href="https://uncloud.run/">uncloud</a></p>
+<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
+<p><a href="https://github.com/psviderski/uncloud/?tab=readme-ov-file#-quick-start">quick-start</a></p>
+<p>注意项：<br />
+- mac 上使用 1password 的 ssh-agent，需覆盖 SSH_AUTH_SOCK 变量<br />
+- 使用私钥登录要写全路径，不然执行 uc 会提示找不到私钥<br />
+- 多集群可通过指定上下文区分 -c, --context string<br />
+- 因为域名和 dns 原因，并未直接安装 caddy 和 dns</p>
+<pre><code class="language-plain_text">$ export SSH_AUTH_SOCK=~/Library/Group\ Containers/com.1password/t/agent.sock
+
+$ uc machine init root@example.com --name example-1 --no-caddy --no-dns
+</code></pre>
+<h2><a id="caddy-ingress" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>caddy ingress</h2>
+<ul>
+<li>使用 ip ssl</li>
+<li>caddy 仅为安装并配置 zerossl 签名证书</li>
+<li>路由划分放到 excalidraw，由于 ip ssl 的原因，个人测试不影响</li>
+</ul>
+<pre><code class="language-plain_text">$ cat certificate.crt ca_bundle.crt &gt; fullchain.crt
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/compose.yaml">caddy compose.yaml</a></p>
+<pre><code class="language-plain_text">services:
+  caddy:
+    image: docker.1ms.run/library/caddy:2.11
+    command: caddy run -c /config/Caddyfile
+    environment:
+      CADDY_ADMIN: unix//run/caddy/admin.sock
+    volumes:
+      - /root/caddy:/root/caddy # 此处是在服务器上存放 ssl 证书文件的路径，可以根据需要修改
+      - /var/lib/uncloud/caddy:/data
+      - /var/lib/uncloud/caddy:/config
+      - /run/uncloud/caddy:/run/caddy
+    x-ports:
+      - 80:80@host
+      - 443:443@host
+    deploy:
+      mode: global
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/README.runme">runme deploy</a></p>
+<h2><a id="excalidraw" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>excalidraw</h2>
+<ul>
+<li>/ 路径是 excalidraw</li>
+<li>/message 是 leave-a-message 服务</li>
+</ul>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/compose.yaml">excalidraw compose.yaml</a></p>
+<pre><code class="language-plain_text">services:
+  excalidraw:
+    image: docker.1ms.run/excalidraw/excalidraw
+    x-caddy: |
+      :443 {
+          tls /root/caddy/fullchain.crt /root/caddy/private.key
+          
+          # excalidraw
+          reverse_proxy {{upstreams}} {
+              import common_proxy
+          }
+      
+          # leave-a-message static
+          handle /static/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+
+          # leave-a-message api
+          handle /api/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+      
+          # leave-a-message root pages
+          handle_path /message/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+      
+          log
+      }
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/README.runme">runme deploy</a></p>
+<h2><a id="leave-a-message" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>leave-a-message</h2>
+<p><a href="https://github.com/orange723/leave-a-message/blob/main/compose-uncloud.yml">leave-a-message compose-uncloud.yml</a></p>
+<pre><code class="language-plain_text">services:
+
+  message:
+    build:
+      context: .
+      platforms:
+        - linux/amd64
+    image: message:{{date &quot;20060102-150405&quot; &quot;Local&quot;}}
+    configs:
+      - source: app_config
+        target: /app/.env
+        mode: 0644
+
+  db:
+    image: docker.1ms.run/library/mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: message
+    x-ports:
+      - 3306:3306/tcp@host
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+
+configs:
+  app_config:
+    content: |
+      SERVER_HOST=0.0.0.0
+      SERVER_PORT=3000
+
+      ENABLE_LOGGER=true
+
+      MYSQL_USER=root
+      MYSQL_PASSWORD=12345678
+      MYSQL_HOST=db
+      MYSQL_DB=message
+</code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>不用 Kubernetes 情况下，用 uncloud 基本可以平替，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
+<p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[文章链接]]></title>
@@ -33,10 +171,13 @@
 <p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
 <h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
 <p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
+<p><a href="https://www.lifewire.com/layers-of-the-osi-model-illustrated-818017">The Layers of the OSI Model Illustrated</a></p>
 <h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
 <p><a href="https://samber.github.io/awesome-prometheus-alerts/rules">awesome-prometheus-alerts</a></p>
 <h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
 <p><a href="https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands">iptables-essentials-common-firewall-rules-and-commands</a></p>
+<p><a href="https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/">Scripts I wrote that I use all the time</a></p>
+<p><a href="https://docs.runme.dev/usage/stdin">Working with Stdin, Stdout, and Stderr</a></p>
 <h2><a id="machine-price" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>machine price</h2>
 <p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
 
