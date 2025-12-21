@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-12-21T23:53:06+08:00</updated>
+  <updated>2025-12-22T00:14:53+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -12,6 +12,67 @@
   </author>
   <generator uri="http://www.coderforart.com/">CoderForArt</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Terraform 使用]]></title>
+    <link href="https://orange723.github.io/17663325089626.html"/>
+    <updated>2025-12-21T23:55:08+08:00</updated>
+    <id>https://orange723.github.io/17663325089626.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="import" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>import</h2>
+<p>将已经创建的机器转换成 terraform 并管理</p>
+<pre><code class="language-main.tf">resource &quot;google_compute_instance&quot; &quot;compute-00&quot; {}
+</code></pre>
+<pre><code class="language-plain_text">$ terraform import google_compute_instance.compute-00 projects/PROJECT_ID/zones/REGION/instances/compute-00
+</code></pre>
+<h2><a id="gcp-lb" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>gcp lb</h2>
+<ul>
+<li>cloud func 和 cloud run 使用的 resource 是不同的，但是假如你有个 cloud func 它其实是会先创建一个 cloud run，在配置 lb 时写 cloud run 名称 这个 lb 也是能工作的。</li>
+</ul>
+<p>根据路由区分 cloud func 两种写法</p>
+<pre><code class="language-plain_text">    path_rule {
+      paths   = [&quot;/terraform/*&quot;]
+
+      route_action {
+        url_rewrite {
+          path_prefix_rewrite = &quot;/&quot;
+        }
+
+      weighted_backend_services {
+        backend_service = google_compute_backend_service.terraform.id
+        weight          = 100
+      }
+      }
+    }
+</code></pre>
+<pre><code class="language-plain_text">    route_rules {
+      priority = 1
+      service  = google_compute_backend_service.terraform.id
+
+      match_rules {
+        prefix_match = &quot;/terraform/&quot;
+      }
+
+      route_action {
+        url_rewrite {
+          path_prefix_rewrite = &quot;/&quot;
+        }
+      }
+    }
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Docker 流量路径]]></title>
+    <link href="https://orange723.github.io/17663324445184.html"/>
+    <updated>2025-12-21T23:54:04+08:00</updated>
+    <id>https://orange723.github.io/17663324445184.html</id>
+    <content type="html"><![CDATA[
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[uncloud 初体验]]></title>
@@ -1595,6 +1656,143 @@ tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   
   </entry>
   
   <entry>
+    <title type="html"><![CDATA[机器初始化]]></title>
+    <link href="https://orange723.github.io/17622391793233.html"/>
+    <updated>2025-11-04T14:52:59+08:00</updated>
+    <id>https://orange723.github.io/17622391793233.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
+<pre><code class="language-plain_text">sudo apt update
+sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
+</code></pre>
+<h2><a id="cloud-init" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>cloud-init</h2>
+<pre><code class="language-plain_text">#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - bridge-utils
+  - make
+  - cmake
+  - pkg-config
+  - build-essential
+  - wget
+  - net-tools
+  - inetutils-ping
+  - dnsutils
+  - vim
+  - unzip
+  - zip
+  - sysstat
+  - git
+  - iproute2
+  - ca-certificates
+  - telnet
+  - curl
+  - htop
+  - tcpdump
+  - gnupg
+  - lsb-release
+  - btrfs-progs
+  - libssl-dev
+  - m4
+  - gcc
+  - g++
+  - clang
+  - fuse
+  - tree
+  - iftop
+  - jq
+  - gpg
+  - man
+  - tmux
+  - traceroute
+  - ethtool
+  - lz4
+  - btop
+  - gh
+  - qemu-guest-agent
+  - supervisor
+
+bootcmd:
+  - mkdir -p /opt/docker/cadvisor
+  - mkdir -p /opt/docker/node_exporter
+
+write_files:
+  - path: /opt/docker/node_exporter/compose.yaml
+    owner: root:root
+    permissions: 0o755
+    defer: true
+    content: |
+      services:
+        node_exporter:
+          image: quay.io/prometheus/node-exporter:latest
+          container_name: node_exporter
+          command:
+            - '--web.listen-address=:10000'
+            - '--path.rootfs=/host'
+          network_mode: host
+          pid: host
+          restart: unless-stopped
+          volumes:
+            - '/:/host:ro,rslave'
+  
+  - path: /opt/docker/cadvisor/compose.yaml
+    owner: root:root
+    permissions: 0o755
+    content: |
+      services:
+        cadvisor:
+          image: gcr.io/cadvisor/cadvisor:latest
+          container_name: cadvisor
+          privileged: true
+          devices:
+            - /dev/kmsg:/dev/kmsg
+          volumes:
+            - /:/rootfs:ro
+            - /var/run:/var/run:ro
+            - /sys:/sys:ro
+            - /var/lib/docker/:/var/lib/docker:ro
+            - /dev/disk/:/dev/disk:ro
+          ports:
+            - &quot;10001:8080&quot;
+          restart: unless-stopped
+
+runcmd:
+  - install -m 0755 -d /etc/apt/keyrings
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+  - chmod a+r /etc/apt/keyrings/docker.asc
+  - echo &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;) stable&quot; | tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+  - apt update
+  - apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  - systemctl enable docker
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+  - systemctl start docker
+  - docker compose -f /opt/docker/node_exporter/compose.yaml up -d
+  - docker compose -f /opt/docker/cadvisor/compose.yaml up -d
+
+users:
+  - default
+  - name: orange723
+    sudo: &quot;ALL=(ALL) NOPASSWD:ALL&quot;
+    groups: sudo, sys, root, adm, docker
+    shell: /bin/bash
+    homedir: /home/orange723
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC
+
+no_ssh_fingerprints: true
+
+ssh:
+  emit_keys_to_console: false
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
     <title type="html"><![CDATA[TCP 连接的建立]]></title>
     <link href="https://orange723.github.io/17622389809452.html"/>
     <updated>2025-11-04T14:49:40+08:00</updated>
@@ -2049,6 +2247,150 @@ Host *
 <h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
 <pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
 </code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[深入剖析 Kubernetes]]></title>
+    <link href="https://orange723.github.io/17608597754550.html"/>
+    <updated>2025-10-19T15:42:55+08:00</updated>
+    <id>https://orange723.github.io/17608597754550.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+<p>云计算已经蜕变成 虚拟机和账单</p>
+<p>改变一切的是 docker 镜像 解决了本地和云端环境一致的问题</p>
+<h2><a id="05" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>05</h2>
+<p>容器技术的核心功能，就是通过约束和修改进程的动态表现，从而为其创造出一个边界</p>
+<p>Cgroups技术是用来制造约束的主要手段，而Namespace技术则是用来修改进程视图的主要方法</p>
+<p>Docker 容器这个听起来玄而又玄的概念，实际上是在创建容器进程时，指定了这个进程所需要启用的一组 Namespace 参数。这样，容器就只能“看”到当前 Namespace 所限定的资源、文件、设备、状态，或者配置。而对于宿主机以及其他不相关的程序，它就完全看不到了。</p>
+<p>容器，其实是一种特殊的进程而已。</p>
+<h2><a id="06" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>06</h2>
+<p>容器是一个 “单进程” 模型</p>
+<p>一个正在运行的 Docker 容器，其实就是一个启用了多个 Linux Namespace 的应用进程，而这个进程能够使用的资源量，则受 Cgroups 配置的限制。</p>
+<h2><a id="07" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>07</h2>
+<p>rootfs</p>
+<h2><a id="08" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>08</h2>
+<p>默认情况下，Docker 会为你提供一个隐含的 ENTRYPOINT，即：/bin/sh -c。所以，在不指定 ENTRYPOINT 时，比如在我们这个例子里，实际上运行在容器里的完整进程是：/bin/sh -c &quot;python app.py&quot;，即 CMD 的内容就是 ENTRYPOINT 的参数。</p>
+<h2><a id="09" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>09</h2>
+<p>Kubernetes 项目的架构, 都由 Master 和 Node 两种节点组成，而这两种角色分别对应着控制节点和计算节点。</p>
+<p>其中，控制节点，即 Master 节点，由三个紧密协作的独立组件组合而成，它们分别是负责 API 服务的 kube-apiserver、负责调度的 kube-scheduler，以及负责容器编排的 kube-controller-manager。整个集群的持久化数据，则由 kube-apiserver 处理后保存在 Etcd 中。</p>
+<p>而计算节点上最核心的部分，则是一个叫作 kubelet 的组件。</p>
+<p>在 Kubernetes 项目中，kubelet 主要负责同容器运行时（比如 Docker 项目）打交道。而这个交互所依赖的，是一个称作 CRI（Container Runtime Interface）的远程调用接口，这个接口定义了容器运行时的各项核心操作，比如：启动一个容器需要的所有参数。</p>
+<p>而 kubelet 的另一个重要功能，则是调用网络插件和存储插件为容器配置网络和持久化存储。这两个插件与 kubelet 进行交互的接口，分别是 CNI（Container Networking Interface）和 CSI（Container Storage Interface）。</p>
+<p>运行在大规模集群中的各种任务之间，实际上存在着各种各样的关系。这些关系的处理，才是作业编排和管理系统最困难的地方。</p>
+<h2><a id="14" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>14</h2>
+<p>Pod 生命周期的变化，主要体现在 Pod API 对象的 Status 部分，这是它除了 Metadata 和 Spec 之外的第三个重要字段。其中，pod.status.phase，就是 Pod 的当前状态，它有如下几种可能的情况：</p>
+<ol>
+<li>Pending。这个状态意味着，Pod 的 YAML 文件已经提交给了 Kubernetes，API 对象已经被创建并保存在 Etcd 当中。但是，这个 Pod 里有些容器因为某种原因而不能被顺利创建。比如，调度不成功。</li>
+<li>Running。这个状态下，Pod 已经调度成功，跟一个具体的节点绑定。它包含的容器都已经创建成功，并且至少有一个正在运行中。</li>
+<li>Succeeded。这个状态意味着，Pod 里的所有容器都正常运行完毕，并且已经退出了。这种情况在运行一次性任务时最为常见。</li>
+<li>Failed。这个状态下，Pod 里至少有一个容器以不正常的状态（非 0 的返回码）退出。这个状态的出现，意味着你得想办法 Debug 这个容器的应用，比如查看 Pod 的 Events 和日志。</li>
+<li>Unknown。这是一个异常状态，意味着 Pod 的状态不能持续地被 kubelet 汇报给 kube-apiserver，这很有可能是主从节点（Master 和 Kubelet）间的通信出现了问题。</li>
+</ol>
+<p>更进一步地，Pod 对象的 Status 字段，还可以再细分出一组 Conditions。这些细分状态的值包括：PodScheduled、Ready、Initialized，以及 Unschedulable。它们主要用于描述造成当前 Status 的具体原因是什么。</p>
+<h2><a id="15" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>15</h2>
+<p>Kubernetes 支持的 Projected Volume 一共有四种：</p>
+<ol>
+<li>Secret；</li>
+<li>ConfigMap；</li>
+<li>Downward API；</li>
+<li>ServiceAccountToken。</li>
+</ol>
+<p>其实，Secret、ConfigMap，以及 Downward API 这三种 Projected Volume 定义的信息，大多还可以通过环境变量的方式出现在容器里。但是，通过环境变量获取这些信息的方式，不具备自动更新的能力。所以，一般情况下，我都建议你使用 Volume 文件的方式获取这些信息。</p>
+<p>而作为用户，你还可以通过设置 restartPolicy，改变 Pod 的恢复策略。除了 Always，它还有 OnFailure 和 Never 两种情况：</p>
+<ol>
+<li>Always：在任何情况下，只要容器不在运行状态，就自动重启容器；</li>
+<li>OnFailure: 只在容器 异常时才自动重启容器；</li>
+<li>Never: 从来不重启容器。</li>
+</ol>
+<p>只要记住如下两个基本的设计原理即可：</p>
+<ol>
+<li>只要 Pod 的 restartPolicy 指定的策略允许重启异常的容器（比如：Always），那么这个 Pod 就会保持 Running 状态，并进行容器重启。否则，Pod 就会进入 Failed 状态 。</li>
+<li>对于包含多个容器的 Pod，只有它里面所有的容器都进入异常状态后，Pod 才会进入 Failed 状态。在此之前，Pod 都是 Running 状态。此时，Pod 的 READY 字段会显示正常容器的个数</li>
+</ol>
+<p>livenessProbe 检查服务是否健康，状态是否为running<br />
+readnessProbe 是否能被Service使用</p>
+<p>PodPreset 可以写通用的字段，给pod用，只会更改pod，而不会修改deployment</p>
+<h2><a id="17" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>17</h2>
+<p><img src="media/17608597754550/17609368857215.jpg" alt="" /></p>
+<h2><a id="18" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>18</h2>
+<p>StatefulSet 的设计其实非常容易理解。它把真实世界里的应用状态，抽象为了两种情况：</p>
+<ol>
+<li>拓扑状态。这种情况意味着，应用的多个实例之间不是完全对等的关系。这些应用实例，必须按照某些顺序启动，比如应用的主节点 A 要先于从节点 B 启动。而如果你把 A 和 B 两个 Pod 删除掉，它们再次被创建出来时也必须严格按照这个顺序才行。并且，新创建出来的 Pod，必须和原来 Pod 的网络标识一样，这样原先的访问者才能使用同样的方法，访问到这个新 Pod。</li>
+<li>存储状态。这种情况意味着，应用的多个实例分别绑定了不同的存储数据。对于这些应用实例来说，Pod A 第一次读取到的数据，和隔了十分钟之后再次读取到的数据，应该是同一份，哪怕在此期间 Pod A 被重新创建过。这种情况最典型的例子，就是一个数据库应用的多个存储实例。</li>
+</ol>
+<p>StatefulSet 这个控制器的主要作用之一，就是使用 Pod 模板创建 Pod 的时候，对它们进行编号，并且按照编号顺序逐一完成创建工作。而当 StatefulSet 的“控制循环”发现 Pod 的“实际状态”与“期望状态”不一致，需要新建或者删除 Pod 进行“调谐”的时候，它会严格按照这些 Pod 编号的顺序，逐一完成这些操作。</p>
+<h2><a id="19" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>19</h2>
+<p>首先，StatefulSet 的控制器直接管理的是 Pod。这是因为，StatefulSet 里的不同 Pod 实例，不再像 ReplicaSet 中那样都是完全一样的，而是有了细微区别的。比如，每个 Pod 的 hostname、名字等都是不同的、携带了编号的。而 StatefulSet 区分这些实例的方式，就是通过在 Pod 的名字里加上事先约定好的编号。</p>
+<p>其次，Kubernetes 通过 Headless Service，为这些有编号的 Pod，在 DNS 服务器中生成带有同样编号的 DNS 记录。只要 StatefulSet 能够保证这些 Pod 名字里的编号不变，那么 Service 里类似于 web-0.nginx.default.svc.cluster.local 这样的 DNS 记录也就不会变，而这条记录解析出来的 Pod 的 IP 地址，则会随着后端 Pod 的删除和再创建而自动更新。这当然是 Service 机制本身的能力，不需要 StatefulSet 操心。</p>
+<p>最后，StatefulSet 还为每一个 Pod 分配并创建一个同样编号的 PVC。这样，Kubernetes 就可以通过 Persistent Volume 机制为这个 PVC 绑定上对应的 PV，从而保证了每一个 Pod 都拥有一个独立的 Volume。</p>
+<h2><a id="26" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>26</h2>
+<p>而在 Kubernetes 项目中，负责完成授权（Authorization）工作的机制，就是 RBAC：基于角色的访问控制（Role-Based Access Control）。</p>
+<p>如果你直接查看 Kubernetes 项目中关于 RBAC 的文档的话，可能会感觉非常复杂。但实际上，等到你用到这些 RBAC 的细节时，再去查阅也不迟。</p>
+<p>而在这里，我只希望你能明确三个最基本的概念。</p>
+<ol>
+<li>Role：角色，它其实是一组规则，定义了一组对 Kubernetes API 对象的操作权限。</li>
+<li>Subject：被作用者，既可以是“人”，也可以是“机器”，也可以是你在 Kubernetes 里定义的“用户”。</li>
+<li>RoleBinding：定义了“被作用者”和“角色”的绑定关系。</li>
+</ol>
+<h2><a id="33" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>33</h2>
+<p>Flannel 项目是 CoreOS 公司主推的容器网络方案。事实上，Flannel 项目本身只是一个框架，真正为我们提供容器网络功能的，是 Flannel 的后端实现。目前，Flannel 支持三种后端实现，分别是：</p>
+<ol>
+<li>VXLAN；</li>
+<li>host-gw；</li>
+<li>UDP。</li>
+</ol>
+<h2><a id="35" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>35</h2>
+<p>所谓 BGP，就是在大规模网络中实现节点路由信息共享的一种协议。</p>
+<p>Calico 项目的架构</p>
+<ol>
+<li>Calico 的 CNI 插件。这是 Calico 与 Kubernetes 对接的部分。</li>
+<li>Felix。它是一个 DaemonSet，负责在宿主机上插入路由规则（即：写入 Linux 内核的 FIB 转发信息库），以及维护 Calico 所需的网络设备等工作。</li>
+<li>BIRD。它就是 BGP 的客户端，专门负责在集群里分发路由规则信息。</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[容器实战高手课]]></title>
+    <link href="https://orange723.github.io/17403208106259.html"/>
+    <updated>2025-02-23T22:26:50+08:00</updated>
+    <id>https://orange723.github.io/17403208106259.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+<p>在容器中，1 号进程永远不会响应 SIGKILL 和 SIGSTOP 这两个特权信号；</p>
+<p>对于其他的信号，如果用户自己注册了 handler，1 号进程可以响应。</p>
+<p>SIGTERM 可以程序自己注册，所以 1 号进程是可以响应的</p>
+<h2><a id="02" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>02</h2>
+<p>进程 “活着” 的时候只有两个状态：运行态（TASK_RUNNING）和睡眠态（TASK_INTERRUPTIBLE，TASK_UNINTERRUPTIBLE）</p>
+<p>如果你想让容器里的进程避免过多僵尸进程，1需要限制容器的pids.max 是容器需要做的，2是程序的父进程要处理子进程进行回收</p>
+<p>进程退出会调用do_exit() 它有两个状态 EXIT_DEAD EXIT_ZOMBIE，僵尸进程会处于EXIT_ZOMBIE</p>
+<h2><a id="03" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>03</h2>
+<p>如何实现 graceful shutdown</p>
+<p>容器的第一个进程 也就是 init 进程，如果你做docker stop时 init进程收到的是 SIGTERM 你的进程注册了 SIGTERM 他就会自动退出，但是在容器里你的子进程收到的是 SIGKILL 这个signal是不允许被注册的，所以当你的init收到SIGTERM要转发给子进程让他们去退出</p>
+<h2><a id="08" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>08</h2>
+<p>通过查看 syslog 看是否有 oom-kill</p>
+<pre><code class="language-plain_text">grep -C 10 oom-kill syslog
+</code></pre>
+<p>系统总的可用页面数乘以进程的 OOM 校准值 oom_score_adj，再加上进程已经使用的物理页面数，计算出来的值越大，那么这个进程被 OOM Kill 的几率也就越大。</p>
+<p>要么调大内存，要么修bug</p>
+<h2><a id="09" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>09</h2>
+<p>在linux里 内存 rss 是程序真正使用的内存，page cache是文件缓存，当内存达到max时 也可以继续申请，会释放page的内存</p>
+<p>cgroup v2 memory.stat anon 是rss ，file是page cache</p>
+<h2><a id="11" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>11</h2>
+<p>overlayfs 就是 unionfs 的一种实现，overlayfs主要是给容器镜像使用，分为 lowerlay 和 upperlay 还有workerlay，lowerlay仅仅可读，一般写操作都放在 upperlay</p>
+<h2><a id="12" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>12</h2>
+<p>overlayfs 没有专门限制磁盘使用量的实现，如果你的磁盘是xfs是可以通过xfs的quota来限制，docker 自己也有磁盘使用限制</p>
+<h2><a id="15" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>15</h2>
+<p>容器中有些网络参数是默认继承宿主机，而有些是会写入默认值，所以当你需要变更网络参数时 要在你的程序没启动时进行修改，如果你的应用已经启动，变更后已经连接的tcp要重新连接才会生效，容器提供了 sysctl 来在容器里应用启动之前修改，这样就会是你想要的网络参数</p>
+<h2><a id="16" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>16</h2>
+<p>容器和宿主机网络通信是走docker0这个网卡，宿主机和容器是通过一对网卡pair来连接，容器pair-&gt;宿主机pai—&gt;docker0-&gt;eth0 转发</p>
+<h2><a id="19" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>19</h2>
+<p>其实 Linux capabilities 就是把 Linux root 用户原来所有的特权做了细化，可以更加细粒度地给进程赋予不同权限</p>
+<p>getcap $(which ping)<br />
+setcap -r $(which ping)</p>
 
 ]]></content>
   </entry>

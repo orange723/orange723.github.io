@@ -1,0 +1,1155 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>  
+	  
+  	orange723
+  	
+	</title>
+
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link href="atom.xml" rel="alternate" title="orange723" type="application/atom+xml">
+
+	<link href="asset/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<link href="asset/stylesheets/font-awesome.min.css" media="screen, projection" rel="stylesheet" type="text/css">
+	<script src="asset/javascripts/jquery.min.js"></script>
+	
+
+	<!--[if lt IE 9]><script src="asset/javascripts/html5.js"></script><![endif]-->
+	<!-- <link href='http://fonts.googleapis.com/css?family=Nunito:400,300,700' rel='stylesheet' type='text/css'> -->
+	<style type="text/css">
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 300;
+  src: local('Nunito-Light'), url(asset/font/1TiHc9yag0wq3lDO9cw0voX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Nunito-Regular'), url(asset/font/6TbRXKWJjpj6V2v_WyRbMX-_kf6ByYO6CLYdB4HQE-Y.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+/* latin */
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Nunito-Bold'), url(asset/font/TttUCfJ272GBgSKaOaD7KoX0hVgzZQUfRDuZrPvH3D8.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215, U+E0FF, U+EFFD, U+F000;
+}
+	</style>
+	
+	<style type="text/css">
+	.container .left-col{ opacity: 1;}
+	#pagenavi a{ font-size: 1.3em;}
+	#pagenavi .next:before{ top: 3px;}
+	#pagenavi .prev:before{ top: 3px;}
+	.container .mid-col .mid-col-container #content .archives .title{ font-size: 1.5em;}
+	.container .mid-col .mid-col-container #content article{ padding: 15px 0px;}
+	#header .subtitle {
+		line-height: 1.2em;
+		padding-top: 8px;
+	}
+	article pre{ background: none; border: none; padding: 0;}
+	article .entry-content{text-align: left;}
+	.share-comment{ padding: 25px 0px; clear: both;}
+	hr{ margin: 20px 0px;border: 0; border-top:solid 1px #ddd;}
+	</style>
+  
+
+</head>
+
+
+<body>
+	<div class="container">
+		<div class="left-col">
+			<div class="intrude-less">
+				<header id="header" class="inner">
+				 
+					
+					<h1><a href="index.html">orange723</a></h1>
+					<p class="subtitle"></p>
+					<nav id="main-nav">
+						<ul class="main">
+						
+						  <li id=""><a target="_self" href="index.html">Home</a></li>
+						
+						  <li id=""><a target="_self" href="archives.html">Archives</a></li>
+						
+						</ul>
+					</nav>
+
+					<nav id="sub-nav">
+						<div class="social">
+
+
+
+
+
+
+
+
+
+
+<a target="_blank" class="github" target="_blank" href="https://github.com/orange723" title="GitHub">GitHub</a>
+
+
+								
+
+								<a class="rss" href="atom.xml" title="RSS">RSS</a>
+							
+						</div>
+					</nav>
+				</header>				
+			</div>
+		</div>	
+		<div class="mid-col">
+			<div class="mid-col-container"> <div id="content" class="inner">
+<div itemscope itemtype="http://schema.org/Blog">
+
+
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-11-04T14:49:40+08:00" itemprop="datePublished">2025/11/04</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17622389809452.html" itemprop="url">
+		TCP 连接的建立</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+<h2><a id="%E5%88%9B%E5%BB%BA%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>创建连接</h2>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp.pcap">vm-1-tcp.pcap</a></p>
+<p><img src="media/17622389809452/17623353881103.png" alt="" /></p>
+<p>当时碰到个问题，在 vm-1 用 &quot;nc -k -l vm-1 9527&quot;，vm-2 连接 vm-1 时 vm-1 窗口收不到消息</p>
+<p>在两台 vm 里 hosts 文件加了对端的机器名和 ip</p>
+<pre><code class="language-plain_text">vm-1
+198.19.249.151 vm-2
+
+vm-2
+198.19.249.111 vm-1
+</code></pre>
+<p>vm-1 上抓包看下</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost.pcap">vm-1-tcp-nc-localhost.pcap</a></p>
+<p><img src="media/17622389809452/17623363981311.png" alt="" /></p>
+<p>在看 vm-1 监听的情况</p>
+<pre><code class="language-plain_text">sudo netstat -anpt
+</code></pre>
+<p><img src="media/17622389809452/17623364790719.png" alt="" /></p>
+<p>监听 127.0.0.1 去了，另外一块网卡没监听</p>
+<p><img src="media/17622389809452/17623365606789.png" alt="" /></p>
+<p>vm-2 发 syn 给 vm-1，vm-1 直接回了个 rst，然后 vm-1 根据 net.ipv4.tcp_syn_retries 不停的重试</p>
+<pre><code class="language-plain_text">sudo sysctl -a|grep net.ipv4.tcp_syn_retries
+net.ipv4.tcp_syn_retries = 6
+</code></pre>
+<p>但是我抓包发现会重传 10 次 共 11 个包</p>
+<p>再次抓包验证</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries.pcap">vm-1-tcp-nc-localhost-retries.pcap</a></p>
+<p><img src="media/17622389809452/17623427565466.png" alt="" /></p>
+<p>很奇怪，和 net.ipv4.tcp_syn_linear_timeouts=6 的现象不一样，正常只应该有 7 个包，一个正常 syn 和 6 个重试</p>
+<p>这时还有一个现象，正常来说 “指数退避” 应该是 1 2 4 8，但抓包前 4 次均是相隔 1s，第5个重试包才相隔 2s，根据这个现象和当前内核版本查询到</p>
+<p><a href="https://docs.kernel.org/networking/ip-sysctl.html">net.ipv4.tcp_syn_linear_timeouts</a></p>
+<pre><code class="language-plain_text">tcp_syn_linear_timeouts - INTEGER
+The number of times for an active TCP connection to retransmit SYNs with a linear backoff timeout before defaulting to an exponential backoff timeout. This has no effect on SYNACK at the passive TCP side.
+
+With an initial RTO of 1 and tcp_syn_linear_timeouts = 4 we would expect SYN RTOs to be: 1，1，1，1，1，2，4，... (4 linear timeouts，and the first exponential backoff using 2^0 * initial_RTO). Default: 4
+</code></pre>
+<p>这就对了，后面更改 net.ipv4.tcp_syn_linear_timeouts 在继续测试</p>
+<pre><code class="language-plain_text">sudo sysctl -w net.ipv4.tcp_syn_retries=6 net.ipv4.tcp_syn_linear_timeouts=1
+</code></pre>
+<p>正常是 10 次，现在应该是 7 次</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-nc-localhost-retries-syn-linear.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-nc-localhost-retries-syn-linear.pcap">vm-1-tcp-nc-localhost-retries-syn-linear.pcap</a></p>
+<p><img src="media/17622389809452/17623435601644.png" alt="" /></p>
+<pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
+</code></pre>
+<p><img src="media/17622389809452/17623436245867.png" alt="" /></p>
+<p>没错到7次自动停了</p>
+<p>后面改成 nc -k -l 192.168.139.111 9527 直接就通了</p>
+<h2><a id="%E8%A7%82%E6%B5%8Bsyn-sent" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 SYN_SENT</h2>
+<p>vm-1 使用 iptables drop vm-2 发来的 syn 包</p>
+<pre><code class="language-plain_text">sudo iptables -A INPUT -p tcp --dport 9527 -j DROP
+</code></pre>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-drop-9527.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-drop-9527.pcap">vm-1-tcp-iptables-drop-9527.pcap</a></p>
+<p><img src="media/17622389809452/17623444619210.png" alt="" /></p>
+<p>能看到这回是 tcp retransmission，重传了 10 次 依旧是这两个参数控制</p>
+<pre><code class="language-plain_text">net.ipv4.tcp_syn_retries
+net.ipv4.tcp_syn_linear_timeouts
+</code></pre>
+<p>能看到 vm-2 连接状态 SYN_SENT</p>
+<h2><a id="%E8%A7%82%E6%B5%8Bsyn-recv" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 SYN_RECV</h2>
+<p>需要在 vm-2 drop 从 vm-1 传过来的 SYN+ACK 包，这样 vm-2 收不到 SYN+ACK 就没办法回 ACK，vm-1 也没办法将三次握手完成</p>
+<pre><code class="language-plain_text">sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
+</code></pre>
+<p>改用 nmap 测试连接</p>
+<pre><code class="language-plain_text">sudo nmap -sS 192.168.139.111 -p 9527
+</code></pre>
+<p>vm-1 查看连接状态</p>
+<pre><code class="language-plain_text">while true;do sudo netstat -anpo|grep 9527;sleep 1;done
+</code></pre>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527.pcap">vm-1-tcp-iptables-vm2-drop-9527.pcap</a></p>
+<p><img src="media/17622389809452/17623452557499.png" alt="" /></p>
+<p>能看到 vm-2 &gt;(SYN) vm-1，vm-1 &gt;(SYN+ACK) vm-2，然后 vm-1 一直在重试，试了5次</p>
+<p>net.ipv4.tcp_synack_retries 默认是5</p>
+<pre><code class="language-plain_text">tcp_synack_retries - INTEGER
+Number of times SYNACKs for a passive TCP connection attempt will be retransmitted. Should not be higher than 255. Default value is 5, which corresponds to 31seconds till the last retransmission with the current initial RTO of 1second. With this the final timeout for a passive TCP connection will happen after 63seconds.
+</code></pre>
+<p>文中提到：<a href="https://en.wikipedia.org/wiki/SYN_flood">SYN FLOOD</a></p>
+<p>客户端发了 1 个 SYN 到服务端，如果客户端不响应那服务端就会重试 5 次，一台机器是 5 次如果机器多服务端资源很快就会被消耗</p>
+<p>文中提到：<strong>如果只使用 iptables 拦截第二次握手包的话，会导致源端协议栈 SYN 重传的，这样就没法测试 SYN+ACK 重传了。所以发送端在发完 SYN 包后不能有其他逻辑。nc 做不到只发送 SYN 包就退出，改用 nmap 来进行实验。</strong></p>
+<p>复现下 用 nc 然后抓包</p>
+<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-iptables-vm2-drop-9527-nc.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-connect/vm-1-tcp-iptables-vm2-drop-9527-nc.pcap">vm-1-tcp-iptables-vm2-drop-9527-nc.pcap</a></p>
+<p><img src="media/17622389809452/17623462984652.png" alt="" /></p>
+<p>果然 vm-2 在重传</p>
+<h2><a id="syn-queue" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>SYN Queue</h2>
+<p>借用下文中的图</p>
+<p><img src="media/17622389809452/17623467697593.jpg" alt="" /></p>
+<p>（图片来自：<a href="https://www.emqx.com/en/blog/emqx-performance-tuning-tcp-syn-queue-and-accept-queue%EF%BC%89">https://www.emqx.com/en/blog/emqx-performance-tuning-tcp-syn-queue-and-accept-queue）</a></p>
+<p>验证下半连接队列长度，修改相关的内核参数</p>
+<pre><code class="language-plain_text">sudo sysctl -w net.ipv4.tcp_syncookies=0 net.ipv4.tcp_max_syn_backlog=4 net.core.somaxconn=8
+</code></pre>
+<p>vm-2 测试</p>
+<pre><code class="language-plain_text">while true;do sudo nmap -sS 192.168.139.111 -p 9527;done
+</code></pre>
+<p>vm-1 查看状态，又和修改的内核参数对应不上</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep RECV
+tcp        0      0 192.168.139.111:9527    192.168.139.151:35013   SYN_RECV    -                    on (1.82/2/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:57984   SYN_RECV    -                    on (1.76/2/0)
+</code></pre>
+<p>半连接取值的规则是这样</p>
+<pre><code class="language-plain_text">min(backlog, net.core.somaxconn, net.ipv4.tcp_max_syn_backlog)
+</code></pre>
+<p>syn_backlog 和 somaxconn 设置的都不是 2，唯一有关系的就是 backlog，backlog没有改直接用的 nc</p>
+<pre><code class="language-plain_text">nc -k -l 192.168.139.111 9527
+</code></pre>
+<pre><code class="language-plain_text">$ sudo ss -anpt
+State     Recv-Q    Send-Q         Local Address:Port       Peer Address:Port   Process
+LISTEN    0         1            192.168.139.111:9527            0.0.0.0:*       users:((&quot;nc&quot;,pid=37710,fd=3))
+</code></pre>
+<p><a href="https://www.ibm.com/support/pages/whats-meaning-recv-q-and-send-q-netstat">关于 ss 的 Send-Q 解释</a></p>
+<p>High Send-Q means the data is put on TCP/IP send buffer, but it is not sent or it is sent but not ACKed</p>
+<p>表示数据在 tcp/ip 发送缓存中，但未发送或已发送但未 ack</p>
+<p>对比我们情况就是 vm-2 拦截了 vm-1 发过来的 syn+ack，未回复 ack</p>
+<p>也就是 nc 的 backlog 设置的是 1，server 的半连接队列只允许有1个等待</p>
+<p>用 go 写一个</p>
+<pre><code class="language-plain_text">package main
+
+import (
+	&quot;fmt&quot;
+	&quot;log&quot;
+	&quot;net&quot;
+	&quot;time&quot;
+)
+
+func main() {
+	fmt.Print(&quot;h&quot;)
+	conn，err := net.Listen(&quot;tcp4&quot;，&quot;0.0.0.0:9527&quot;)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+
+	log.Println(&quot;listen :9527 success&quot;)
+
+	for {
+		time.Sleep(time.Second * 10)
+	}
+}
+</code></pre>
+<pre><code class="language-plain_text">$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          8                    0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=37717,fd=4))
+</code></pre>
+<p>能看到 send-q 是 8，根据公示 min(backlog, net.core.somaxconn, net.ipv4.tcp_max_syn_backlog)，somaxconn 是 8，syn_backlog 是 4</p>
+<p>我们把内核参数恢复默认看下 go server 的默认 backlog</p>
+<pre><code class="language-plain_text">$ sudo sysctl -a|grep tcp_syncookies;sudo sysctl -a|grep max_syn_backlog;sudo sysctl -a|grep net.core.somaxconn
+net.ipv4.tcp_syncookies = 1
+net.ipv4.tcp_max_syn_backlog = 512
+net.core.somaxconn = 4096
+
+$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          4096                 0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=318,fd=4))
+</code></pre>
+<p>现在唯一的问题是最小应是4，通过 ss -anpt 查看显示是8，我们访问测试下，改完内核参数记得重新运行服务</p>
+<pre><code class="language-plain_text">$ while true;do sudo nmap -sS 192.168.139.111 -p 9527;done
+
+$ sudo ss -anpt
+State     Recv-Q     Send-Q         Local Address:Port         Peer Address:Port    Process
+LISTEN    0          8                    0.0.0.0:9527              0.0.0.0:*        users:((&quot;s&quot;,pid=344,fd=4))
+
+$ sudo netstat -anpo | grep SYN_RECV | wc -l
+4
+
+$ sudo ss -anpt|grep 9527
+LISTEN   0      8              0.0.0.0:9527         0.0.0.0:*     users:((&quot;s&quot;,pid=344,fd=4))
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:53165
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:33241
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:50404
+SYN-RECV 0      0      192.168.139.111:9527 192.168.139.151:46060
+</code></pre>
+<p>能看到队列里是4，那上面的就是取值问题</p>
+<p>netstat -s 能看到丢弃了多少 syn</p>
+<pre><code class="language-plain_text">$ sudo netstat -s | grep -E &quot;LISTEN|overflowed&quot;
+    85 SYNs to LISTEN sockets dropped
+</code></pre>
+<h2><a id="accept-queue" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Accept Queue</h2>
+<pre><code class="language-plain_text">全连接队列最大长度
+min(backlog, net.core.somaxconn)
+</code></pre>
+<p>vm-1</p>
+<pre><code class="language-plain_text">import socket
+import time
+
+def start_server(host, port, backlog):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen(backlog)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    start_server('192.168.139.111', 9527, 8)
+</code></pre>
+<p>vm-2</p>
+<pre><code class="language-plain_text">import socket
+import time
+
+def connect_and_hold(host, port, count):
+    cli_list = []
+    try:
+        for i in range(count):
+            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            cli.connect((host, port))
+            cli_list.append(cli)
+    except Exception as e:
+        print(f&quot;Failed to connect: {e}&quot;)
+
+    while True:
+        time.sleep(1)
+
+if __name__ == '__main__':
+    connect_and_hold('192.168.139.111', 9527, 10)
+</code></pre>
+<p>清理掉之前的 iptables 规则，分别启动测试</p>
+<pre><code class="language-plain_text">$ sudo netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    6 times the listen queue of a socket overflowed # 全连接丢弃的包
+    91 SYNs to LISTEN sockets dropped
+</code></pre>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        9      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      407/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54468   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54524   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54516   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54478   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54464   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54494   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54508   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54536   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:54496   ESTABLISHED -                    off (0.00/0/0)
+
+vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 192.168.139.151:54464   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54468   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54478   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54494   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54496   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54508   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54516   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54524   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:54536   192.168.139.111:9527    ESTABLISHED 33260/python3        off (0.00/0/0)
+tcp        0      1 192.168.139.151:54538   192.168.139.111:9527    SYN_SENT    33260/python3        on (0.81/7/0)
+</code></pre>
+<p>没错，vm-2 的第10个包 SYN_SENT 在重传</p>
+<p><strong>也就是全连接满了 半连接是不接收直接drop掉的</strong></p>
+<p>观测下全连接不满，半连接什么情况</p>
+<p>vm-2 的连接改成6</p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        6      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      463/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51454   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51402   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51440   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51426   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51418   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51450   ESTABLISHED -                    off (0.00/0/0)
+</code></pre>
+<p>vm-2 拦截 vm-1 过来的 syn+ack</p>
+<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
+
+$ nc 192.168.139.111 9527
+</code></pre>
+<p>vm-1 能看到这个 SYN_RECV 在重试，也就是进了半连接队列，因为 vm-2 拦截了 vm-1 过来的包，vm-2 不会给 vm-1 发送 ack，vm-1 就会一直重试</p>
+<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        6      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      463/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51454   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:40638   SYN_RECV    -                    on (12.04/4/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51402   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51440   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51426   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51418   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:51450   ESTABLISHED -                    off (0.00/0/0)
+</code></pre>
+<p><strong>当全连接没满，半连接是可以接收的</strong></p>
+<p>文中描述</p>
+<pre><code class="language-plain_text">net.ipv4.tcp_abort_on_overflow
+此值为 0 表示握手到第三步时全连接队列满时则扔掉客户端发过来的 ACK 包。但是客户端那边因为握手包已经发出，已经自动进入 ESTABLISHED 状态准备传输数据了。服务端丢弃了 ACK 包后这个链接还是处于 SYN_RECV 状态的（如果此时客户端发数据，服务端会直接丢弃。客户端就开始重传，此时的重传次数受内核的 net.ipv4.tcp_retries2 参数控制）；
+
+此值为 1 则直接给客户端发送 RST 包直接断开连接。
+
+这里强调下，这个参数只在半连接队列往全连接队列移动时才有效。而全连接队列已经满的情况下，内核的默认行为只是丢弃新的 SYN 包（而且目前没有参数可以控制这个行为），这会导致客户端 SYN 不断重传。
+</code></pre>
+<p>默认 net.ipv4.tcp_abort_on_overflow 是 0，要想测试很难，只在半连接向全连接移动时有效。</p>
+<p>另外握手到第三步，就是 vm-2 向 vm-1 发 ack，既要满足发送 ack 又要叫全连接是满的，也就是发送 syn+ack 时候全连接还没满，回 ack 时 vm-1 恰巧有一个比当前请求还快的握手，让 vm-1 的全连接队列满。</p>
+<p>我尝试在 vm-1 全连接队列满的时候，发送一个正常包到 vm-1，看看 vm-1 和 vm-2 的状态</p>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_abort_on_overflow.pcap --print
+</code></pre>
+<p><img src="media/17622389809452/17624093182775.png" alt="" /></p>
+<pre><code class="language-plain_text">vm-1
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        9      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      538/python3          off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56822   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56802   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56786   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56840   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56838   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56796   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56790   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56780   ESTABLISHED -                    off (0.00/0/0)
+tcp        0      0 192.168.139.111:9527    192.168.139.151:56818   ESTABLISHED -                    off (0.00/0/0)
+
+-----------------------------------------------------------------
+vm-2
+
+$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      1 192.168.139.151:42424   192.168.139.111:9527    SYN_SENT    33284/nc             on (1.58/6/0)
+tcp        0      0 192.168.139.151:56780   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56786   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56790   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56796   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56802   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56818   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56822   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56838   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      0 192.168.139.151:56840   192.168.139.111:9527    ESTABLISHED 33283/python3        off (0.00/0/0)
+tcp        0      1 192.168.139.151:56844   192.168.139.111:9527    SYN_SENT    33283/python3        on (48.94/7/0)
+</code></pre>
+<p>能看到 vm-1 建立9个连接后这边就停止了，没有 SYN_RECV，也就是全连接满了 半连接的请求直接被 drop</p>
+<p>而 vm-2 通过抓包能看到 56844 python 在发送 SYN_SENT</p>
+<p><img src="media/17622389809452/17624097018293.png" alt="" /></p>
+<p>nc 的 42424 也是，全部都在重试，试了7次，正常现象 我的 net.ipv4.tcp_syn_retries = 6 net.ipv4.tcp_syn_linear_timeouts = 1</p>
+<p><img src="media/17622389809452/17624097278656.png" alt="" /></p>
+<p>重传这里还能看到个现象：vm-1 使用 iptables 拒绝 vm-2 过来的 syn 包和全连接满了直接拒绝半连接反应的抓包是一样的，区别是一个是用户行为一个是系统行为</p>
+<p>我将 vm-1 重启内核参数恢复默认，又启动一个nginx，能看到默认半连接 511</p>
+<pre><code class="language-plain_text">$ sudo ss -lnt
+State     Recv-Q    Send-Q       Local Address:Port       Peer Address:Port    Process
+LISTEN    0         511                0.0.0.0:80              0.0.0.0:*
+LISTEN    0         511                   [::]:80                 [::]:*
+</code></pre>
+<p>这时候如果你的nginx无法处理连接，状况大致可分为几种</p>
+<ol>
+<li>监听了lo网卡，导致无法处理外部请求，访问会拒绝。客户端走tcp重试</li>
+<li>监听了正确的网卡，但有 iptables 或安全组等拦截。客户端走tcp重试</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接满了。系统级别直接drop连接</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接没满半连接也没满。但新机器上来就把内核参数改了，导致半连接过小，高并发情况下 系统基本指标都正常 这会让请求处理异常吗？（这一点存在疑问后面测试下）</li>
+<li>监听了正确的网卡 iptables 或安全组都放行，全连接没满半连接也没满。但这台机器的基本指标都异常比如CPU内存使用100%，这样全连接就会一直堆积 accept 很慢，导致半连接也满了。你的机器最终也就不可用了</li>
+</ol>
+<p>4 问题测试 会异常 从 server 观测到 vm-2 发送了大量的 tcp 重试，同时半连接队列从系统层又drop掉很多请求</p>
+<p>我发现这个抓包少了并不全，但也不碍事，系统层drop掉请求是对的</p>
+<p><img src="media/17622389809452/17624262484616.png" alt="" /></p>
+<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_syncookies=0 net.ipv4.tcp_max_syn_backlog=4 net.core.somaxconn=8
+net.ipv4.tcp_syncookies = 0
+net.ipv4.tcp_max_syn_backlog = 4
+net.core.somaxconn = 8
+</code></pre>
+<pre><code class="language-plain_text">vm-2
+
+$ wrk -t4 -c400 -d60s http://101.200.150.26
+</code></pre>
+<pre><code class="language-plain_text">$ netstat -anpo|grep -E &quot;Recv|80&quot;
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      28539/nginx: master  off (0.00/0/0)
+tcp        0    862 172.22.7.89:80          x.x.x.x:55481    ESTABLISHED 28540/nginx: worker  on (0.31/0/0)
+tcp        0    862 172.22.7.89:80          x.x.x.x:56121    ESTABLISHED 28541/nginx: worker  on (6.32/6/0)
+
+$ netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    5517 times the listen queue of a socket overflowed
+    78079 SYNs to LISTEN sockets dropped
+$ netstat -s|grep -E &quot;LISTEN|overflow&quot;
+    5517 times the listen queue of a socket overflowed
+    78388 SYNs to LISTEN sockets dropped
+</code></pre>
+<p>还能看到在tcp连接建立以后 nginx 也做了重传，同时 Send-Q 部分为 862 byte，通过抓包分析862 恰好是 tcp 层的 tcp segment len，这个请求是 server 发往 vm-2 的响应请求，server 发给了 vm-2 还在等待 vm-2 的 ack，所以能看到 Send-Q 是 862</p>
+<p><img src="media/17622389809452/17624258673307.png" alt="" /></p>
+<p><img src="media/17622389809452/17624257640262.png" alt="" /></p>
+<p>不设置内核参数，在压测下</p>
+<pre><code class="language-plain_text">tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w cloudserver-wrk-no-sysctl.pcap --print
+</code></pre>
+<p>这个包是全的</p>
+<p><img src="media/17622389809452/17624273202569.png" alt="" /></p>
+<p>再来看系统是否有drop请求，空的 netstat -s|grep -E &quot;LISTEN|overflow&quot; 过滤直接没有</p>
+<pre><code class="language-plain_text">TcpExt:
+    2 invalid SYN cookies received
+    10 resets received for embryonic SYN_RECV sockets
+    42 TCP sockets finished time wait in fast timer
+    273 packets rejected in established connections because of timestamp
+    19 delayed acks sent
+    Quick ack mode was activated 13960 times
+    630 packet headers predicted
+    64905 acknowledgments not containing data payload received
+    16255 predicted acknowledgments
+    TCPSackRecovery: 1741
+    18 congestion windows recovered without slow start after partial ack
+</code></pre>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-11-04T13:06:21+08:00" itemprop="datePublished">2025/11/04</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17622327813502.html" itemprop="url">
+		ssh 使用</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
+<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
+<p>~/.ssh/config</p>
+<pre><code class="language-plain_text"># 通过跳板机做转发
+Host beszel
+  Hostname localhost
+  User root
+  ProxyJump orange723
+  LocalForward 8090 localhost:8090
+
+Host *
+  IdentityAgent agent.sock
+  UserKnownHostsFile /dev/null
+  StrictHostKeyChecking no
+  ServerAliveInterval 15
+</code></pre>
+<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
+<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
+<p>client 会每隔多少s 发送一个 packet 到 server</p>
+<p>抓包看看</p>
+<p>no-time</p>
+<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
+<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
+<p>time</p>
+<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
+<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
+<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
+<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
+</code></pre>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-10-19T15:42:55+08:00" itemprop="datePublished">2025/10/19</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17608597754550.html" itemprop="url">
+		深入剖析 Kubernetes</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+<p>云计算已经蜕变成 虚拟机和账单</p>
+<p>改变一切的是 docker 镜像 解决了本地和云端环境一致的问题</p>
+<h2><a id="05" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>05</h2>
+<p>容器技术的核心功能，就是通过约束和修改进程的动态表现，从而为其创造出一个边界</p>
+<p>Cgroups技术是用来制造约束的主要手段，而Namespace技术则是用来修改进程视图的主要方法</p>
+<p>Docker 容器这个听起来玄而又玄的概念，实际上是在创建容器进程时，指定了这个进程所需要启用的一组 Namespace 参数。这样，容器就只能“看”到当前 Namespace 所限定的资源、文件、设备、状态，或者配置。而对于宿主机以及其他不相关的程序，它就完全看不到了。</p>
+<p>容器，其实是一种特殊的进程而已。</p>
+<h2><a id="06" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>06</h2>
+<p>容器是一个 “单进程” 模型</p>
+<p>一个正在运行的 Docker 容器，其实就是一个启用了多个 Linux Namespace 的应用进程，而这个进程能够使用的资源量，则受 Cgroups 配置的限制。</p>
+<h2><a id="07" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>07</h2>
+<p>rootfs</p>
+<h2><a id="08" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>08</h2>
+<p>默认情况下，Docker 会为你提供一个隐含的 ENTRYPOINT，即：/bin/sh -c。所以，在不指定 ENTRYPOINT 时，比如在我们这个例子里，实际上运行在容器里的完整进程是：/bin/sh -c &quot;python app.py&quot;，即 CMD 的内容就是 ENTRYPOINT 的参数。</p>
+<h2><a id="09" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>09</h2>
+<p>Kubernetes 项目的架构, 都由 Master 和 Node 两种节点组成，而这两种角色分别对应着控制节点和计算节点。</p>
+<p>其中，控制节点，即 Master 节点，由三个紧密协作的独立组件组合而成，它们分别是负责 API 服务的 kube-apiserver、负责调度的 kube-scheduler，以及负责容器编排的 kube-controller-manager。整个集群的持久化数据，则由 kube-apiserver 处理后保存在 Etcd 中。</p>
+<p>而计算节点上最核心的部分，则是一个叫作 kubelet 的组件。</p>
+<p>在 Kubernetes 项目中，kubelet 主要负责同容器运行时（比如 Docker 项目）打交道。而这个交互所依赖的，是一个称作 CRI（Container Runtime Interface）的远程调用接口，这个接口定义了容器运行时的各项核心操作，比如：启动一个容器需要的所有参数。</p>
+<p>而 kubelet 的另一个重要功能，则是调用网络插件和存储插件为容器配置网络和持久化存储。这两个插件与 kubelet 进行交互的接口，分别是 CNI（Container Networking Interface）和 CSI（Container Storage Interface）。</p>
+<p>运行在大规模集群中的各种任务之间，实际上存在着各种各样的关系。这些关系的处理，才是作业编排和管理系统最困难的地方。</p>
+<h2><a id="14" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>14</h2>
+<p>Pod 生命周期的变化，主要体现在 Pod API 对象的 Status 部分，这是它除了 Metadata 和 Spec 之外的第三个重要字段。其中，pod.status.phase，就是 Pod 的当前状态，它有如下几种可能的情况：</p>
+<ol>
+<li>Pending。这个状态意味着，Pod 的 YAML 文件已经提交给了 Kubernetes，API 对象已经被创建并保存在 Etcd 当中。但是，这个 Pod 里有些容器因为某种原因而不能被顺利创建。比如，调度不成功。</li>
+<li>Running。这个状态下，Pod 已经调度成功，跟一个具体的节点绑定。它包含的容器都已经创建成功，并且至少有一个正在运行中。</li>
+<li>Succeeded。这个状态意味着，Pod 里的所有容器都正常运行完毕，并且已经退出了。这种情况在运行一次性任务时最为常见。</li>
+<li>Failed。这个状态下，Pod 里至少有一个容器以不正常的状态（非 0 的返回码）退出。这个状态的出现，意味着你得想办法 Debug 这个容器的应用，比如查看 Pod 的 Events 和日志。</li>
+<li>Unknown。这是一个异常状态，意味着 Pod 的状态不能持续地被 kubelet 汇报给 kube-apiserver，这很有可能是主从节点（Master 和 Kubelet）间的通信出现了问题。</li>
+</ol>
+<p>更进一步地，Pod 对象的 Status 字段，还可以再细分出一组 Conditions。这些细分状态的值包括：PodScheduled、Ready、Initialized，以及 Unschedulable。它们主要用于描述造成当前 Status 的具体原因是什么。</p>
+<h2><a id="15" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>15</h2>
+<p>Kubernetes 支持的 Projected Volume 一共有四种：</p>
+<ol>
+<li>Secret；</li>
+<li>ConfigMap；</li>
+<li>Downward API；</li>
+<li>ServiceAccountToken。</li>
+</ol>
+<p>其实，Secret、ConfigMap，以及 Downward API 这三种 Projected Volume 定义的信息，大多还可以通过环境变量的方式出现在容器里。但是，通过环境变量获取这些信息的方式，不具备自动更新的能力。所以，一般情况下，我都建议你使用 Volume 文件的方式获取这些信息。</p>
+<p>而作为用户，你还可以通过设置 restartPolicy，改变 Pod 的恢复策略。除了 Always，它还有 OnFailure 和 Never 两种情况：</p>
+<ol>
+<li>Always：在任何情况下，只要容器不在运行状态，就自动重启容器；</li>
+<li>OnFailure: 只在容器 异常时才自动重启容器；</li>
+<li>Never: 从来不重启容器。</li>
+</ol>
+<p>只要记住如下两个基本的设计原理即可：</p>
+<ol>
+<li>只要 Pod 的 restartPolicy 指定的策略允许重启异常的容器（比如：Always），那么这个 Pod 就会保持 Running 状态，并进行容器重启。否则，Pod 就会进入 Failed 状态 。</li>
+<li>对于包含多个容器的 Pod，只有它里面所有的容器都进入异常状态后，Pod 才会进入 Failed 状态。在此之前，Pod 都是 Running 状态。此时，Pod 的 READY 字段会显示正常容器的个数</li>
+</ol>
+<p>livenessProbe 检查服务是否健康，状态是否为running<br />
+readnessProbe 是否能被Service使用</p>
+<p>PodPreset 可以写通用的字段，给pod用，只会更改pod，而不会修改deployment</p>
+<h2><a id="17" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>17</h2>
+<p><img src="media/17608597754550/17609368857215.jpg" alt="" /></p>
+<h2><a id="18" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>18</h2>
+<p>StatefulSet 的设计其实非常容易理解。它把真实世界里的应用状态，抽象为了两种情况：</p>
+<ol>
+<li>拓扑状态。这种情况意味着，应用的多个实例之间不是完全对等的关系。这些应用实例，必须按照某些顺序启动，比如应用的主节点 A 要先于从节点 B 启动。而如果你把 A 和 B 两个 Pod 删除掉，它们再次被创建出来时也必须严格按照这个顺序才行。并且，新创建出来的 Pod，必须和原来 Pod 的网络标识一样，这样原先的访问者才能使用同样的方法，访问到这个新 Pod。</li>
+<li>存储状态。这种情况意味着，应用的多个实例分别绑定了不同的存储数据。对于这些应用实例来说，Pod A 第一次读取到的数据，和隔了十分钟之后再次读取到的数据，应该是同一份，哪怕在此期间 Pod A 被重新创建过。这种情况最典型的例子，就是一个数据库应用的多个存储实例。</li>
+</ol>
+<p>StatefulSet 这个控制器的主要作用之一，就是使用 Pod 模板创建 Pod 的时候，对它们进行编号，并且按照编号顺序逐一完成创建工作。而当 StatefulSet 的“控制循环”发现 Pod 的“实际状态”与“期望状态”不一致，需要新建或者删除 Pod 进行“调谐”的时候，它会严格按照这些 Pod 编号的顺序，逐一完成这些操作。</p>
+<h2><a id="19" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>19</h2>
+<p>首先，StatefulSet 的控制器直接管理的是 Pod。这是因为，StatefulSet 里的不同 Pod 实例，不再像 ReplicaSet 中那样都是完全一样的，而是有了细微区别的。比如，每个 Pod 的 hostname、名字等都是不同的、携带了编号的。而 StatefulSet 区分这些实例的方式，就是通过在 Pod 的名字里加上事先约定好的编号。</p>
+<p>其次，Kubernetes 通过 Headless Service，为这些有编号的 Pod，在 DNS 服务器中生成带有同样编号的 DNS 记录。只要 StatefulSet 能够保证这些 Pod 名字里的编号不变，那么 Service 里类似于 web-0.nginx.default.svc.cluster.local 这样的 DNS 记录也就不会变，而这条记录解析出来的 Pod 的 IP 地址，则会随着后端 Pod 的删除和再创建而自动更新。这当然是 Service 机制本身的能力，不需要 StatefulSet 操心。</p>
+<p>最后，StatefulSet 还为每一个 Pod 分配并创建一个同样编号的 PVC。这样，Kubernetes 就可以通过 Persistent Volume 机制为这个 PVC 绑定上对应的 PV，从而保证了每一个 Pod 都拥有一个独立的 Volume。</p>
+<h2><a id="26" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>26</h2>
+<p>而在 Kubernetes 项目中，负责完成授权（Authorization）工作的机制，就是 RBAC：基于角色的访问控制（Role-Based Access Control）。</p>
+<p>如果你直接查看 Kubernetes 项目中关于 RBAC 的文档的话，可能会感觉非常复杂。但实际上，等到你用到这些 RBAC 的细节时，再去查阅也不迟。</p>
+<p>而在这里，我只希望你能明确三个最基本的概念。</p>
+<ol>
+<li>Role：角色，它其实是一组规则，定义了一组对 Kubernetes API 对象的操作权限。</li>
+<li>Subject：被作用者，既可以是“人”，也可以是“机器”，也可以是你在 Kubernetes 里定义的“用户”。</li>
+<li>RoleBinding：定义了“被作用者”和“角色”的绑定关系。</li>
+</ol>
+<h2><a id="33" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>33</h2>
+<p>Flannel 项目是 CoreOS 公司主推的容器网络方案。事实上，Flannel 项目本身只是一个框架，真正为我们提供容器网络功能的，是 Flannel 的后端实现。目前，Flannel 支持三种后端实现，分别是：</p>
+<ol>
+<li>VXLAN；</li>
+<li>host-gw；</li>
+<li>UDP。</li>
+</ol>
+<h2><a id="35" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>35</h2>
+<p>所谓 BGP，就是在大规模网络中实现节点路由信息共享的一种协议。</p>
+<p>Calico 项目的架构</p>
+<ol>
+<li>Calico 的 CNI 插件。这是 Calico 与 Kubernetes 对接的部分。</li>
+<li>Felix。它是一个 DaemonSet，负责在宿主机上插入路由规则（即：写入 Linux 内核的 FIB 转发信息库），以及维护 Calico 所需的网络设备等工作。</li>
+<li>BIRD。它就是 BGP 的客户端，专门负责在集群里分发路由规则信息。</li>
+</ol>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-02-23T22:26:50+08:00" itemprop="datePublished">2025/02/23</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17403208106259.html" itemprop="url">
+		容器实战高手课</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+<p>在容器中，1 号进程永远不会响应 SIGKILL 和 SIGSTOP 这两个特权信号；</p>
+<p>对于其他的信号，如果用户自己注册了 handler，1 号进程可以响应。</p>
+<p>SIGTERM 可以程序自己注册，所以 1 号进程是可以响应的</p>
+<h2><a id="02" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>02</h2>
+<p>进程 “活着” 的时候只有两个状态：运行态（TASK_RUNNING）和睡眠态（TASK_INTERRUPTIBLE，TASK_UNINTERRUPTIBLE）</p>
+<p>如果你想让容器里的进程避免过多僵尸进程，1需要限制容器的pids.max 是容器需要做的，2是程序的父进程要处理子进程进行回收</p>
+<p>进程退出会调用do_exit() 它有两个状态 EXIT_DEAD EXIT_ZOMBIE，僵尸进程会处于EXIT_ZOMBIE</p>
+<h2><a id="03" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>03</h2>
+<p>如何实现 graceful shutdown</p>
+<p>容器的第一个进程 也就是 init 进程，如果你做docker stop时 init进程收到的是 SIGTERM 你的进程注册了 SIGTERM 他就会自动退出，但是在容器里你的子进程收到的是 SIGKILL 这个signal是不允许被注册的，所以当你的init收到SIGTERM要转发给子进程让他们去退出</p>
+<h2><a id="08" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>08</h2>
+<p>通过查看 syslog 看是否有 oom-kill</p>
+<pre><code class="language-plain_text">grep -C 10 oom-kill syslog
+</code></pre>
+<p>系统总的可用页面数乘以进程的 OOM 校准值 oom_score_adj，再加上进程已经使用的物理页面数，计算出来的值越大，那么这个进程被 OOM Kill 的几率也就越大。</p>
+<p>要么调大内存，要么修bug</p>
+<h2><a id="09" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>09</h2>
+<p>在linux里 内存 rss 是程序真正使用的内存，page cache是文件缓存，当内存达到max时 也可以继续申请，会释放page的内存</p>
+<p>cgroup v2 memory.stat anon 是rss ，file是page cache</p>
+<h2><a id="11" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>11</h2>
+<p>overlayfs 就是 unionfs 的一种实现，overlayfs主要是给容器镜像使用，分为 lowerlay 和 upperlay 还有workerlay，lowerlay仅仅可读，一般写操作都放在 upperlay</p>
+<h2><a id="12" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>12</h2>
+<p>overlayfs 没有专门限制磁盘使用量的实现，如果你的磁盘是xfs是可以通过xfs的quota来限制，docker 自己也有磁盘使用限制</p>
+<h2><a id="15" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>15</h2>
+<p>容器中有些网络参数是默认继承宿主机，而有些是会写入默认值，所以当你需要变更网络参数时 要在你的程序没启动时进行修改，如果你的应用已经启动，变更后已经连接的tcp要重新连接才会生效，容器提供了 sysctl 来在容器里应用启动之前修改，这样就会是你想要的网络参数</p>
+<h2><a id="16" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>16</h2>
+<p>容器和宿主机网络通信是走docker0这个网卡，宿主机和容器是通过一对网卡pair来连接，容器pair-&gt;宿主机pai—&gt;docker0-&gt;eth0 转发</p>
+<h2><a id="19" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>19</h2>
+<p>其实 Linux capabilities 就是把 Linux root 用户原来所有的特权做了细化，可以更加细粒度地给进程赋予不同权限</p>
+<p>getcap $(which ping)<br />
+setcap -r $(which ping)</p>
+
+
+			
+			
+		</div>
+
+	</article>
+  
+
+</div>
+<nav id="pagenavi">
+	 <a class="prev" href="all_1.html">Prev</a>  
+	
+	<div class="center"><a href="archives.html">Blog Archives</a></div>
+
+</nav>
+
+</div>
+
+
+
+        </div>
+			<footer id="footer" class="inner">Copyright &copy; 2014
+Powered by <a target="_blank" href="http://www.mweb.im">MWeb</a> &nbsp;&nbsp; 
+Theme by <a href="http://shashankmehta.in/archive/2012/greyshade.html">Shashank Mehta</a>
+      </footer>
+		</div>
+	</div>
+
+
+<script>(n=>{"use strict";let s,r,e;const l=["cdn.jsdelivr.net","fastly.jsdelivr.net","gcore.jsdelivr.net","cdn.zenless.top","testingcf.jsdelivr.net"],t="//",i=l[0],o=Date.now(),a=2e3,c="jsdelivr-auto-fallback",f="/gh/PipecraftNet/jsdelivr-auto-fallback@main/empty.css?",d=e=>e&&e.includes(t+i),m=e=>e.replace(t+i,t+s),u=window.setTimeout,v=n.querySelectorAll.bind(n),b=()=>{let e,t;for(e of v('link[rel="stylesheet"]'))t=e.href,d(t)&&!t.includes(f)&&(e.href=m(t));for(e of v("script"))if(t=e.src,d(t)){const s=n.createElement("script");s.src=m(t),e.defer=!0,e.src="",e.before(s),e.remove()}for(e of v("img"))t=e.src,d(t)&&(e.src="",e.src=m(t));for(e of v("*[style]"))t=e.getAttribute("style"),d(t)&&e.setAttribute("style",m(t));for(e of v("style"))t=e.innerHTML,d(t)&&(e.innerHTML=m(t))},h=()=>{!e&&r&&s&&(console.warn(i+" is not available. Use "+s),e=!0,u(b,0),u(b,20),setInterval(b,500))},g=(()=>{try{return Object.assign({},JSON.parse(localStorage.getItem(c)||"{}"))}catch{return{}}})(),y=()=>{g.time=o,g.failed=!1,g.fastNode=null;for(const t of l)((e,t)=>{let s;const r=n.createElement("link"),l=e=>{s&&(clearTimeout(s),s=0,e||(r.href="data:text/css;base64,"),r.remove(),t(e))};s=u(l,a),r.addEventListener("error",()=>l(!1)),r.addEventListener("load",()=>l(!0)),r.rel="stylesheet",r.text="text/css",r.href=e+f+o,n.head.insertAdjacentElement("afterbegin",r)})("https://"+t,e=>{e||t!==i||(r=!0,g.failed=!0),e&&!s&&(s=t),e&&!g.fastNode&&(g.fastNode=t),h()});u(()=>{r&&!s&&(s=l[1],h()),localStorage.setItem(c,JSON.stringify(g))},a+100)};if(g.time&&o-g.time<36e5&&g.failed&&g.fastNode)r=!0,s=g.fastNode,h(),u(y,1e3);else if(n.head)y();else{const j=new MutationObserver(()=>{n.head&&(j.disconnect(),y())});j.observe(n,{childList:!0,subtree:!0})}})(document);</script>
+<style>.mweb-charts{background:#fff;}
+body{ box-sizing: border-box;
+    margin: 0 auto;}
+@media print{
+    pre, code, pre code {
+     overflow: visible !important;
+     white-space: pre-wrap !important;       /* css-3 */
+     white-space: -moz-pre-wrap !important;  /* Mozilla, since 1999 */
+     white-space: -pre-wrap !important;      /* Opera 4-6 */
+     white-space: -o-pre-wrap !important;    /* Opera 7 */
+     word-wrap: break-word !important;       /* Internet Explorer 5.5+ */
+    }
+    html,body{margin:0;padding:4px;}
+    .mweb-yaml{display:none;}
+}
+
+
+
+div.code-toolbar {
+  position: relative;
+}
+
+div.code-toolbar > .toolbar {
+  position: absolute;
+  z-index: 10;
+  top: .3em;
+  right: .2em;
+  transition: opacity 0.3s ease-in-out;
+  opacity: 0;
+}
+
+div.code-toolbar:hover > .toolbar {
+  opacity: 1;
+}
+
+/* Separate line b/c rules are thrown out if selector is invalid.
+   IE11 and old Edge versions don't support :focus-within. */
+div.code-toolbar:focus-within > .toolbar {
+  opacity: 1;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item {
+  display: inline-block;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a {
+  cursor: pointer;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > button {
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  line-height: normal;
+  overflow: visible;
+  padding: 0;
+  -webkit-user-select: none; /* for button */
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a,
+div.code-toolbar > .toolbar > .toolbar-item > button,
+div.code-toolbar > .toolbar > .toolbar-item > span {
+  color: inherit;
+  font-size: .8em;
+  padding: 4px .5em;
+  background: #f5f2f0;
+  background: rgba(224, 224, 224, 0.4);
+  box-shadow: 0 2px 0 0 rgba(0,0,0,0.2);
+  border-radius: .5em;
+}
+
+div.code-toolbar > .toolbar > .toolbar-item > a:hover,
+div.code-toolbar > .toolbar > .toolbar-item > a:focus,
+div.code-toolbar > .toolbar > .toolbar-item > button:hover,
+div.code-toolbar > .toolbar > .toolbar-item > button:focus,
+div.code-toolbar > .toolbar > .toolbar-item > span:hover,
+div.code-toolbar > .toolbar > .toolbar-item > span:focus {
+  color: inherit;
+  text-decoration: none;
+}
+</style><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><script>!function(){if("undefined"!=typeof Prism&&"undefined"!=typeof document){var e=[],t={},n=function(){};Prism.plugins.toolbar={};var a=Prism.plugins.toolbar.registerButton=function(n,a){var r;r="function"==typeof a?a:function(e){var t;return"function"==typeof a.onClick?((t=document.createElement("button")).type="button",t.addEventListener("click",(function(){a.onClick.call(this,e)}))):"string"==typeof a.url?(t=document.createElement("a")).href=a.url:t=document.createElement("span"),a.className&&t.classList.add(a.className),t.textContent=a.text,t},n in t?console.warn('There is a button with the key "'+n+'" registered already.'):e.push(t[n]=r)},r=Prism.plugins.toolbar.hook=function(a){var r=a.element.parentNode;var l=a.element.classList;if(l.contains('language-mermaid') || l.contains('language-echarts') || l.contains('language-plantuml')){return;} if(r&&/pre/i.test(r.nodeName)&&!r.parentNode.classList.contains("code-toolbar")){var o=document.createElement("div");o.classList.add("code-toolbar"),r.parentNode.insertBefore(o,r),o.appendChild(r);var i=document.createElement("div");i.classList.add("toolbar");var l=e,d=function(e){for(;e;){var t=e.getAttribute("data-toolbar-order");if(null!=t)return(t=t.trim()).length?t.split(/\s*,\s*/g):[];e=e.parentElement}}(a.element);d&&(l=d.map((function(e){return t[e]||n}))),l.forEach((function(e){var t=e(a);if(t){var n=document.createElement("div");n.classList.add("toolbar-item"),n.appendChild(t),i.appendChild(n)}})),o.appendChild(i)}};a("label",(function(e){var t=e.element.parentNode;if(t&&/pre/i.test(t.nodeName)&&t.hasAttribute("data-label")){var n,a,r=t.getAttribute("data-label");try{a=document.querySelector("template#"+r)}catch(e){}return a?n=a.content:(t.hasAttribute("data-url")?(n=document.createElement("a")).href=t.getAttribute("data-url"):n=document.createElement("span"),n.textContent=r),n}})),Prism.hooks.add("complete",r)}}();</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/toolbar/prism-toolbar.min.css"><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><style>div.code-toolbar > .toolbar > .toolbar-item > a, div.code-toolbar > .toolbar > .toolbar-item > button, div.code-toolbar > .toolbar > .toolbar-item > span {padding: 4px .5em; background: #f5f2f0; background: rgba(224, 224, 224, 0.4);}</style>
+
+<style type="text/css">
+figure{margin: 1em 0;padding: 0;}
+  figcaption{text-align:center;}
+
+/* PrismJS 1.14.0
+https://prismjs.com/download.html#themes=prism-coy&languages=markup+css+clike+javascript */
+/**
+ * prism.js Coy theme for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/tshedor/workshop-wp-theme (Example: http://workshop.kansan.com/category/sessions/basics or http://workshop.timshedor.com/category/sessions/basics);
+ * @author Tim  Shedor
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: black;
+  background: none;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+/* Code blocks */
+pre[class*="language-"] {
+  position: relative;
+  margin: .5em 0;
+  overflow: visible;
+  padding: 0;
+}
+pre[class*="language-"]>code {
+  position: relative;
+  border-left: 10px solid #358ccb;
+  box-shadow: -1px 0px 0px 0px #358ccb, 0px 0px 0px 1px #dfdfdf;
+  background-color: #fdfdfd;
+  background-image: linear-gradient(transparent 50%, rgba(69, 142, 209, 0.04) 50%);
+  background-size: 3em 3em;
+  background-origin: content-box;
+  background-attachment: local;
+}
+
+code[class*="language"] {
+  max-height: inherit;
+  height: inherit;
+  padding: 0 1em;
+  display: block;
+  overflow: auto;
+}
+
+/* Margin bottom to accomodate shadow */
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+  background-color: #fdfdfd;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+  margin-bottom: 1em;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+  position: relative;
+  padding: .2em;
+  border-radius: 0.3em;
+  color: #c92c2c;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: inline;
+  white-space: normal;
+}
+
+pre[class*="language-"]:before,
+pre[class*="language-"]:after {
+  content: '';
+  z-index: -2;
+  display: block;
+  position: absolute;
+  bottom: 0.75em;
+  left: 0.18em;
+  width: 40%;
+  height: 20%;
+  max-height: 13em;
+  box-shadow: 0px 13px 8px #979797;
+  -webkit-transform: rotate(-2deg);
+  -moz-transform: rotate(-2deg);
+  -ms-transform: rotate(-2deg);
+  -o-transform: rotate(-2deg);
+  transform: rotate(-2deg);
+}
+
+:not(pre) > code[class*="language-"]:after,
+pre[class*="language-"]:after {
+  right: 0.75em;
+  left: auto;
+  -webkit-transform: rotate(2deg);
+  -moz-transform: rotate(2deg);
+  -ms-transform: rotate(2deg);
+  -o-transform: rotate(2deg);
+  transform: rotate(2deg);
+}
+
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #7D8B99;
+}
+
+.token.punctuation {
+  color: #5F6364;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.function-name,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #c92c2c;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.function,
+.token.builtin,
+.token.inserted {
+  color: #2f9c0a;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.token.variable {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword,
+.token.class-name {
+  color: #1990b8;
+}
+
+.token.regex,
+.token.important {
+  color: #e90;
+}
+
+.language-css .token.string,
+.style .token.string {
+  color: #a67f59;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.token.important {
+  font-weight: normal;
+}
+
+.token.bold {
+  font-weight: bold;
+}
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.namespace {
+  opacity: .7;
+}
+
+@media screen and (max-width: 767px) {
+  pre[class*="language-"]:before,
+  pre[class*="language-"]:after {
+    bottom: 14px;
+    box-shadow: none;
+  }
+
+}
+
+/* Plugin styles */
+.token.tab:not(:empty):before,
+.token.cr:before,
+.token.lf:before {
+  color: #e0d7d1;
+}
+
+/* Plugin styles: Line Numbers */
+pre[class*="language-"].line-numbers.line-numbers {
+  padding-left: 0;
+}
+
+pre[class*="language-"].line-numbers.line-numbers code {
+  padding-left: 3.8em;
+}
+
+pre[class*="language-"].line-numbers.line-numbers .line-numbers-rows {
+  left: 0;
+}
+
+/* Plugin styles: Line Highlight */
+pre[class*="language-"][data-line] {
+  padding-top: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+}
+pre[data-line] code {
+  position: relative;
+  padding-left: 4em;
+}
+pre .line-highlight {
+  margin-top: 0;
+}
+
+pre[class*="language-"].line-numbers {
+    position: relative;
+    padding-left: 3.8em;
+    counter-reset: linenumber;
+}
+
+pre[class*="language-"].line-numbers > code {
+    position: relative;
+    white-space: inherit;
+}
+
+.line-numbers .line-numbers-rows {
+    position: absolute;
+    pointer-events: none;
+    top: 0;
+    font-size: 100%;
+    left: -3.8em;
+    width: 3em; /* works for line-numbers below 1000 lines */
+    letter-spacing: -1px;
+    border-right: 1px solid #999;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+    .line-numbers-rows > span {
+        pointer-events: none;
+        display: block;
+        counter-increment: linenumber;
+    }
+
+        .line-numbers-rows > span:before {
+            content: counter(linenumber);
+            color: #999;
+            display: block;
+            padding-right: 0.8em;
+            text-align: right;
+        }
+
+</style>
+  
+    
+
+
+</body>
+</html>
