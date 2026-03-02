@@ -120,6 +120,470 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
+				<time datetime="2026-03-02T15:45:21+08:00" itemprop="datePublished">2026/03/02</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17724375213917.html" itemprop="url">
+		consul + nomad + apisix</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<h2><a id="consul" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>consul</h2>
+<p>推荐看直播录制的视频，讲的很好 很轻松 <a href="https://www.youtube.com/watch?v=0H06VKvlTJQ&amp;list=PL81sUbsFNc5b8i2g2sB_tG-PuZxEdlDpK">Getting into HashiCorp Consul</a></p>
+<p>还有个生产部署推荐配置 <a href="https://developer.hashicorp.com/consul/tutorials/production-vms">production-vms</a></p>
+<p>推荐使用官方源直接安装 <a href="https://developer.hashicorp.com/consul/install">install</a> 配置文件和目录会直接配置好，无需自己规划</p>
+<pre><code class="language-plain_text"># 直接启动
+$ sudo consul agent -dev -bind 192.168.139.24 -client 0.0.0.0
+==&gt; Starting Consul agent...
+               Version: '1.22.5'
+            Build Date: '2026-02-26 11:50:53 +0000 UTC'
+               Node ID: '7da7829f-ccfd-2841-1805-540d3ee3c491'
+             Node name: 'consul'
+            Datacenter: 'dc1' (Segment: '&lt;all&gt;')
+                Server: true (Bootstrap: false)
+           Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, gRPC-TLS: 8503, DNS: 8600)
+          Cluster Addr: 192.168.139.130 (LAN: 8301, WAN: 8302)
+     Gossip Encryption: false
+      Auto-Encrypt-TLS: false
+           ACL Enabled: false
+     Reporting Enabled: false
+    ACL Default Policy: allow
+             HTTPS TLS: Verify Incoming: false, Verify Outgoing: false, Min Version: TLSv1_2
+              gRPC TLS: Verify Incoming: false, Min Version: TLSv1_2
+      Internal RPC TLS: Verify Incoming: false, Verify Outgoing: false (Verify Hostname: false), Min Version: TLSv1_2
+</code></pre>
+<p>获取服务状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/services
+{
+    &quot;consul&quot;: [],
+    &quot;nomad&quot;: [
+        &quot;serf&quot;,
+        &quot;rpc&quot;,
+        &quot;http&quot;
+    ],
+    &quot;nomad-client&quot;: [
+        &quot;http&quot;
+    ]
+}
+</code></pre>
+<p>获取单个服务详细状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/service/hello-world-servers
+[
+    {
+        &quot;ID&quot;: &quot;ff7990be-d401-8a26-3698-76ee6a04e0c5&quot;,
+        &quot;Node&quot;: &quot;nomad&quot;,
+        &quot;Address&quot;: &quot;192.168.139.24&quot;,
+        &quot;Datacenter&quot;: &quot;dc1&quot;,
+        &quot;TaggedAddresses&quot;: {
+            &quot;lan&quot;: &quot;192.168.139.24&quot;,
+            &quot;lan_ipv4&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan_ipv4&quot;: &quot;192.168.139.24&quot;
+        },
+        &quot;NodeMeta&quot;: {
+            &quot;consul-network-segment&quot;: &quot;&quot;,
+            &quot;consul-version&quot;: &quot;1.22.5&quot;
+        },
+        &quot;ServiceKind&quot;: &quot;&quot;,
+        &quot;ServiceID&quot;: &quot;_nomad-task-d6ec357a-55be-23b8-65ff-f95e01fd4170-group-servers-hello-world-servers-www&quot;,
+        &quot;ServiceName&quot;: &quot;hello-world-servers&quot;,
+        &quot;ServiceTags&quot;: [],
+        &quot;ServiceAddress&quot;: &quot;192.168.139.24&quot;,
+        &quot;ServiceTaggedAddresses&quot;: {
+            &quot;lan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            },
+            &quot;wan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            }
+        },
+        &quot;ServiceWeights&quot;: {
+            &quot;Passing&quot;: 1,
+            &quot;Warning&quot;: 1
+        },
+        &quot;ServiceMeta&quot;: {
+            &quot;external-source&quot;: &quot;nomad&quot;
+        },
+        &quot;ServicePort&quot;: 23747,
+        &quot;ServicePorts&quot;: null,
+        &quot;ServiceSocketPath&quot;: &quot;&quot;,
+        &quot;ServiceEnableTagOverride&quot;: false,
+        &quot;ServiceProxy&quot;: {
+            &quot;Mode&quot;: &quot;&quot;,
+            &quot;MeshGateway&quot;: {},
+            &quot;Expose&quot;: {}
+        },
+        &quot;ServiceConnect&quot;: {},
+        &quot;ServiceLocality&quot;: null,
+        &quot;CreateIndex&quot;: 32,
+        &quot;ModifyIndex&quot;: 32
+    }
+]
+</code></pre>
+<h2><a id="nomad" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nomad</h2>
+<p><a href="https://developer.hashicorp.com/nomad/tutorials/get-started/gs-install">install</a></p>
+<p><del>本地用的 orbstack，在 orb 创建虚拟机然后在里面部署 nomad，因为要调用 /var/run/docker.sock 不可能在装个 docker，直接把 mac 文件的 /var/run/docker.sock 做软链接拿到虚拟机里用了，虚拟机是可以直接访问 mac 文件的。</del></p>
+<p>直接在机器里重新装 docker，nomad 可以直接调用</p>
+<pre><code class="language-plain_text">$ sudo nomad agent -dev -bind 192.168.139.24 -network-interface=eth0
+$ export NOMAD_ADDR=http://localhost:4646
+</code></pre>
+<p><img src="media/17724375213917/17724446461001.png" alt="" /></p>
+<p>贴一个测试 job，会直接映射到主机端口，apisix 可直接访问到。</p>
+<pre><code class="language-plain_text">job &quot;hello-world&quot; {
+  # Specifies the datacenter where this job should be run
+  # This can be omitted and it will default to [&quot;*&quot;]
+  datacenters = [&quot;*&quot;]
+
+  meta {
+    # User-defined key/value pairs that can be used in your jobs.
+    # You can also use this meta block within Group and Task levels.
+    foo = &quot;bar&quot;
+  }
+
+  # A group defines a series of tasks that should be co-located
+  # on the same client (host). All tasks within a group will be
+  # placed on the same host.
+  group &quot;servers&quot; {
+
+    # Specifies the number of instances of this group that should be running.
+    # Use this to scale or parallelize your job.
+    # This can be omitted and it will default to 1.
+    count = 1
+
+    network {
+      port &quot;www&quot; {
+        to = 8001
+      }
+    }
+
+    service {
+      provider = &quot;consul&quot;
+      port     = &quot;www&quot;
+      address_mode = &quot;host&quot;
+    }
+
+    # Tasks are individual units of work that are run by Nomad.
+    task &quot;web&quot; {
+      # This particular task starts a simple web server within a Docker container
+      driver = &quot;docker&quot;
+
+      config {
+        image   = &quot;busybox:1&quot;
+        command = &quot;httpd&quot;
+        args    = [&quot;-v&quot;, &quot;-f&quot;, &quot;-p&quot;, &quot;${NOMAD_PORT_www}&quot;, &quot;-h&quot;, &quot;/local&quot;]
+        ports   = [&quot;www&quot;]
+      }
+
+      template {
+        data        = &lt;&lt;-EOF
+                      &lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+                      &lt;ul&gt;
+                        &lt;li&gt;Task: {{env &quot;NOMAD_TASK_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Group: {{env &quot;NOMAD_GROUP_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Job: {{env &quot;NOMAD_JOB_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Metadata value for foo: {{env &quot;NOMAD_META_foo&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Currently running on port: {{env &quot;NOMAD_PORT_www&quot;}}&lt;/li&gt;
+                      &lt;/ul&gt;
+                      EOF
+        destination = &quot;local/index.html&quot;
+      }
+
+      # Specify the maximum resources required to run the task
+      resources {
+        cpu    = 50
+        memory = 64
+      }
+    }
+  }
+}
+</code></pre>
+<h2><a id="apisix" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix</h2>
+<p><a href="https://apisix.apache.org/zh/docs/apisix/installation-guide/">install</a></p>
+<p>填加一个路由转发到 consul 中的 hello-world</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9180/apisix/admin/routes/1 -H &quot;X-API-KEY: edd1c9f034335f136f87ad84b625c8f1&quot; -X PUT -i -d '
+{
+    &quot;uri&quot;: &quot;/*&quot;,
+    &quot;upstream&quot;: {
+        &quot;service_name&quot;: &quot;hello-world-servers&quot;,
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;discovery_type&quot;: &quot;consul&quot;
+    }
+}'
+</code></pre>
+<h3><a id="admin-api" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>admin api</h3>
+<p>获取状态</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1|jq
+</code></pre>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2026-02-25T14:59:27+08:00" itemprop="datePublished">2026/02/25</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17720027672498.html" itemprop="url">
+		PPHC 测试</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
+<p>作者姓名:吕文翰<br />
+原始网站地址:<a href="https://pphc.lvwenhan.com">https://pphc.lvwenhan.com</a></p>
+<h2><a id="nginx%E5%92%8C-apache%E9%9D%99%E6%80%81%E5%9B%BE%E7%89%87" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nginx 和 apache 静态图片</h2>
+<p>文中看到一张静态图片 “Nginx 的性能是 Apache 的四倍”</p>
+<p>nginx 和 apache 均未更改配置，直接使用容器启动 根目录替换为一张图片。</p>
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-nginx -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/share/nginx/html/jovan.jpg:ro -d nginx:stable
+</code></pre>
+<pre><code class="language-plain_text">$ oha -n 10000 -c 4 --connect-to 'pphc-nginx.orb.local:80:192.168.215.2:80' --latency-correction --disable-keepalive http://pphc-nginx.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	5859.5672 ms
+  Slowest:	21.9470 ms
+  Fastest:	1.2468 ms
+  Average:	2.3418 ms
+  Requests/sec:	1706.6107
+
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	4.08 GiB
+
+Response time histogram:
+   1.247 ms [1]    |
+   3.317 ms [9547] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.387 ms [433]  |■
+   7.457 ms [9]    |
+   9.527 ms [2]    |
+  11.597 ms [2]    |
+  13.667 ms [2]    |
+  15.737 ms [1]    |
+  17.807 ms [0]    |
+  19.877 ms [1]    |
+  21.947 ms [2]    |
+
+Response time distribution:
+  10.00% in 1.8269 ms
+  25.00% in 1.9920 ms
+  50.00% in 2.2289 ms
+  75.00% in 2.5561 ms
+  90.00% in 2.9806 ms
+  95.00% in 3.2815 ms
+  99.00% in 3.9765 ms
+  99.90% in 7.9387 ms
+  99.99% in 21.8587 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.1799 ms, 0.0535 ms, 3.3844 ms
+  DNS-lookup:	0.0029 ms, 0.0010 ms, 0.4548 ms
+
+Status code distribution:
+  [200] 10000 responses
+</code></pre>
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-apache -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/local/apache2/htdocs/jovan.jpg:ro httpd
+</code></pre>
+<pre><code class="language-plain_text">oha -n 10000 -c 4 --connect-to 'pphc-apache.orb.local:80:192.168.215.3:80' --latency-correction --disable-keepalive http://pphc-apache.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	6991.0027 ms
+  Slowest:	22.5767 ms
+  Fastest:	1.4700 ms
+  Average:	2.7935 ms
+  Requests/sec:	1430.4100
+
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	3.42 GiB
+
+Response time histogram:
+   1.470 ms [1]    |
+   3.581 ms [9035] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.691 ms [904]  |■■■
+   7.802 ms [43]   |
+   9.913 ms [7]    |
+  12.023 ms [3]    |
+  14.134 ms [3]    |
+  16.245 ms [0]    |
+  18.355 ms [0]    |
+  20.466 ms [0]    |
+  22.577 ms [4]    |
+
+Response time distribution:
+  10.00% in 2.1455 ms
+  25.00% in 2.3568 ms
+  50.00% in 2.6547 ms
+  75.00% in 3.0646 ms
+  90.00% in 3.5604 ms
+  95.00% in 3.9060 ms
+  99.00% in 4.9914 ms
+  99.90% in 9.9304 ms
+  99.99% in 22.5364 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.2219 ms, 0.0607 ms, 2.7639 ms
+  DNS-lookup:	0.0044 ms, 0.0010 ms, 0.4934 ms
+
+Status code distribution:
+  [200] 10000 responses
+</code></pre>
+<p>能看到实际 nginx 和 apache 差别没那么大，或许是在特定年代的特殊情况，不过两次请求都有一个问题 “总会有几个请求处理时间过长，尽管大部分请求会很快完成”</p>
+<h2><a id="apisix-nomad-consul%E6%9E%B6%E6%9E%84%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix + nomad + consul 架构测试</h2>
+<p>文中说到 api 网关能玩出花来，本地弄了个 apisix，顺便结合 nomad 和 consul 测试下。</p>
+<p>先测试下 apisix，根据官方文档配置了个 route，通过 api 看看结果</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1 | jq
+{
+  &quot;total&quot;: 1,
+  &quot;list&quot;: [
+    {
+      &quot;key&quot;: &quot;/apisix/routes/00000000000000000015&quot;,
+      &quot;value&quot;: {
+        &quot;status&quot;: 1,
+        &quot;id&quot;: &quot;00000000000000000015&quot;,
+        &quot;enable_websocket&quot;: false,
+        &quot;update_time&quot;: 1772193933,
+        &quot;priority&quot;: 0,
+        &quot;name&quot;: &quot;getting-started-ip&quot;,
+        &quot;upstream&quot;: {
+          &quot;pass_host&quot;: &quot;pass&quot;,
+          &quot;tls&quot;: {
+            &quot;verify&quot;: false
+          },
+          &quot;nodes&quot;: [
+            {
+              &quot;priority&quot;: 0,
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;port&quot;: 80,
+              &quot;weight&quot;: 0
+            }
+          ],
+          &quot;type&quot;: &quot;roundrobin&quot;,
+          &quot;hash_on&quot;: &quot;vars&quot;,
+          &quot;checks&quot;: {
+            &quot;active&quot;: {
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;type&quot;: &quot;http&quot;,
+              &quot;healthy&quot;: {
+                &quot;http_statuses&quot;: [
+                  200
+                ],
+                &quot;interval&quot;: 1,
+                &quot;successes&quot;: 200
+              },
+              &quot;https_verify_certificate&quot;: false,
+              &quot;port&quot;: 80,
+              &quot;timeout&quot;: 2
+            }
+          },
+          &quot;scheme&quot;: &quot;http&quot;
+        },
+        &quot;methods&quot;: [
+          &quot;GET&quot;
+        ],
+        &quot;uri&quot;: &quot;/ip&quot;,
+        &quot;create_time&quot;: 1772193933
+      },
+      &quot;modifiedIndex&quot;: 16,
+      &quot;createdIndex&quot;: 16
+    }
+  ]
+}
+</code></pre>
+<p>直接将请求转发到 httpbin.org 了</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9080/ip
+{
+  &quot;origin&quot;: &quot;192.168.117.1, 185.220.238.225&quot;
+}
+</code></pre>
+<p>nomad 也是很有趣的服务管理部署应用，和 terraform 是同公司，它只是做服务管理 像服务发现这类就交给 consul 测试的话配置起来不复杂，我的想法是这样：用 consul 将 nomad 和 apisix 连通，consul 也能给 nomad 管理的容器做健康检查 服务发现，apisix 找上游服务器通过 consul。</p>
+<p>最简单的架构，此状态下最基础是 consul</p>
+<p><img src="media/17720027672498/design-1-1.png" alt="design-1" /></p>
+<p>配置过程可查看 <a href="17724375213917.html">consul + nomad + apisix</a></p>
+<p>最后结果如下</p>
+<pre><code class="language-plain_text">$ curl -s 127.0.0.1:9080
+&lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;Task: web&lt;/li&gt;
+  &lt;li&gt;Group: servers&lt;/li&gt;
+  &lt;li&gt;Job: hello-world&lt;/li&gt;
+  &lt;li&gt;Metadata value for foo: bar&lt;/li&gt;
+  &lt;li&gt;Currently running on port: 8001&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>如果要作为生产环境需要考虑的有很多，上面仅是测试</p>
+<ul>
+<li>consul 高可用，单独部署还是让 nomad 管理部署</li>
+<li>consul acl 策略，访问更安全</li>
+<li>nomad 的多机器</li>
+<li>nomad 网络，除了服务发现还有服务暴露，即使有 api 网关作为转发，要考虑各个容器间是二层转发还是三层 flannel/calico</li>
+<li>apisix 高可用，前提是 etcd 高可用，服务层是无状态的 容量不够横向扩展</li>
+</ul>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2026-01-16T11:04:56+08:00" itemprop="datePublished">2026/01/16</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17685326962696.html" itemprop="url">
+		Claude code 使用 Doubao-Seed-Code</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
+<p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
+<pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
+</code></pre>
+<p><a href="https://github.com/anthropics/claude-code">claude-code</a></p>
+<pre><code class="language-plain_text">$ curl -fsSL https://claude.ai/install.sh | bash
+
+                    or
+
+$ npm install -g @anthropic-ai/claude-code
+</code></pre>
+<h2><a id="doubao-seed-code" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Doubao-Seed-Code</h2>
+<ul>
+<li>登录火山云 - <a href="https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement">https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement</a></li>
+<li>生成 api 并开通 Doubao-Seed-Code 模型</li>
+<li>本地调用 claude-code-router，ccr ui 可打开页面控制</li>
+<li>添加供应商，doubao 的供应商部分选择 volcengine</li>
+<li>ccr ui 中设置 claude-code 文件路径</li>
+<li>重启 ccr</li>
+<li>本地执行 ccr code</li>
+</ul>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
 				<time datetime="2025-12-21T23:55:08+08:00" itemprop="datePublished">2025/12/21</time>
 			</div>
 			
@@ -193,405 +657,6 @@
 		<div class="entry-content" itemprop="articleBody">
 			
 			
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-12-17T21:51:14+08:00" itemprop="datePublished">2025/12/17</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17659794748401.html" itemprop="url">
-		uncloud 初体验</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<p><a href="https://uncloud.run/">uncloud</a></p>
-<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
-<p><a href="https://github.com/psviderski/uncloud/?tab=readme-ov-file#-quick-start">quick-start</a></p>
-<p>注意项：<br />
-- mac 上使用 1password 的 ssh-agent，需覆盖 SSH_AUTH_SOCK 变量<br />
-- 使用私钥登录要写全路径，不然执行 uc 会提示找不到私钥<br />
-- 多集群可通过指定上下文区分 -c, --context string<br />
-- 因为域名和 dns 原因，并未直接安装 caddy 和 dns</p>
-<pre><code class="language-plain_text">$ export SSH_AUTH_SOCK=~/Library/Group\ Containers/com.1password/t/agent.sock
-
-$ uc machine init root@example.com --name example-1 --no-caddy --no-dns
-</code></pre>
-<h2><a id="caddy-ingress" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>caddy ingress</h2>
-<ul>
-<li>使用 ip ssl</li>
-<li>caddy 仅为安装并配置 zerossl 签名证书</li>
-<li>路由划分放到 excalidraw，由于 ip ssl 的原因，个人测试不影响</li>
-</ul>
-<pre><code class="language-plain_text">$ cat certificate.crt ca_bundle.crt &gt; fullchain.crt
-</code></pre>
-<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/compose.yaml">caddy compose.yaml</a></p>
-<pre><code class="language-plain_text">services:
-  caddy:
-    image: docker.1ms.run/library/caddy:2.11
-    command: caddy run -c /config/Caddyfile
-    environment:
-      CADDY_ADMIN: unix//run/caddy/admin.sock
-    volumes:
-      - /root/caddy:/root/caddy # 此处是在服务器上存放 ssl 证书文件的路径，可以根据需要修改
-      - /var/lib/uncloud/caddy:/data
-      - /var/lib/uncloud/caddy:/config
-      - /run/uncloud/caddy:/run/caddy
-    x-ports:
-      - 80:80@host
-      - 443:443@host
-    deploy:
-      mode: global
-</code></pre>
-<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/README.runme">runme deploy</a></p>
-<h2><a id="excalidraw" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>excalidraw</h2>
-<ul>
-<li>/ 路径是 excalidraw</li>
-<li>/message 是 leave-a-message 服务</li>
-</ul>
-<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/compose.yaml">excalidraw compose.yaml</a></p>
-<pre><code class="language-plain_text">services:
-  excalidraw:
-    image: docker.1ms.run/excalidraw/excalidraw
-    x-caddy: |
-      :443 {
-          tls /root/caddy/fullchain.crt /root/caddy/private.key
-          
-          # excalidraw
-          reverse_proxy {{upstreams}} {
-              import common_proxy
-          }
-      
-          # leave-a-message static
-          handle /static/* {
-              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
-                  import common_proxy
-              }
-          }
-
-          # leave-a-message api
-          handle /api/* {
-              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
-                  import common_proxy
-              }
-          }
-      
-          # leave-a-message root pages
-          handle_path /message/* {
-              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
-                  import common_proxy
-              }
-          }
-      
-          log
-      }
-</code></pre>
-<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/README.runme">runme deploy</a></p>
-<h2><a id="leave-a-message" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>leave-a-message</h2>
-<p><a href="https://github.com/orange723/leave-a-message/blob/main/compose-uncloud.yml">leave-a-message compose-uncloud.yml</a></p>
-<pre><code class="language-plain_text">services:
-
-  message:
-    build:
-      context: .
-      platforms:
-        - linux/amd64
-    image: message:{{date &quot;20060102-150405&quot; &quot;Local&quot;}}
-    configs:
-      - source: app_config
-        target: /app/.env
-        mode: 0644
-
-  db:
-    image: docker.1ms.run/library/mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: message
-    x-ports:
-      - 3306:3306/tcp@host
-    volumes:
-      - mysql_data:/var/lib/mysql
-
-volumes:
-  mysql_data:
-
-configs:
-  app_config:
-    content: |
-      SERVER_HOST=0.0.0.0
-      SERVER_PORT=3000
-
-      ENABLE_LOGGER=true
-
-      MYSQL_USER=root
-      MYSQL_PASSWORD=12345678
-      MYSQL_HOST=db
-      MYSQL_DB=message
-</code></pre>
-<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>不用 Kubernetes 情况下，用 uncloud 基本可以平替，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
-<p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
-<p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
-
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-11-28T15:37:43+08:00" itemprop="datePublished">2025/11/28</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17643154634631.html" itemprop="url">
-		文章链接</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<p>放一些工作当中借鉴过的文档。</p>
-<h2><a id="devops" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>devops</h2>
-<p><a href="https://roadmap.sh/devops">roadmap devops</a></p>
-<p><a href="https://github.com/Pradumnasaraf/DevOps">learning devops</a></p>
-<p><a href="https://www.ruanyifeng.com/blog/2023/03/platform-engineering.html">运维的未来是平台工程</a></p>
-<p><a href="https://coolshell.cn/articles/17459.html">关于高可用的系统</a></p>
-<p><a href="https://www.cloudflare.com/zh-cn/learning/ddos/what-is-a-ddos-attack/">什么是 DDoS 攻击?</a></p>
-<p><a href="https://cloud.google.com/blog/topics/developers-practitioners/microservices-architecture-google-cloud">Microservices architecture on Google Cloud</a></p>
-<p><a href="https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port">Using SSH over the HTTPS port</a></p>
-<h2><a id="terraform" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>terraform</h2>
-<p><a href="https://bgiri-gcloud.medium.com/directory-structure-and-modules-terraform-on-gcp-organize-your-terraform-configurations-using-a-7d604b3da52b">Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and modules for different environments(Dev, Staging&amp;Prod).</a></p>
-<p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
-<h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
-<p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
-<p><a href="https://www.lifewire.com/layers-of-the-osi-model-illustrated-818017">The Layers of the OSI Model Illustrated</a></p>
-<h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
-<p><a href="https://samber.github.io/awesome-prometheus-alerts/rules">awesome-prometheus-alerts</a></p>
-<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
-<p><a href="https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands">iptables-essentials-common-firewall-rules-and-commands</a></p>
-<p><a href="https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/">Scripts I wrote that I use all the time</a></p>
-<p><a href="https://docs.runme.dev/usage/stdin">Working with Stdin, Stdout, and Stderr</a></p>
-<h2><a id="machine-price" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>machine price</h2>
-<p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
-
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-11-18T16:48:47+08:00" itemprop="datePublished">2025/11/18</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17634557278324.html" itemprop="url">
-		一个数据包的生命周期</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
-<p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
-<h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/packet.pcap">packet.pcap</a></p>
-<p><img src="media/17634557278324/17643195146767.png" alt="" /></p>
-<pre><code class="language-plain_text">$ curl -o /dev/null -v http://example.com
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host example.com:80 was resolved.
-* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
-* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
-*   Trying 23.215.0.136:80...
-* Connected to example.com (23.215.0.136) port 80
-&gt; GET / HTTP/1.1
-&gt; Host: example.com
-&gt; User-Agent: curl/8.5.0
-&gt; Accept: */*
-&gt;
-  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0&lt; HTTP/1.1 200 OK
-&lt; Content-Type: text/html
-&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
-&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
-&lt; Cache-Control: max-age=86000
-&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
-&lt; Content-Length: 513
-&lt; Connection: keep-alive
-&lt;
-{ [513 bytes data]
-100   513  100   513    0     0    418      0  0:00:01  0:00:01 --:--:--   418
-* Connection #0 to host example.com left intact
-</code></pre>
-<p>先是 dns 解析，知道 ip 后和 23.215.0.136:80 tcp 连接</p>
-<pre><code class="language-plain_text">* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
-* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
-*   Trying 23.215.0.136:80...
-</code></pre>
-<p>连接成功后发送 GET / 请求</p>
-<pre><code class="language-plain_text">&gt; GET / HTTP/1.1
-&gt; Host: example.com
-&gt; User-Agent: curl/8.5.0
-&gt; Accept: */*
-</code></pre>
-<p>example.com 回复 http 状态码 200，在通过抓包看本地机器 192.168.139.111 发起了 tcp 连接关闭</p>
-<pre><code class="language-plain_text">&lt; HTTP/1.1 200 OK
-&lt; Content-Type: text/html
-&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
-&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
-&lt; Cache-Control: max-age=86000
-&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
-&lt; Content-Length: 513
-&lt; Connection: keep-alive
-</code></pre>
-<h2><a id="%E7%BD%91%E7%BB%9C%E5%88%86%E5%B1%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>网络分层</h2>
-<p><img src="media/17634557278324/17643204166689.jpg" alt="" /></p>
-<p><img src="media/17634557278324/17643204810489.jpg" alt="" /></p>
-<p>图片来自：<a href="https://time.geekbang.org/column/article/846257">网络架构实战课</a></p>
-<h2><a id="%E7%A9%BF%E8%BF%87%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%B1%80%E5%9F%9F%E7%BD%91" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>穿过客户端局域网</h2>
-<p>一句话总结：同局域网 arp 查询 mac 直接发送，不同局域网路由发送</p>
-<p>计算下我的 ip 和 example.com 的 ip 在不在同一局域网</p>
-<pre><code class="language-plain_text">$ ifconfig
-eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
-        inet 192.168.139.111  netmask 255.255.255.0  broadcast 192.168.139.255
-        inet6 fd07:b51a:cc66:0:a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x0&lt;global&gt;
-        inet6 fe80::a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x20&lt;link&gt;
-        ether a2:db:de:a3:9c:b5  txqueuelen 1000  (Ethernet)
-        RX packets 46016  bytes 17701736 (17.7 MB)
-        RX errors 0  dropped 0  overruns 0  frame 0
-        TX packets 330  bytes 29500 (29.5 KB)
-        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-        
-# 128 64 32 16 8 4 2 1
-# 这里的对比是拿本机的子网掩码去和目的ip和本机ip对比，网络位相同则在同一网络
-        
-本机：192.168.139.111 子网掩码：255.255.255.0
-
-IP：         11000000.10101000.10001011.01101111
-子网掩码：     11111111.11111111.11111111.00000000
-按位与运算：    11000000.10101000.10001011.00000000
-网络位：        192.168.139.0
-
-example.com：23.215.0.136
-
-IP：          00010111.11010111.00000000.10001000
-子网掩码：      11111111.11111111.11111111.00000000
-按位与运算：     00010111.11010111.00000000.00000000
-网络位：         23.215.0.0
-</code></pre>
-<p>既然不在一定会走路由规则，能看到走 192.168.139.1 网关设备是 eth0</p>
-<pre><code class="language-plain_text">$ ip route get 23.215.0.136
-23.215.0.136 via 192.168.139.1 dev eth0 src 192.168.139.111 uid 501
-    cache
-</code></pre>
-<p>网关一定是和主机在同一网络，观察下 arp 是怎么工作的</p>
-<pre><code class="language-plain_text">$ sudo arp -d 192.168.139.1
-
-$ sudo tcpdump -s0 -X -nn &quot;arp&quot; -w arp.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/arp.pcap">arp.pcap</a></p>
-<p><img src="media/17634557278324/17643230353738.png" alt="" /></p>
-<pre><code class="language-plain_text">$ arp -n
-Address                  HWtype  HWaddress           Flags Mask            Iface
-192.168.139.1            ether   da:9b:d0:54:e0:02   C                     eth0
-</code></pre>
-<p>traceroute 查看也是一样，虽然解析的 ip 不同但不影响</p>
-<pre><code class="language-plain_text">$ sudo traceroute -n -I example.com
-traceroute to example.com (23.220.75.232), 30 hops max, 60 byte packets
- 1  192.168.139.1  0.036 ms  0.014 ms  0.005 ms
- 2  192.168.1.1  4.661 ms  4.647 ms  4.642 ms
- 3  * 100.101.0.1  12.028 ms *
- 4  * * *
- 5  * * *
- 6  * * *
- 7  * * *
- 8  * * *
- 9  * * *
-10  * * *
-11  * * *
-12  * * *
-13  * * *
-14  23.220.75.232  186.684 ms  186.577 ms  260.319 ms
-</code></pre>
-<p>推荐使用 <a href="https://github.com/nxtrace/NTrace-core">NextTrace</a></p>
-<p>在服务器上测试中间设备会响应 icmp 协议，可能是个人住址经过的设备屏蔽了 icmp</p>
-<pre><code class="language-plain_text">$ traceroute -I -n -m 50 example.com
-traceroute to example.com (23.220.75.245), 50 hops max, 60 byte packets
- 1  10.59.252.86  1.378 ms  1.446 ms  1.442 ms
- 2  11.73.60.253  1.937 ms * *
- 3  26.25.187.33  1.519 ms  1.529 ms  1.630 ms
- 4  10.216.220.118  3.104 ms  3.179 ms  3.160 ms
- 5  10.216.229.106  3.177 ms  3.178 ms  3.232 ms
- 6  * * *
- 7  * * *
- 8  * * *
- 9  * * *
-10  * * *
-11  * * *
-12  219.158.5.174  178.130 ms  178.125 ms  178.145 ms
-13  * * *
-14  154.54.77.53  162.103 ms  162.088 ms  162.185 ms
-15  154.54.63.70  157.864 ms  157.916 ms  157.911 ms
-16  154.54.47.165  238.095 ms  238.125 ms  243.526 ms
-17  154.54.169.178  260.650 ms  260.635 ms  260.638 ms
-18  154.54.29.134  249.462 ms  249.394 ms  248.589 ms
-19  154.54.40.249  249.505 ms  249.495 ms *
-20  154.54.165.26  247.671 ms  249.877 ms  250.234 ms
-21  154.54.166.58  251.909 ms  252.616 ms  252.628 ms
-22  154.54.44.86  254.282 ms  254.289 ms  254.572 ms
-23  154.54.27.118  250.352 ms  252.829 ms  252.919 ms
-24  38.104.84.101  236.554 ms  236.499 ms  236.548 ms
-25  218.30.54.6  242.952 ms  242.911 ms  242.916 ms
-26  * * *
-27  * * *
-28  * * *
-29  23.220.75.245  239.147 ms  236.590 ms  239.235 ms
-</code></pre>
-<h2><a id="%E6%8E%A8%E8%8D%90%E6%A1%88%E4%BE%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐案例</h2>
-<p>分析了下此篇文章的问题，很有趣 <a href="https://www.kawabangga.com/posts/7066">0.01% 的概率超时问题</a></p>
-<p>我的回答是：</p>
-<pre><code class="language-plain_text">两个包还有个区别
-
-正常的：server 会给 client 发 zerowindow 随后又发 window update，server 处理的慢但节奏在 server 这里。
-
-超时的：没看到窗口更新的包 都是 client 给 server 发送，2136 包到 2149包能看到重试 15次。
-
-要说 server 处理的慢，只看到一次超时后面全部正常，你说中间设备处理的有问题吧 它还只有0.01的超时概率
-</code></pre>
-<p>作者给了回复：</p>
-<pre><code class="language-plain_text">zero window 在这里其实是一个好的现象。
-
-数据进入的处理路径是：
-
-NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
-
-正常的：
-
-正是因为 kernel 处理的速度够快，才能填满 buffer，应用程序处理的不够快，导致 buffer 填满了，接收端发送 zero window 让发送端暂停发送。
-
-超时的：
-
-因为 kernel 处理的带宽（由于没有开启 LRO）变慢，导致无法填满 buffer，所以不会出现 zero window。同时，由于 NIC 收包比较快，很可呢是 kernel 处理不过来，导致了丢包。
-</code></pre>
-<p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
-<p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
-
 
 			
 			

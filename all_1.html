@@ -120,6 +120,644 @@
 	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
 		<div class="meta">
 			<div class="date">
+				<time datetime="2025-12-17T21:51:14+08:00" itemprop="datePublished">2025/12/17</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17659794748401.html" itemprop="url">
+		uncloud 初体验</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p><a href="https://uncloud.run/">uncloud</a></p>
+<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
+<p><a href="https://github.com/psviderski/uncloud/?tab=readme-ov-file#-quick-start">quick-start</a></p>
+<p>注意项：<br />
+- mac 上使用 1password 的 ssh-agent，需覆盖 SSH_AUTH_SOCK 变量<br />
+- 使用私钥登录要写全路径，不然执行 uc 会提示找不到私钥<br />
+- 多集群可通过指定上下文区分 -c, --context string<br />
+- 因为域名和 dns 原因，并未直接安装 caddy 和 dns</p>
+<pre><code class="language-plain_text">$ export SSH_AUTH_SOCK=~/Library/Group\ Containers/com.1password/t/agent.sock
+
+$ uc machine init root@example.com --name example-1 --no-caddy --no-dns
+</code></pre>
+<h2><a id="caddy-ingress" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>caddy ingress</h2>
+<ul>
+<li>使用 ip ssl</li>
+<li>caddy 仅为安装并配置 zerossl 签名证书</li>
+<li>路由划分放到 excalidraw，由于 ip ssl 的原因，个人测试不影响</li>
+</ul>
+<pre><code class="language-plain_text">$ cat certificate.crt ca_bundle.crt &gt; fullchain.crt
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/compose.yaml">caddy compose.yaml</a></p>
+<pre><code class="language-plain_text">services:
+  caddy:
+    image: docker.1ms.run/library/caddy:2.11
+    command: caddy run -c /config/Caddyfile
+    environment:
+      CADDY_ADMIN: unix//run/caddy/admin.sock
+    volumes:
+      - /root/caddy:/root/caddy # 此处是在服务器上存放 ssl 证书文件的路径，可以根据需要修改
+      - /var/lib/uncloud/caddy:/data
+      - /var/lib/uncloud/caddy:/config
+      - /run/uncloud/caddy:/run/caddy
+    x-ports:
+      - 80:80@host
+      - 443:443@host
+    deploy:
+      mode: global
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/caddy/README.runme">runme deploy</a></p>
+<h2><a id="excalidraw" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>excalidraw</h2>
+<ul>
+<li>/ 路径是 excalidraw</li>
+<li>/message 是 leave-a-message 服务</li>
+</ul>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/compose.yaml">excalidraw compose.yaml</a></p>
+<pre><code class="language-plain_text">services:
+  excalidraw:
+    image: docker.1ms.run/excalidraw/excalidraw
+    x-caddy: |
+      :443 {
+          tls /root/caddy/fullchain.crt /root/caddy/private.key
+          
+          # excalidraw
+          reverse_proxy {{upstreams}} {
+              import common_proxy
+          }
+      
+          # leave-a-message static
+          handle /static/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+
+          # leave-a-message api
+          handle /api/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+      
+          # leave-a-message root pages
+          handle_path /message/* {
+              reverse_proxy {{upstreams &quot;message&quot; 3000}} {
+                  import common_proxy
+              }
+          }
+      
+          log
+      }
+</code></pre>
+<p><a href="https://github.com/orange723/uncloud-compose/blob/main/excalidraw/README.runme">runme deploy</a></p>
+<h2><a id="leave-a-message" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>leave-a-message</h2>
+<p><a href="https://github.com/orange723/leave-a-message/blob/main/compose-uncloud.yml">leave-a-message compose-uncloud.yml</a></p>
+<pre><code class="language-plain_text">services:
+
+  message:
+    build:
+      context: .
+      platforms:
+        - linux/amd64
+    image: message:{{date &quot;20060102-150405&quot; &quot;Local&quot;}}
+    configs:
+      - source: app_config
+        target: /app/.env
+        mode: 0644
+
+  db:
+    image: docker.1ms.run/library/mysql:8.0
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345678
+      MYSQL_DATABASE: message
+    x-ports:
+      - 3306:3306/tcp@host
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
+
+configs:
+  app_config:
+    content: |
+      SERVER_HOST=0.0.0.0
+      SERVER_PORT=3000
+
+      ENABLE_LOGGER=true
+
+      MYSQL_USER=root
+      MYSQL_PASSWORD=12345678
+      MYSQL_HOST=db
+      MYSQL_DB=message
+</code></pre>
+<h2><a id="wireguard%E7%BB%84%E7%BD%91%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>wireguard 组网测试</h2>
+<p>没用 uncloud 之前也没用过 wireguard 看了下 uncloud 的 blog <a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/">connect-docker-containers-across-hosts-wireguard</a> 不是很复杂，想要测试下 wireguard 组网效果</p>
+<p>官方的图更直接</p>
+<p><img src="https://uncloud.run/assets/images/wireguard-overlay-7a728453ea899fe8b5ca48e88d9e4421.png" alt="" /></p>
+<p>整体流程是(括号1代表第一台机器，括号2代表第二台)</p>
+<p>docker bridge(1) -&gt; iptables(1) -&gt; wireguard(1) -&gt; wireguard(2) -&gt; iptables(2) -&gt; docker bridge(2)</p>
+<p>创建新的 bridge 网络，通过 iptables 将 bridge 网段流量转发到 wireguard，两台机器的 wireguard 之间做了 tunnel，另外一台机器的 wireguard 接收到流量通过 iptables 规则转发到 bridge 网络下的容器。</p>
+<p>我的环境</p>
+<p><img src="media/17659794748401/docker-wireguard.png" alt="docker-wireguard" /></p>
+<p>先提前互 ping 下，免的访问不了白测试</p>
+<pre><code class="language-plain_text"># Machine 1
+$ ping 74.48.78.11
+PING 74.48.78.11 (74.48.78.11) 56(84) bytes of data.
+64 bytes from 74.48.78.11: icmp_seq=1 ttl=48 time=189 ms
+64 bytes from 74.48.78.11: icmp_seq=2 ttl=48 time=181 ms
+
+# Machine 2
+$ ping 101.200.150.26
+PING 101.200.150.26 (101.200.150.26) 56(84) bytes of data.
+64 bytes from 101.200.150.26: icmp_seq=1 ttl=50 time=193 ms
+64 bytes from 101.200.150.26: icmp_seq=2 ttl=50 time=193 ms
+</code></pre>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network create --subnet 10.200.1.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+18ca4396c2977a987d3238f4a6b83d4dd3a0ceabad25c7c1f670a967c6b1cdef
+
+# Machine 2
+$ docker network create --subnet 10.200.2.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+04c3ec0b2eaba837c5e974bdc6c76ed4dda8c10349fd3cb75af3506b0e2bac63
+</code></pre>
+<pre><code class="language-plain_text"># 两边分别执行，确保云厂商方面安全组开通 51820
+$ iptables -I INPUT -p udp --dport 51820 -j ACCEPT
+# 安装 wireguard 生成配置
+$ apt update &amp;&amp; apt install wireguard
+$ umask 077
+$ wg genkey &gt; privatekey
+$ wg pubkey &lt; privatekey &gt; publickey
+</code></pre>
+<p>PrivateKey 填本机的，PublicKey 则要填对端的</p>
+<p>原文：</p>
+<p>PrivateKey = &lt;replace with 'privatekey' file content from Machine 1&gt;<br />
+PublicKey = &lt;replace with 'publickey' file content from Machine 2&gt;</p>
+<pre><code class="language-plain_text"># 生成 wg 配置
+# Machine 1
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = kKaGXES+s2mFVYTxEMN/KTJ0k/a0S9bv8JxeVz0bdnA=
+
+[Peer]
+PublicKey = Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.2.0/24
+# Public IP of Machine 2
+Endpoint = 74.48.78.11:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# Machine 2
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = MBLrCQ2eVCga+unX3IIKPSnyzsyh1SwkmRIkIryX+0k=
+
+[Peer]
+PublicKey = TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.1.0/24
+# Public IP of Machine 2
+Endpoint = 101.200.150.26:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# 分别启动
+$ wg-quick up wg0
+</code></pre>
+<p>查看 wg 状态</p>
+<pre><code class="language-plain_text"># Machine 1
+$ wg show
+interface: wg0
+  public key: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  private key: (hidden)
+  listening port: 51820
+
+peer: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  endpoint: 74.48.78.11:51820
+  allowed ips: 10.200.2.0/24
+  latest handshake: 45 seconds ago
+  transfer: 116.21 KiB received, 41.36 KiB sent
+  persistent keepalive: every 25 seconds
+  
+# Machine 2
+$ wg show
+interface: wg0
+  public key: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  private key: (hidden)
+  listening port: 51820
+
+peer: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  endpoint: 101.200.150.26:51820
+  allowed ips: 10.200.1.0/24
+  latest handshake: 1 minute, 4 seconds ago
+  transfer: 39.93 KiB received, 116.46 KiB sent
+  persistent keepalive: every 25 seconds
+</code></pre>
+<p>配置 iptables 规则，允许 wg 到 bridge 网络</p>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network ls -f name=multi-host
+NETWORK ID     NAME         DRIVER    SCOPE
+18ca4396c297   multi-host   bridge    local
+$ iptables -I DOCKER-USER -i wg0 -o br-18ca4396c297 -j ACCEPT
+
+# Machine 2
+$ docker network ls
+NETWORK ID     NAME         DRIVER    SCOPE
+e4613839f6f6   bridge       bridge    local
+f1954f4aff63   host         host      local
+04c3ec0b2eab   multi-host   bridge    local
+7fb9f0ad47ba   none         null      local
+$ iptables -I DOCKER-USER -i wg0 -o br-04c3ec0b2eab -j ACCEPT
+</code></pre>
+<p>最后配置下本机容器出网通过 wg 网卡的策略</p>
+<pre><code class="language-plain_text"># Machine 1
+$ iptables -t nat -I POSTROUTING -s 10.200.1.0/24 -o wg0 -j RETURN
+
+# Machine 2
+$ iptables -t nat -I POSTROUTING -s 10.200.2.0/24 -o wg0 -j RETURN
+</code></pre>
+<p>测试下互通性</p>
+<pre><code class="language-plain_text"># Machine 2
+$ docker run -d --name whoami --network multi-host traefik/whoami
+$ docker inspect b992403e1e4f|grep 10.200
+                    &quot;Gateway&quot;: &quot;10.200.2.1&quot;,
+                    &quot;IPAddress&quot;: &quot;10.200.2.2&quot;,
+                    
+# Machine 1
+$ docker run -it --rm --network multi-host busybox ping 10.200.2.2
+PING 10.200.2.2 (10.200.2.2): 56 data bytes
+64 bytes from 10.200.2.2: seq=0 ttl=62 time=194.198 ms
+64 bytes from 10.200.2.2: seq=1 ttl=62 time=190.275 ms
+64 bytes from 10.200.2.2: seq=2 ttl=62 time=198.435 ms
+64 bytes from 10.200.2.2: seq=3 ttl=62 time=196.896 ms
+64 bytes from 10.200.2.2: seq=4 ttl=62 time=197.444 ms
+^C
+--- 10.200.2.2 ping statistics ---
+6 packets transmitted, 5 packets received, 16% packet loss
+round-trip min/avg/max = 190.275/195.449/198.435 ms
+$ docker run -it --rm --network multi-host alpine/curl http://10.200.2.2
+Hostname: b992403e1e4f
+IP: 127.0.0.1
+IP: ::1
+IP: 10.200.2.2
+RemoteAddr: 10.200.1.2:60960
+GET / HTTP/1.1
+Host: 10.200.2.2
+User-Agent: curl/8.17.0
+Accept: */*
+</code></pre>
+<p>能看到互相通信没问题，就是延迟对比直 ping 会高一点点，毕竟本身两台机器就不近</p>
+<p>在 1 机器把 iptables 规则导出看看</p>
+<pre><code class="language-plain_text"># filter
+$ iptables -S -v
+-P INPUT ACCEPT -c 608049 168734434
+-P FORWARD DROP -c 0 0
+-P OUTPUT ACCEPT -c 0 0
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT
+-A FORWARD -c 270 22213 -j DOCKER-USER
+-A FORWARD -c 147 12070 -j DOCKER-FORWARD
+-A DOCKER ! -i docker0 -o docker0 -c 0 0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -c 0 0 -j DROP
+-A DOCKER-BRIDGE -o docker0 -c 0 0 -j DOCKER
+-A DOCKER-BRIDGE -o br-18ca4396c297 -c 0 0 -j DOCKER
+-A DOCKER-CT -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-CT -o br-18ca4396c297 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-CT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-INTERNAL
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-BRIDGE
+-A DOCKER-FORWARD -i docker0 -c 40 3360 -j ACCEPT
+-A DOCKER-FORWARD -i br-18ca4396c297 -c 107 8710 -j ACCEPT
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT
+
+# nat
+$ iptables -t nat -S -v
+-P PREROUTING ACCEPT -c 668150 42644933
+-P INPUT ACCEPT -c 0 0
+-P OUTPUT ACCEPT -c 7495 569953
+-P POSTROUTING ACCEPT -c 7501 570385
+-N DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL -c 667962 42630817 -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -c 0 0 -j DOCKER
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN
+-A POSTROUTING -s 10.200.1.0/24 ! -o br-18ca4396c297 -c 0 0 -j MASQUERADE
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -c 2 168 -j MASQUERADE
+</code></pre>
+<p>关键是这三条</p>
+<pre><code class="language-plain_text">-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT # 允许 wg 入网
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT # 允许 input 是 wg0 设备到 br-18ca4396c297 设备
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN # 从容器出网走 wg 然后转发出去
+</code></pre>
+<p>原文还说 DOCKER-USER 规则会优先 DOCKER 链处理，所以添加在 DOCKER-USER，以后在自定义容器规则可以参考，查询确实如此</p>
+<p><img src="media/17659794748401/17724308235955.png" alt="" /></p>
+<p>测试将 DOCKER-USER 的规则配置到 DOCKER rule 下也能正常工作，不过 docker 重启 DOCKER 里手动加的规则就会消失</p>
+<pre><code class="language-plain_text">$ iptables -I DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+$ iptables -S
+-P INPUT ACCEPT
+-P FORWARD DROP
+-P OUTPUT ACCEPT
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -j ACCEPT
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD
+-A DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+-A DOCKER ! -i docker0 -o docker0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -j DROP
+</code></pre>
+<p>原文也说了局限性，容器互相之间通过 ip 访问 没有服务发现，无法通过名称互相访问</p>
+<p><a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/#dns-resolution">DNS resolution</a></p>
+<pre><code class="language-plain_text">DNS resolution
+The main limitation of this setup is that containers can't find each other by name across machines. You need to use their IP addresses directly or implement a service discovery solution like Consul or CoreDNS.
+
+For small deployments, you can assign static IPs to containers and use those IPs in your app configuration. But service discovery is essential for larger and more dynamic deployments.
+</code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>不用 Kubernetes 情况下，用 uncloud 可以<del>平替</del>(平替谈不上，uncloud只是个多机管理容器的服务)测试玩玩，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>wireguard 这部分如果机器距离较远，该有的延迟不会变只是机器能互相通信，从稳定性上来说 服务器距离较远还是不建议组网，自己玩玩尚可，企业有需求不如直接用云厂商做 peer 或者像 gcp 那样各个区域本身就是通的，延迟低也不额外付费，只需规划好 ip 即可。</p>
+<p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
+<p>另外相比 uncloud 我觉得 <a href="https://www.hashicorp.com/en/products/nomad">nomad</a> 会更纯粹，只是负责容器管理 服务发现交给 <a href="https://www.hashicorp.com/en/products/consul">consul</a> 搭配 <a href="https://apisix.apache.org/">apisix</a> 网关，我觉得从管理和稳定性方面会更好。</p>
+<p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-11-28T15:37:43+08:00" itemprop="datePublished">2025/11/28</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17643154634631.html" itemprop="url">
+		文章链接</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p>放一些工作当中借鉴过的文档。</p>
+<h2><a id="devops" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>devops</h2>
+<p><a href="https://roadmap.sh/devops">roadmap devops</a></p>
+<p><a href="https://github.com/Pradumnasaraf/DevOps">learning devops</a></p>
+<p><a href="https://www.ruanyifeng.com/blog/2023/03/platform-engineering.html">运维的未来是平台工程</a></p>
+<p><a href="https://coolshell.cn/articles/17459.html">关于高可用的系统</a></p>
+<p><a href="https://www.cloudflare.com/zh-cn/learning/ddos/what-is-a-ddos-attack/">什么是 DDoS 攻击?</a></p>
+<p><a href="https://cloud.google.com/blog/topics/developers-practitioners/microservices-architecture-google-cloud">Microservices architecture on Google Cloud</a></p>
+<p><a href="https://docs.github.com/en/authentication/troubleshooting-ssh/using-ssh-over-the-https-port">Using SSH over the HTTPS port</a></p>
+<h2><a id="terraform" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>terraform</h2>
+<p><a href="https://bgiri-gcloud.medium.com/directory-structure-and-modules-terraform-on-gcp-organize-your-terraform-configurations-using-a-7d604b3da52b">Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and modules for different environments(Dev, Staging&amp;Prod).</a></p>
+<p><a href="https://terragrunt.gruntwork.io/">terragrunt</a></p>
+<h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
+<p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
+<p><a href="https://www.lifewire.com/layers-of-the-osi-model-illustrated-818017">The Layers of the OSI Model Illustrated</a></p>
+<p><a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/">uncloud network</a></p>
+<h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
+<p><a href="https://samber.github.io/awesome-prometheus-alerts/rules">awesome-prometheus-alerts</a></p>
+<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
+<p><a href="https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands">iptables-essentials-common-firewall-rules-and-commands</a></p>
+<p><a href="https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/">Scripts I wrote that I use all the time</a></p>
+<p><a href="https://docs.runme.dev/usage/stdin">Working with Stdin, Stdout, and Stderr</a></p>
+<p><a href="https://help.cloudcone.com/en-us/article/how-to-secure-your-server-from-abuse-and-prevent-ip-blacklisting-p4m1d0/#1-4-protect-any-services-you-run">How to secure your server from abuse and prevent IP blacklisting</a></p>
+<h2><a id="machine-price" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>machine price</h2>
+<p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
+<h2><a id="%E9%9D%A2%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>面试</h2>
+<p><a href="https://become-a-programmer.2baxb.me/cheng-wei-qiu-zhi-zhe/qiu-zhi-yu-jian-li">求职与简历</a></p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
+				<time datetime="2025-11-18T16:48:47+08:00" itemprop="datePublished">2025/11/18</time>
+			</div>
+			
+			 
+			
+		</div>
+		<h1 class="title" itemprop="name"><a href="17634557278324.html" itemprop="url">
+		一个数据包的生命周期</a></h1>
+		<div class="entry-content" itemprop="articleBody">
+			
+			<p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
+<p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
+<h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/packet.pcap">packet.pcap</a></p>
+<p><img src="media/17634557278324/17643195146767.png" alt="" /></p>
+<pre><code class="language-plain_text">$ curl -o /dev/null -v http://example.com
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host example.com:80 was resolved.
+* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
+* Connected to example.com (23.215.0.136) port 80
+&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt;
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
+&lt;
+{ [513 bytes data]
+100   513  100   513    0     0    418      0  0:00:01  0:00:01 --:--:--   418
+* Connection #0 to host example.com left intact
+</code></pre>
+<p>先是 dns 解析，知道 ip 后和 23.215.0.136:80 tcp 连接</p>
+<pre><code class="language-plain_text">* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
+</code></pre>
+<p>连接成功后发送 GET / 请求</p>
+<pre><code class="language-plain_text">&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+</code></pre>
+<p>example.com 回复 http 状态码 200，在通过抓包看本地机器 192.168.139.111 发起了 tcp 连接关闭</p>
+<pre><code class="language-plain_text">&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
+</code></pre>
+<h2><a id="%E7%BD%91%E7%BB%9C%E5%88%86%E5%B1%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>网络分层</h2>
+<p><img src="media/17634557278324/17643204166689.jpg" alt="" /></p>
+<p><img src="media/17634557278324/17643204810489.jpg" alt="" /></p>
+<p>图片来自：<a href="https://time.geekbang.org/column/article/846257">网络架构实战课</a></p>
+<h2><a id="%E7%A9%BF%E8%BF%87%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%B1%80%E5%9F%9F%E7%BD%91" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>穿过客户端局域网</h2>
+<p>一句话总结：同局域网 arp 查询 mac 直接发送，不同局域网路由发送</p>
+<p>计算下我的 ip 和 example.com 的 ip 在不在同一局域网</p>
+<pre><code class="language-plain_text">$ ifconfig
+eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.139.111  netmask 255.255.255.0  broadcast 192.168.139.255
+        inet6 fd07:b51a:cc66:0:a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x0&lt;global&gt;
+        inet6 fe80::a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether a2:db:de:a3:9c:b5  txqueuelen 1000  (Ethernet)
+        RX packets 46016  bytes 17701736 (17.7 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 330  bytes 29500 (29.5 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        
+# 128 64 32 16 8 4 2 1
+# 这里的对比是拿本机的子网掩码去和目的ip和本机ip对比，网络位相同则在同一网络
+        
+本机：192.168.139.111 子网掩码：255.255.255.0
+
+IP：         11000000.10101000.10001011.01101111
+子网掩码：     11111111.11111111.11111111.00000000
+按位与运算：    11000000.10101000.10001011.00000000
+网络位：        192.168.139.0
+
+example.com：23.215.0.136
+
+IP：          00010111.11010111.00000000.10001000
+子网掩码：      11111111.11111111.11111111.00000000
+按位与运算：     00010111.11010111.00000000.00000000
+网络位：         23.215.0.0
+</code></pre>
+<p>既然不在一定会走路由规则，能看到走 192.168.139.1 网关设备是 eth0</p>
+<pre><code class="language-plain_text">$ ip route get 23.215.0.136
+23.215.0.136 via 192.168.139.1 dev eth0 src 192.168.139.111 uid 501
+    cache
+</code></pre>
+<p>网关一定是和主机在同一网络，观察下 arp 是怎么工作的</p>
+<pre><code class="language-plain_text">$ sudo arp -d 192.168.139.1
+
+$ sudo tcpdump -s0 -X -nn &quot;arp&quot; -w arp.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/arp.pcap">arp.pcap</a></p>
+<p><img src="media/17634557278324/17643230353738.png" alt="" /></p>
+<pre><code class="language-plain_text">$ arp -n
+Address                  HWtype  HWaddress           Flags Mask            Iface
+192.168.139.1            ether   da:9b:d0:54:e0:02   C                     eth0
+</code></pre>
+<p>traceroute 查看也是一样，虽然解析的 ip 不同但不影响</p>
+<pre><code class="language-plain_text">$ sudo traceroute -n -I example.com
+traceroute to example.com (23.220.75.232), 30 hops max, 60 byte packets
+ 1  192.168.139.1  0.036 ms  0.014 ms  0.005 ms
+ 2  192.168.1.1  4.661 ms  4.647 ms  4.642 ms
+ 3  * 100.101.0.1  12.028 ms *
+ 4  * * *
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  * * *
+13  * * *
+14  23.220.75.232  186.684 ms  186.577 ms  260.319 ms
+</code></pre>
+<p>推荐使用 <a href="https://github.com/nxtrace/NTrace-core">NextTrace</a></p>
+<p>在服务器上测试中间设备会响应 icmp 协议，可能是个人住址经过的设备屏蔽了 icmp</p>
+<pre><code class="language-plain_text">$ traceroute -I -n -m 50 example.com
+traceroute to example.com (23.220.75.245), 50 hops max, 60 byte packets
+ 1  10.59.252.86  1.378 ms  1.446 ms  1.442 ms
+ 2  11.73.60.253  1.937 ms * *
+ 3  26.25.187.33  1.519 ms  1.529 ms  1.630 ms
+ 4  10.216.220.118  3.104 ms  3.179 ms  3.160 ms
+ 5  10.216.229.106  3.177 ms  3.178 ms  3.232 ms
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  219.158.5.174  178.130 ms  178.125 ms  178.145 ms
+13  * * *
+14  154.54.77.53  162.103 ms  162.088 ms  162.185 ms
+15  154.54.63.70  157.864 ms  157.916 ms  157.911 ms
+16  154.54.47.165  238.095 ms  238.125 ms  243.526 ms
+17  154.54.169.178  260.650 ms  260.635 ms  260.638 ms
+18  154.54.29.134  249.462 ms  249.394 ms  248.589 ms
+19  154.54.40.249  249.505 ms  249.495 ms *
+20  154.54.165.26  247.671 ms  249.877 ms  250.234 ms
+21  154.54.166.58  251.909 ms  252.616 ms  252.628 ms
+22  154.54.44.86  254.282 ms  254.289 ms  254.572 ms
+23  154.54.27.118  250.352 ms  252.829 ms  252.919 ms
+24  38.104.84.101  236.554 ms  236.499 ms  236.548 ms
+25  218.30.54.6  242.952 ms  242.911 ms  242.916 ms
+26  * * *
+27  * * *
+28  * * *
+29  23.220.75.245  239.147 ms  236.590 ms  239.235 ms
+</code></pre>
+<h2><a id="%E6%8E%A8%E8%8D%90%E6%A1%88%E4%BE%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐案例</h2>
+<p>分析了下此篇文章的问题，很有趣 <a href="https://www.kawabangga.com/posts/7066">0.01% 的概率超时问题</a></p>
+<p>我的回答是：</p>
+<pre><code class="language-plain_text">两个包还有个区别
+
+正常的：server 会给 client 发 zerowindow 随后又发 window update，server 处理的慢但节奏在 server 这里。
+
+超时的：没看到窗口更新的包 都是 client 给 server 发送，2136 包到 2149包能看到重试 15次。
+
+要说 server 处理的慢，只看到一次超时后面全部正常，你说中间设备处理的有问题吧 它还只有0.01的超时概率
+</code></pre>
+<p>作者给了回复：</p>
+<pre><code class="language-plain_text">zero window 在这里其实是一个好的现象。
+
+数据进入的处理路径是：
+
+NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
+
+正常的：
+
+正是因为 kernel 处理的速度够快，才能填满 buffer，应用程序处理的不够快，导致 buffer 填满了，接收端发送 zero window 让发送端暂停发送。
+
+超时的：
+
+因为 kernel 处理的带宽（由于没有开启 LRO）变慢，导致无法填满 buffer，所以不会出现 zero window。同时，由于 NIC 收包比较快，很可呢是 kernel 处理不过来，导致了丢包。
+</code></pre>
+<p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
+<p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
+
+
+			
+			
+		</div>
+
+	</article>
+ 
+	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+		<div class="meta">
+			<div class="date">
 				<time datetime="2025-11-17T12:30:27+08:00" itemprop="datePublished">2025/11/17</time>
 			</div>
 			
@@ -615,907 +1253,6 @@ Address                  HWtype  HWaddress           Flags Mask            Iface
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/flannel/node/flannel-1-hostgw-ping.pcap">flannel-1-hostgw-ping.pcap</a></p>
 <p><img src="media/17631942404298/17633752529419.png" alt="" /></p>
-
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-11-10T15:48:38+08:00" itemprop="datePublished">2025/11/10</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17627609182209.html" itemprop="url">
-		TCP 数据的发送和接收</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
-<h2><a id="tcp%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 超时重传</h2>
-<h3><a id="tcp%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E7%9A%84%E9%87%8D%E4%BC%A0" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 基于时间的重传</h3>
-<pre><code class="language-plain_text">vm-1
-
-$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-time-retries.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-send-receive-time-retries.pcap">vm-1-tcp-send-receive-time-retries.pcap</a></p>
-<p><img src="media/17627609182209/17627740747946.png" alt="" /></p>
-<p>当连接建立好后，vm-2 拦截 vm-1 发的包</p>
-<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
-</code></pre>
-<p>vm-1 发送数据</p>
-<pre><code class="language-plain_text">$ nc -k -l 192.168.139.111 9527
-abc
-abc
-abc
-
-$ while true;do sudo netstat -anpo|grep 9527|grep -v LISTEN; sleep 1;done
-...
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (3.14/15/0)
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (2.12/15/0)
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (1.10/15/0)
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (0.07/15/0)
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (0.00/15/0)
-tcp        0      4 192.168.139.111:9527    192.168.139.151:37506   ESTABLISHED 303/nc               on (0.00/15/0)
-</code></pre>
-<p>能看到重传了 15 次，但在抓包里看到了 16 个重传包</p>
-<pre><code class="language-plain_text">tcp_retries2 - INTEGER
-This value influences the timeout of an alive TCP connection, when RTO retransmissions remain unacknowledged. Given a value of N, a hypothetical TCP connection following exponential backoff with an initial RTO of TCP_RTO_MIN would retransmit N times before killing the connection at the (N+1)th RTO.
-
-The default value of 15 yields a hypothetical timeout of 924.6 seconds and is a lower bound for the effective timeout. TCP will effectively time out at the first RTO which exceeds the hypothetical timeout. If tcp_rto_max_ms is decreased, it is recommended to also change tcp_retries2.
-
-RFC 1122 recommends at least 100 seconds for the timeout, which corresponds to a value of at least 8.
-</code></pre>
-<p>第一个包其实不算做重传，而是对端在 rto 时间没有回复，然后触发重传</p>
-<blockquote>
-<p>47.086654-46.884133=0.202521</p>
-</blockquote>
-<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_retries2
-net.ipv4.tcp_retries2 = 15
-</code></pre>
-<p>文中对 RTT 和 RTO 的描述</p>
-<p>RTT（Round Trip Time）：指一个数据包从发出去到回来的时间<br />
-RTO（Retransmission TimeOut）：指的是重传超时的时间</p>
-<p>linux 中有 TCP_RTO_MIN 内核参数</p>
-<pre><code class="language-plain_text">tcp_rto_min_us - INTEGER
-Minimal TCP retransmission timeout (in microseconds). Note that the rto_min route option has the highest precedence for configuring this setting, followed by the TCP_BPF_RTO_MIN and TCP_RTO_MIN_US socket options, followed by this tcp_rto_min_us sysctl.
-
-The recommended practice is to use a value less or equal to 200000 microseconds.
-
-Possible Values: 1 - INT_MAX
-
-Default: 200000
-</code></pre>
-<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_rto_min_us
-net.ipv4.tcp_rto_min_us = 200000
-</code></pre>
-<p>具体的 rto 是根据 TCP_RTO_MIN 计算出的，也能查看到</p>
-<pre><code class="language-plain_text">$ sudo ss -tip|grep -A 1 9527
-ESTAB 0      0      192.168.139.111:9527 192.168.139.151:57060 users:((&quot;nc&quot;,pid=303,fd=4))
-	 cubic wscale:10,10 rto:201 rtt:0.078/0.039 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:10 segs_in:2 send 1.49Gbps lastsnd:21909 lastrcv:21909 lastack:21909 pacing_rate 2.97Gbps delivered:1 app_limited rcv_space:14480 rcv_ssthresh:64088 minrtt:0.078 snd_wnd:64512
-</code></pre>
-<p>当从 vm-1 发送数据到 vm-2 再次查看 rto，重试后会增加的</p>
-<pre><code class="language-plain_text">$ sudo ss -tip|grep -A 1 9527
-ESTAB 0      4      192.168.139.111:9527 192.168.139.151:57060 users:((&quot;nc&quot;,pid=303,fd=4))
-	 cubic wscale:10,10 rto:25728 backoff:7 rtt:0.078/0.039 ato:40 mss:1448 pmtu:1500 rcvmss:536 advmss:1448 cwnd:1 ssthresh:7 bytes_sent:36 bytes_retrans:32 bytes_received:4 segs_out:18 segs_in:11 data_segs_out:9 data_segs_in:9 send 149Mbps lastsnd:11529 lastrcv:42622 lastack:16135 pacing_rate 297Mbps delivered:1 app_limited busy:38299ms unacked:1 retrans:1/8 lost:1 rcv_space:14480 rcv_ssthresh:64088 minrtt:0.078 snd_wnd:64512
-</code></pre>
-<h3><a id="tcp%E5%BF%AB%E9%80%9F%E9%87%8D%E4%BC%A0" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 快速重传</h3>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-dupack3-wrong.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-send-receive-dupack3-wrong.pcap">vm-1-tcp-send-receive-dupack3-wrong.pcap</a></p>
-<p><img src="media/17627609182209/17628691876068.png" alt="" /></p>
-<p>确实能看到 TCP Fast Retransmission 但是和文章中确不一样，vm-1 的数据没发完 vm-2 就在发 TCP Dup ACK，在 fast 前已经发了 7 个 dup ack，根据 net.ipv4.tcp_reordering 默认是3，也就是发 3 次 dup ack 才会快速重传，一开始猜测是我本地两台虚拟机传输速度太快的原因，这里贴下 vm-1 server 和 vm-2 client 的代码</p>
-<p>测试前需要在 vm-2 drop 发送给 vm-1 的 rst 包</p>
-<pre><code class="language-plain_text">$ sudo iptables -A OUTPUT -p tcp --tcp-flags RST RST --dport 9527 -j DROP
-</code></pre>
-<pre><code class="language-plain_text">vm-1
-
-import socket
-import time
-
-def start_server(host, port, backlog):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen(backlog)
-    client, _ = server.accept()
-    client.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) # 禁用 Nagle 算法
-
-    client.sendall(b&quot;a&quot; * 1460)
-    time.sleep(0.1) # 避免协议栈合并包的方式，不严谨但是凑合能工作
-    client.sendall(b&quot;b&quot; * 1460)
-    time.sleep(0.1)
-    client.sendall(b&quot;c&quot; * 1460)
-    time.sleep(0.1)
-    client.sendall(b&quot;d&quot; * 1460)
-    time.sleep(0.1)
-    client.sendall(b&quot;e&quot; * 1460)
-    time.sleep(0.1)
-    client.sendall(b&quot;f&quot; * 1460)
-    time.sleep(0.1)
-    client.sendall(b&quot;g&quot; * 1460)
-
-    time.sleep(10000)
-
-
-if __name__ == '__main__':
-    start_server('192.168.139.111', 9527, 8)
-</code></pre>
-<p>后面将 vm-1 server 的 time.sleep(0.1) 注释，保持 iptables 规则，重新测试</p>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-dupack3.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-send-receive-dupack3.pcap">vm-1-tcp-send-receive-dupack3.pcap</a></p>
-<p><img src="media/17627609182209/17628695651893.png" alt="" /></p>
-<p>能看到这三个 TCP Dup ACK 的序列号全是 1566486280</p>
-<p><img src="media/17627609182209/17628697504120.png" alt="" /></p>
-<p><img src="media/17627609182209/17628697636399.png" alt="" /></p>
-<p><img src="media/17627609182209/17628698112776.png" alt="" /></p>
-<p>然后快速重传发送了 seq 为 1566486280 的包，这里和文中有一些不一样，我的抓包显示第 9 个包是 vm-2 回复了 ack 对应第 4 个发送数据的包。</p>
-<p>假如这时你断开 vm-1 的 server，你会发现 vm-1 和 vm-2 本来为 established 的状态变为 FIN1，但是 vm-1 还是在继续重传此时是基于 rto 的重传会发送 15 次，很 TCP。</p>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      698/python3          off (0.00/0/0)
-tcp        0   8760 192.168.139.111:9527    192.168.139.151:9528    ESTABLISHED 698/python3          on (108.19/12/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0   8761 192.168.139.111:9527    192.168.139.151:9528    FIN_WAIT1   -                    on (102.22/12/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0   8761 192.168.139.111:9527    192.168.139.151:9528    FIN_WAIT1   -                    on (82.74/12/0)
-</code></pre>
-<p>这里能看到快速重传和基于时间重传的差距</p>
-<p>快速</p>
-<p><img src="media/17627609182209/1.png" alt="1" /></p>
-<p>基于时间</p>
-<p><img src="media/17627609182209/2.png" alt="2" /></p>
-<p>在测试下，修改 net.ipv4.tcp_reordering</p>
-<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_reordering
-net.ipv4.tcp_reordering = 3
-
-$ sudo sysctl -w net.ipv4.tcp_reordering=1
-net.ipv4.tcp_reordering = 1
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -S -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-dupack1.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-send-receive-dupack1.pcap">vm-1-tcp-send-receive-dupack1.pcap</a></p>
-<p><img src="media/17627609182209/17628714961662.png" alt="" /></p>
-<h3><a id="tcp-selective-acknowledgment%EF%BC%88sack%EF%BC%89" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP Selective Acknowledgment（SACK）</h3>
-<pre><code class="language-plain_text">$ sudo tcpdump -S -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-scak.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-send-receive-scak.pcap">vm-1-tcp-send-receive-scak.pcap</a></p>
-<p><img src="media/17627609182209/17628736355188.png" alt="" /></p>
-<p>vm-2 的 iptables 规则还是要保持</p>
-<pre><code class="language-plain_text">vm-1
-
-$ nc -k -l 192.168.139.111 9527
-
-</code></pre>
-<pre><code class="language-plain_text">vm-2
-
-import time
-from scapy.all import *
-from scapy.layers.inet import *
-
-
-def main():
-    ip = IP(dst=&quot;192.168.139.111&quot;)
-
-    myself_seq = 1
-    tcp = TCP(sport=9528, dport=9527, flags='S', seq=myself_seq, options=[(&quot;SAckOK&quot;, '')])
-    print(&quot;send SYN, seq=0&quot;)
-    resp = sr1(ip/tcp, timeout=2)
-    if not resp:
-        print(&quot;recv timeout&quot;)
-        return
-
-    resp_tcp = resp[TCP]
-    if 'SA' in str(resp_tcp.flags):
-        recv_seq = resp_tcp.seq
-        recv_ack = resp_tcp.ack
-        print(f&quot;received SYN, seq={recv_seq}, ACK={recv_ack}&quot;)
-
-        myself_seq += 1
-        send_ack = recv_seq + 1
-        tcp = TCP(sport=9528, dport=9527, flags='A', seq=myself_seq, ack=send_ack)
-        print(f&quot;send ACK={send_ack}&quot;)
-        send(ip/tcp)
-
-        # 特意注释掉，让发的数据有空洞
-        # send data
-        # payload = b&quot;a&quot; * 10
-        # tcp = TCP(sport=9528, dport=9527, flags='A', seq=myself_seq, ack=send_ack)
-        # send(ip/tcp/payload)
-        myself_seq += 10
-
-        payload = b&quot;b&quot; * 10
-        tcp = TCP(sport=9528, dport=9527, flags='A', seq=myself_seq, ack=send_ack)
-        send(ip/tcp/payload)
-        myself_seq += 10
-
-        # 特意注释掉，让发的数据有空洞
-        # payload = b&quot;c&quot; * 10
-        # tcp = TCP(sport=9528, dport=9527, flags='A', seq=myself_seq, ack=send_ack)
-        # send(ip/tcp/payload)
-        myself_seq += 10
-
-        payload = b&quot;d&quot; * 10
-        tcp = TCP(sport=9528, dport=9527, flags='A', seq=myself_seq, ack=send_ack)
-        send(ip/tcp/payload)
-
-
-    elif 'R' in str(resp_tcp.flags):
-        print(f&quot;received RST&quot;)
-    else:
-        print(&quot;received different TCP flags&quot;)
-
-    time.sleep(100)
-
-
-if __name__ == &quot;__main__&quot;:
-    main()
-</code></pre>
-<p>这时 vm-2 是作为发送端，原文有些没法理解，问了 gpt 给出了关于发送数据空洞和 vm-1 发送的 sack 选项</p>
-<pre><code class="language-plain_text">“让数据有空洞”到底是什么意思（网络上发生了什么）
-
-普通 TCP 顺序数据到达时，接收端按序累计确认（cumulative ACK），ACK 的值是最后连续无缺口字节的下一个序号。
-
-当你不发送某些中间段（比如注释掉的 a、c），但发送了其后的段 b、d 时，接收端会收到 “out-of-order” 数据：它能接收并缓存 b、d，但不能推进累计 ACK，因为 a 缺失阻断了连续序列。
-
-若接收端支持 SACK，它会在返回的 ACK 中带上 SACK 选项，告知发送端“我已经收到了哪些非连续的块（例如 [seq_b, seq_b+9], [seq_d, seq_d+9]）”，从而允许发送端只重传缺失的块（a, c），而不用重传整条流。
-
-简短：你制造的“空洞”就是模拟中间包丢失 / 未发送 的场景，用来触发 SACK 的行为（接收端用 SACK 报告已收到的非连续数据块）。
-</code></pre>
-<p>结合抓包来看，vm-2 发送了第 4 个包 是个 ack，seq number 是 11，next seq number 应该是 21，第 6 个包 seq number 32，next seq number 是 41</p>
-<p><img src="media/17627609182209/17628743521665.png" alt="" /></p>
-<p><img src="media/17627609182209/17628743914016.png" alt="" /></p>
-<p>在分别看 5 和 7 包的 sack</p>
-<p><img src="media/17627609182209/17628745769433.png" alt="" /></p>
-<p><img src="media/17627609182209/17628745873608.png" alt="" /></p>
-<p>也就是缺失 0-10 和 21-30 的包，需要 vm-1 重新发送。</p>
-<p>这部分后面如果碰到不是模拟的场景，和缺失的场景对比下会更好。</p>
-<h2><a id="tcp%E7%AA%97%E5%8F%A3%E7%AE%A1%E7%90%86" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 窗口管理</h2>
-<h3><a id="%E9%BB%98%E8%AE%A4%E5%BC%80%E5%90%AFgsotso" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>默认开启 gso/tso</h3>
-<pre><code class="language-plain_text">$ sudo tcpdump -S -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-window-scale.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-window-scale.pcap">vm-1-tcp-window-scale.pcap</a></p>
-<p><img src="media/17627609182209/17629348846372.png" alt="" /></p>
-<p>不读数据的服务端和循环发送的客户端代码</p>
-<pre><code class="language-plain_text">vm-1
-
-import socket
-import time
-
-def start_server(host, port, backlog):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen(backlog)
-    client, _ = server.accept()
-    time.sleep(10000)
-
-
-if __name__ == '__main__':
-    start_server('192.168.139.111', 9527, 8)
-    
------------------------------------------------------------------
-vm-2
-
-import socket
-import time
-
-def start_client(host, port):
-    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((host, port))
-    client.setblocking(False)
-
-    send_size = 0
-    data = b&quot;a&quot; * 100000
-    while True:
-        try:
-            size = client.send(data)
-            if size &gt; 0:
-                send_size += size
-                print(f&quot;send_size: {send_size}&quot;)
-        except BlockingIOError:
-            time.sleep(0.1)
-            pass
-
-if __name__ == '__main__':
-    start_client('192.168.139.111', 9527)
-</code></pre>
-<p>能看到 vm-2 发的包基本都超过 mtu 大小，检查 generic-segmentation-offload/generic-receive-offload/tcp-segmentation-offload，vm-1 和 vm-2 是一样的。</p>
-<pre><code class="language-plain_text">$ sudo ethtool -k eth0|grep -E &quot;generic-segmentation-offload|generic-receive-offload&quot;
-generic-segmentation-offload: on
-generic-receive-offload: off
-
-$ sudo ethtool -k eth0|grep tcp-segmentation-offload
-tcp-segmentation-offload: on
-</code></pre>
-<p>gpt 解释如下，简单来说会把包合并发送</p>
-<table>
-<thead>
-<tr>
-<th>特性</th>
-<th>方向</th>
-<th>执行位置</th>
-<th>含义</th>
-<th>是否硬件相关</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>TSO (TCP Segmentation Offload)</strong></td>
-<td>发送</td>
-<td>网卡硬件</td>
-<td>TCP 大包分片由网卡完成</td>
-<td>✅ 硬件</td>
-</tr>
-<tr>
-<td><strong>GSO (Generic Segmentation Offload)</strong></td>
-<td>发送</td>
-<td>内核/驱动</td>
-<td>软件模拟 TSO 的功能</td>
-<td>⚙️ 软件</td>
-</tr>
-<tr>
-<td><strong>GRO (Generic Receive Offload)</strong></td>
-<td>接收</td>
-<td>内核/驱动</td>
-<td>把多个包合并成一个大的</td>
-<td>⚙️ 软件</td>
-</tr>
-</tbody>
-</table>
-<p>同时能看到 vm-1 的 Recv-Q 和 vm-2 的 Send-Q 都有堆积，这里恰好能和 <a href="17622389809452.html">TCP 连接的建立</a> 中最后的 nginx 实验部分关联上，云上的 nginx 发送给 vm-2 数据但 vm-2 还没回 ack，Send-Q 会有数值</p>
-<p>此代码是 vm-2 一直发送，vm-1 接收但不读取数据</p>
-<pre><code class="language-plain_text">vm-1
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      335/python3          off (0.00/0/0)
-tcp   123976      0 192.168.139.111:9527    192.168.139.151:45010   ESTABLISHED 335/python3          off (0.00/0/0)
-
------------------------------------------------------------------
-vm-2
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0 706624 192.168.139.151:45010   192.168.139.111:9527    ESTABLISHED 295/python3          probe (3.53/0/0)
-</code></pre>
-<h3><a id="%E5%85%B3%E9%97%ADgsotso" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>关闭 gso/tso</h3>
-<p>两边机器都关闭</p>
-<pre><code class="language-plain_text">$ sudo ethtool -K eth0 gso off
-$ sudo ethtool -K eth0 tso off
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -S -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-window-scale-disable-gso-tso.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-window-scale-disable-gso-tso.pcap">vm-1-tcp-window-scale-disable-gso-tso.pcap</a></p>
-<p><img src="media/17627609182209/17629356450091.png" alt="" /></p>
-<p>这回变正常了，数据该堆积还是堆积，不过有一点 关闭 gso/tso 后抓的包比未关闭要多将近 100 个左右，效率较低。</p>
-<h3><a id="%E7%AA%97%E5%8F%A3%E5%8F%98%E5%8C%96" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>窗口变化</h3>
-<pre><code class="language-plain_text">$ sudo tcpdump -S -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-window-scale-recv.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-send-receive/vm-1-tcp-window-scale-recv.pcap">vm-1-tcp-window-scale-recv.pcap</a></p>
-<p><img src="media/17627609182209/17629360656341.png" alt="" /></p>
-<p>变更服务端代码</p>
-<pre><code class="language-plain_text">import socket
-import time
-
-def start_server(host, port, backlog):
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.bind((host, port))
-    server.listen(backlog)
-    client, _ = server.accept()
-    client.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1) # 禁用 Nagle 算法
-
-    while True:
-        for i in range(5):
-            client.recv(4096)
-
-        time.sleep(1)
-
-
-if __name__ == '__main__':
-    start_server('192.168.139.111', 9527, 8)
-</code></pre>
-<p>感觉这个图表有助于理解，这里放下原文</p>
-<blockquote>
-<p>这里简单解释下这个图，X 轴是时间，Y 轴是 Sequence Number，绿色线是接收方的 window size，蓝色线是发送的包（捕获到的包），黄色的线是 ACK 过的 Sequence Number 值。那么从图上就可以看出来，每当接收方的 window size 增大的时候，立即就有包发送出去了。当 window size 为 0（线平了）的时候，发送立即就停止了。所以这个图告诉我们这个传输是接收方的瓶颈，是接收方通过 window size 的关闭对发送端进行了限流。</p>
-</blockquote>
-<p><img src="media/17627609182209/17629362279087.png" alt="" /></p>
-<p>这张图鼠标可点击的点更多，比如我这里点 x 轴的点，会直接跳转到对应的包 Frame 112 是 keep-alive 下一个包 113 是 TCP ZeroWindow，从 116 到 132 都是 vm-2 给 vm-1 发送数据 代表y 轴上升的线证明有数据发送，113-116 表示 vm-1 没有窗口接收了，参照代码正是读一会停一会，换到正常业务就是服务端处理的比较慢</p>
-<p><img src="media/17627609182209/17629367003651.png" alt="" /></p>
-<p><img src="media/17627609182209/17629368162530.png" alt="" /></p>
-<p><img src="media/17627609182209/17629368467841.png" alt="" /></p>
-<p>tcp window full - tcp 窗口已满<br />
-tcp zerowindow - 接收方无法处理更多数据<br />
-tcp window update - 有缓冲区可以处理，请继续发送</p>
-<p>110 号包到 116 是第一段 x 轴线平了未发送数据阶段，111 是 vm-1 告诉 vm-2 我无法接收更多数据，直到 115 vm-1 发送 window update，跟 vm-2 说你可以发送数据了。</p>
-<p><a href="https://milestone-of-se.nesuke.com/knowhow/wireshark/wireshark-tcp-window-zero-update-full/">wireshark-tcp-window-zero-update-full</a></p>
-<h2><a id="tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a><del>TCP 拥塞控制</del></h2>
-<p>此部分暂时不做测试，接触的较少。</p>
-
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-11-07T13:44:56+08:00" itemprop="datePublished">2025/11/07</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17624942962052.html" itemprop="url">
-		TCP 连接的关闭</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
-<h2><a id="%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>断开连接</h2>
-<p>同样 vm-2 连接 vm-1，然后 vm-2 做为客户端断开连接</p>
-<pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close.pcap">vm-1-tcp_close.pcap</a></p>
-<p><img src="media/17624942962052/17625124682457.png" alt="" /></p>
-<p>很正常的三次握手连接之后四次挥手关闭连接，一切正常</p>
-<p>在看 vm-2 上的连接状态，正常进入 TIME_WAIT 等待 2 * MSL 时间是 60s，没有重试就是在等待</p>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    ESTABLISHED 34043/nc             off (0.00/0/0)
-
-$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (57.43/0/0)
-
-$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (46.88/0/0)
-
-$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo|grep 9527
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:58966   192.168.139.111:9527    TIME_WAIT   -                    timewait (39.88/0/0)
-</code></pre>
-<h2><a id="%E7%9F%AD%E8%BF%9E%E6%8E%A5%E5%92%8Ctime-wait%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>短连接和 TIME_WAIT 状态</h2>
-<h3><a id="%E8%B0%83%E5%A4%A7tw-buckets%E5%85%B3%E9%97%AD-tw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>调大 tw_buckets 关闭 tw_reuse 测试</h3>
-<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000000
-net.ipv4.tcp_max_tw_buckets = 1000000
-
-$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
-net.ipv4.tcp_tw_reuse = 0
-</code></pre>
-<pre><code class="language-plain_text">$ cat loopconnect.py
-import socket
-
-def connect_and_immediately_disconnect(host, port, count):
-    try:
-        for i in range(count):
-            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            cli.connect((host, port))
-            cli.close()
-    except Exception as e:
-        print(f&quot;Failed to connect: {e}&quot;)
-
-if __name__ == '__main__':
-    connect_and_immediately_disconnect('192.168.139.111', 9527, 70000)
-</code></pre>
-<p>然后测试发现机器的 TIME_WAIT 到 5000 左右就上不去了，无法复现无可用地址的错误，尝试将参数缩小5倍，在将本地可用端口范围变小，能看到达到 233 个 TIME_WAIT 提示无可用地址</p>
-<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.ip_local_port_range=&quot;32768 33000&quot;
-net.ipv4.ip_local_port_range = 32768 33000
-
-$ python3 loopconnect.py
-Failed to connect: [Errno 99] Cannot assign requested address
-
-$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
-233
-</code></pre>
-<h3><a id="%E5%BC%80%E5%90%AFtw-reuse%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>开启 tw_reuse 测试</h3>
-<p>然后开启 net.ipv4.tcp_tw_reuse 参数，将本地可用端口扩大些</p>
-<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_tw_reuse net.ipv4.ip_local_port_range net.ipv4.tcp_max_tw_buckets
-net.ipv4.tcp_tw_reuse = 1
-net.ipv4.ip_local_port_range = 32768	38414
-net.ipv4.tcp_max_tw_buckets = 200000
-</code></pre>
-<p>查看 TIME_WAIT 数量，稳定在 2000 多，脚本正常跑完退出</p>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
-2287
-2301
-2303
-2303
-2269
-2291
-2292
-2322
-</code></pre>
-<h3><a id="%E5%85%B3%E9%97%ADtw-reuse%E4%BF%AE%E6%94%B9-tw-buckets%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>关闭 tw_reuse 修改 tw_buckets 测试</h3>
-<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_tw_reuse=0
-net.ipv4.tcp_tw_reuse = 0
-
-$ sudo sysctl -w net.ipv4.tcp_max_tw_buckets=1000
-net.ipv4.tcp_max_tw_buckets = 1000
-
-$ sudo netstat -anpo|grep 9527|grep timewait|wc -l
-1000
-1000
-1000
-</code></pre>
-<p>基本相同，TIME_WAIT 大部分是 1000，监测一会会出现 900 多的状况，我猜测是超过了 2 * MSL 后本地可用地址被释放出来，继续被使用 因为关闭了 tw_reuse 不会被重用，只会等待有可用的地址在继续使用</p>
-<p>连接脚本中是 14000 个连接，也就是有 11353 个连接没等待 TIME_WAIT 的 60s 直接被系统处理了</p>
-<pre><code class="language-plain_text">$ sudo netstat -s|grep TCPTimeWaitOverflow
-    TCPTimeWaitOverflow: 11353
-</code></pre>
-<h2><a id="%E8%A7%82%E6%B5%8Bfin1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN1</h2>
-<p>vm-2 连接 vm-1，连接后在 vm-1 drop vm-2 发送过来的 FIN，vm-2 发送一个 FIN 后就会进入 FIN1 状态</p>
-<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --dport 9527 --tcp-flags FIN FIN -j DROP
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin1.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin1.pcap">vm-1-tcp_close-iptables-fin1.pcap</a></p>
-<p><img src="media/17624942962052/17625154704413.png" alt="" /></p>
-<p>vm-2 向 vm-1 发送 FIN，vm-1 直接 drop，vm-2 因为收不到 vm-1 发送的 FIN+ACK 就会重传</p>
-<p>能看到 vm-2 的网络状态</p>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (2.52/4/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      1 192.168.139.151:37356   192.168.139.111:9527    FIN_WAIT1   -                    on (34.57/8/0)
-</code></pre>
-<p>这 9 次的重传受 net.ipv4.tcp_orphan_retries 影响，默认是 8</p>
-<pre><code class="language-plain_text">tcp_orphan_retries - INTEGER
-This value influences the timeout of a locally closed TCP connection, when RTO retransmissions remain unacknowledged. See tcp_retries2 for more details.
-
-The default value is 8.
-
-If your machine is a loaded WEB server, you should think about lowering this value, such sockets may consume significant resources. Cf. tcp_max_orphans.
-</code></pre>
-<h2><a id="%E8%A7%82%E6%B5%8Bfin2%E5%92%8C-last-ack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 FIN2 和 LAST_ACK</h2>
-<p>还是 vm-2 连接 vm-1 后，在 vm-2 使用 iptables 拦截 FIN，断开 vm-2的连接，FIN1 是 vm-2 发送 FIN 后直接就会进入 FIN1 状态，然后 vm-1 发送 ACK 过来 vm-2 就会进入 FIN2 状态，因为我们拦截了 FIN 所以就能观测到 vm-2 的 FIN2 和 vm-1 的 LAST_ACK</p>
-<pre><code class="language-plain_text">$ sudo iptables -A INPUT -p tcp --sport 9527 --tcp-flags FIN FIN -j DROP
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-fin2.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-fin2.pcap">vm-1-tcp_close-iptables-fin2.pcap</a></p>
-<p><img src="media/17624942962052/17625167883689.png" alt="" /></p>
-<p>能看到 vm-2 这个连接进入了 FIN2 状态，最后的值显示 timewait (多少s/0/0)，这个 s 是 60，通过 tcp_fin_timeout 控制，这并不是重传 就是 FIN2 的超时时间，过了 60s 连接就会消失</p>
-<pre><code class="language-plain_text">$ sudo sysctl -a|grep tcp_fin_timeout
-net.ipv4.tcp_fin_timeout = 60
-</code></pre>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (57.45/0/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:36456   192.168.139.111:9527    FIN_WAIT2   -                    timewait (54.12/0/0)
-</code></pre>
-<p>vm-1 的 LAST_ACK，能看到也是在重传 9 次</p>
-<pre><code class="language-plain_text">$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
-tcp        0      0 192.168.139.111:9527    192.168.139.151:36456   ESTABLISHED 1091/nc              off (0.00/0/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1091/nc              off (0.00/0/0)
-tcp        0      1 192.168.139.111:9527    192.168.139.151:36456   LAST_ACK    -                    on (23.09/7/0)
-</code></pre>
-<h2><a id="%E8%A7%82%E6%B5%8Bclose-wait" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>观测 CLOSE_WAIT</h2>
-<p>使用 python 连接</p>
-<pre><code class="language-plain_text">import socket
-
-c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-c.connect(('192.168.139.111', 9527))
-c.shutdown(socket.SHUT_WR)
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py.pcap">vm-1-tcp_close-iptables-closewait-py.pcap</a></p>
-<p><img src="media/17624942962052/17625175596738.png" alt="" /></p>
-<p>能看到 vm-2 发送 FIN 后进入 FIN1 状态，vm-2 回复 ACK 就结束了，vm-2 收到 ACK 会进入到 FIN2，而 vm-1 只发送 ACK 自己进入 CLOSE_WAIT</p>
-<p><del>同样 FIN2 等待 60s 后不进入 TIME_WAIT 直接结束状态</del> 此状态和文中是对不上的，发送请求后 vm-2 FIN2 会进入 60s 的等待时间，而文中确不会，目前能看到 vm-1 的 CLOSE_WAIT 是一直存在的</p>
-<pre><code class="language-plain_text">vm-2
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (55.39/0/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:34774   192.168.139.111:9527    FIN_WAIT2   -                    timewait (31.64/0/0)
-
------------------------------------------------------------------
-vm-1
-
-$ sudo netstat -anpo|grep 9527
-tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
-tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
-</code></pre>
-<p>修改 net.ipv4.tcp_fin_timeout 测试</p>
-<pre><code class="language-plain_text">$ sudo sysctl -w net.ipv4.tcp_fin_timeout=30
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap">vm-1-tcp_close-iptables-closewait-py-30s-timeout.pcap</a></p>
-<p><img src="media/17624942962052/17625184396227.png" alt="" /></p>
-<pre><code class="language-plain_text">vm-1
-
-$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        2      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1268/python3         off (0.00/0/0)
-tcp        1      0 192.168.139.111:9527    192.168.139.151:37626   CLOSE_WAIT  -                    off (0.00/0/0)
-tcp        1      0 192.168.139.111:9527    192.168.139.151:34774   CLOSE_WAIT  -                    off (0.00/0/0)
-
------------------------------------------------------------------
-vm-2
-
-$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.30/0/0)
-
-$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:37626   192.168.139.111:9527    FIN_WAIT2   -                    timewait (0.49/0/0)
-</code></pre>
-<p>看样子是没法豁免的，时间只会随着 net.ipv4.tcp_fin_timeout 变动，可能和内核也有关系贴一下我的系统内核</p>
-<pre><code class="language-plain_text">Linux vm-2 6.17.4-orbstack-00308-g195e9689a04f #1 SMP PREEMPT Fri Oct 24 07:22:34 UTC 2025 aarch64 aarch64 aarch64 GNU/Linux
-</code></pre>
-<h2><a id="%E8%BF%9E%E6%8E%A5%E4%BF%9D%E6%B4%BB" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>连接保活</h2>
-<p>默认 keepalive 相关参数</p>
-<pre><code class="language-plain_text">$ sudo sysctl net.ipv4.tcp_keepalive_time net.ipv4.tcp_keepalive_probes net.ipv4.tcp_keepalive_intvl
-net.ipv4.tcp_keepalive_time = 7200
-net.ipv4.tcp_keepalive_probes = 9
-net.ipv4.tcp_keepalive_intvl = 75
-</code></pre>
-<pre><code class="language-plain_text">import socket
-import time
-
-def connect_and_hold(host, port, count):
-    cli_list = []
-    try:
-        for i in range(count):
-            cli = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            cli.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            cli.connect((host, port))
-            cli_list.append(cli)
-    except Exception as e:
-        print(f&quot;Failed to connect: {e}&quot;)
-
-    while True:
-        time.sleep(1)
-
-if __name__ == '__main__':
-    connect_and_hold('192.168.139.111', 9527, 1)
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive.pcap">vm-1-tcp_close-vm-2-keepalive.pcap</a></p>
-<p><img src="media/17624942962052/17625859186424.png" alt="" /></p>
-<p>连接后没数据传输，vm-2 每隔 75s 给 vm-1 发送 TCP Keep-Alive，走的 net.ipv4.tcp_keepalive_intvl</p>
-<pre><code class="language-plain_text">vm-2
-
-$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (71.33/0/0)
-
-$ sudo netstat -anpo|grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        0      0 192.168.139.151:37118   192.168.139.111:9527    ESTABLISHED 25305/python3        keepalive (70.62/0/0)
-</code></pre>
-<p>叫 grok 改了 python 脚本</p>
-<pre><code class="language-plain_text">import socket
-import time  # 添加 time 模块以便暂停脚本查看连接状态
-
-c = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-c.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-# 设置 keepalive 参数：TCP_KEEPIDLE 为空闲时间（相当于 net.ipv4.tcp_keepalive_time），单位秒
-
-c.connect(('192.168.139.111', 9527))
-
-# 暂停脚本以便用 netstat -anpo 或 ss -anto 查看连接状态（会显示 keepalive timer 如 timer:keepalive (10.000 sec)）
-print(&quot;连接已建立，按 Enter 退出...&quot;)
-input()  # 或用 time.sleep(60) 自动等待 60 秒
-c.close()
-</code></pre>
-<pre><code class="language-plain_text">$ sudo sysctl -a|grep keep
-net.ipv4.tcp_keepalive_intvl = 20
-net.ipv4.tcp_keepalive_probes = 9
-net.ipv4.tcp_keepalive_time = 10
-</code></pre>
-<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close-vm-2-keepalive-10s.pcap --print
-</code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/tcp-close/vm-1-tcp_close-vm-2-keepalive-10s.pcap">vm-1-tcp_close-vm-2-keepalive-10s.pcap</a></p>
-<p><img src="media/17624942962052/17625901214384.png" alt="" /></p>
-<p>正常三次握手，然后 vm-2 发了 Keep-Alive vm-1 回复，3和4的包之间隔了 10s 也就是 net.ipv4.tcp_keepalive_time，然后 vm-1 和 vm-2 之间没发送数据，相隔 20s 第6个包 vm-2 发了 Keep-Alive 也就是 net.ipv4.tcp_keepalive_intvl，最后 vm-2 enter 直接断开 发了 FIN+ACK vm-1 回了 ACK 但是没回 FIN vm-1 状态就是 CLOSE_WAIT，vm-2 则是 FIN2 然后根据 fin_time 30s 过去就消失</p>
-<pre><code class="language-plain_text">vm-1
-
-$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
-tcp        0      0 192.168.139.111:9527    192.168.139.151:33360   ESTABLISHED -                    off (0.00/0/0)
-
-$ sudo netstat -anpo | grep -E &quot;Recv-Q|9527&quot;
-Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name     Timer
-tcp        1      0 192.168.139.111:9527    0.0.0.0:*               LISTEN      1692/python3         off (0.00/0/0)
-tcp        1      0 192.168.139.111:9527    192.168.139.151:33360   CLOSE_WAIT  -                    off (0.00/0/0)
-
------------------------------------------------------------------
-vm-2
-
-$ sudo netstat -anpo|grep 9527
-tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (7.38/0/0)
-
-$ sudo netstat -anpo|grep 9527
-tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    ESTABLISHED 27528/python3        keepalive (17.59/0/0)
-
-$ sudo netstat -anpo|grep 9527
-tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (26.96/0/0)
-
-$ sudo netstat -anpo|grep 9527
-tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   -                    timewait (23.06/0/0)
-
-</code></pre>
-<h2><a id="tcp-close%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP_CLOSE 状态</h2>
-<p>没找到合适的，自己画了个</p>
-<p><img src="media/17624942962052/tcp-close-1.png" alt="tcp-close" /></p>
-
-
-			
-			
-		</div>
-
-	</article>
- 
-	<article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
-		<div class="meta">
-			<div class="date">
-				<time datetime="2025-11-04T14:52:59+08:00" itemprop="datePublished">2025/11/04</time>
-			</div>
-			
-			 
-			
-		</div>
-		<h1 class="title" itemprop="name"><a href="17622391793233.html" itemprop="url">
-		机器初始化</a></h1>
-		<div class="entry-content" itemprop="articleBody">
-			
-			<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
-<pre><code class="language-plain_text">sudo apt update
-sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
-</code></pre>
-<h2><a id="cloud-init" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>cloud-init</h2>
-<pre><code class="language-plain_text">#cloud-config
-package_update: true
-package_upgrade: true
-
-packages:
-  - bridge-utils
-  - make
-  - cmake
-  - pkg-config
-  - build-essential
-  - wget
-  - net-tools
-  - inetutils-ping
-  - dnsutils
-  - vim
-  - unzip
-  - zip
-  - sysstat
-  - git
-  - iproute2
-  - ca-certificates
-  - telnet
-  - curl
-  - htop
-  - tcpdump
-  - gnupg
-  - lsb-release
-  - btrfs-progs
-  - libssl-dev
-  - m4
-  - gcc
-  - g++
-  - clang
-  - fuse
-  - tree
-  - iftop
-  - jq
-  - gpg
-  - man
-  - tmux
-  - traceroute
-  - ethtool
-  - lz4
-  - btop
-  - gh
-  - qemu-guest-agent
-  - supervisor
-
-bootcmd:
-  - mkdir -p /opt/docker/cadvisor
-  - mkdir -p /opt/docker/node_exporter
-
-write_files:
-  - path: /opt/docker/node_exporter/compose.yaml
-    owner: root:root
-    permissions: 0o755
-    defer: true
-    content: |
-      services:
-        node_exporter:
-          image: quay.io/prometheus/node-exporter:latest
-          container_name: node_exporter
-          command:
-            - '--web.listen-address=:10000'
-            - '--path.rootfs=/host'
-          network_mode: host
-          pid: host
-          restart: unless-stopped
-          volumes:
-            - '/:/host:ro,rslave'
-  
-  - path: /opt/docker/cadvisor/compose.yaml
-    owner: root:root
-    permissions: 0o755
-    content: |
-      services:
-        cadvisor:
-          image: gcr.io/cadvisor/cadvisor:latest
-          container_name: cadvisor
-          privileged: true
-          devices:
-            - /dev/kmsg:/dev/kmsg
-          volumes:
-            - /:/rootfs:ro
-            - /var/run:/var/run:ro
-            - /sys:/sys:ro
-            - /var/lib/docker/:/var/lib/docker:ro
-            - /dev/disk/:/dev/disk:ro
-          ports:
-            - &quot;10001:8080&quot;
-          restart: unless-stopped
-
-runcmd:
-  - install -m 0755 -d /etc/apt/keyrings
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  - chmod a+r /etc/apt/keyrings/docker.asc
-  - echo &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;) stable&quot; | tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
-  - apt update
-  - apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  - systemctl enable docker
-  - systemctl enable qemu-guest-agent
-  - systemctl start qemu-guest-agent
-  - systemctl start docker
-  - docker compose -f /opt/docker/node_exporter/compose.yaml up -d
-  - docker compose -f /opt/docker/cadvisor/compose.yaml up -d
-
-users:
-  - default
-  - name: orange723
-    sudo: &quot;ALL=(ALL) NOPASSWD:ALL&quot;
-    groups: sudo, sys, root, adm, docker
-    shell: /bin/bash
-    homedir: /home/orange723
-    lock_passwd: true
-    ssh_authorized_keys:
-      - ssh-ed25519 AAAAC
-
-no_ssh_fingerprints: true
-
-ssh:
-  emit_keys_to_console: false
-</code></pre>
 
 
 			

@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	ssh 使用 - orange723
+  	consul + nomad + apisix - orange723
   	
 	</title>
 
@@ -116,47 +116,195 @@
 			<div class="mid-col-container"> <div id="content" class="inner">
 
 	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">ssh 使用</h1>
+		<h1 class="title" itemprop="name">consul + nomad + apisix</h1>
 		<div class="entry-content" itemprop="articleBody">
-			<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
-<h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
-<p>/etc/ssh/sshd_config</p>
-<pre><code class="language-plain_text">UsePAM no
-PasswordAuthentication no
+			<h2><a id="consul" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>consul</h2>
+<p>推荐看直播录制的视频，讲的很好 很轻松 <a href="https://www.youtube.com/watch?v=0H06VKvlTJQ&amp;list=PL81sUbsFNc5b8i2g2sB_tG-PuZxEdlDpK">Getting into HashiCorp Consul</a></p>
+<p>还有个生产部署推荐配置 <a href="https://developer.hashicorp.com/consul/tutorials/production-vms">production-vms</a></p>
+<p>推荐使用官方源直接安装 <a href="https://developer.hashicorp.com/consul/install">install</a> 配置文件和目录会直接配置好，无需自己规划</p>
+<pre><code class="language-plain_text"># 直接启动
+$ sudo consul agent -dev -bind 192.168.139.24 -client 0.0.0.0
+==&gt; Starting Consul agent...
+               Version: '1.22.5'
+            Build Date: '2026-02-26 11:50:53 +0000 UTC'
+               Node ID: '7da7829f-ccfd-2841-1805-540d3ee3c491'
+             Node name: 'consul'
+            Datacenter: 'dc1' (Segment: '&lt;all&gt;')
+                Server: true (Bootstrap: false)
+           Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, gRPC-TLS: 8503, DNS: 8600)
+          Cluster Addr: 192.168.139.130 (LAN: 8301, WAN: 8302)
+     Gossip Encryption: false
+      Auto-Encrypt-TLS: false
+           ACL Enabled: false
+     Reporting Enabled: false
+    ACL Default Policy: allow
+             HTTPS TLS: Verify Incoming: false, Verify Outgoing: false, Min Version: TLSv1_2
+              gRPC TLS: Verify Incoming: false, Min Version: TLSv1_2
+      Internal RPC TLS: Verify Incoming: false, Verify Outgoing: false (Verify Hostname: false), Min Version: TLSv1_2
 </code></pre>
-<p>/etc/ssh/sshd_config.d/50-cloud-init.conf</p>
-<pre><code class="language-plain_text"># 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
-PasswordAuthentication yes
+<p>获取服务状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/services
+{
+    &quot;consul&quot;: [],
+    &quot;nomad&quot;: [
+        &quot;serf&quot;,
+        &quot;rpc&quot;,
+        &quot;http&quot;
+    ],
+    &quot;nomad-client&quot;: [
+        &quot;http&quot;
+    ]
+}
 </code></pre>
-<p>有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。</p>
-<p>如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目录</p>
-<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
-<p>~/.ssh/config</p>
-<pre><code class="language-plain_text"># 通过跳板机做转发
-Host beszel
-  Hostname localhost
-  User root
-  ProxyJump orange723
-  LocalForward 8090 localhost:8090
+<p>获取单个服务详细状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/service/hello-world-servers
+[
+    {
+        &quot;ID&quot;: &quot;ff7990be-d401-8a26-3698-76ee6a04e0c5&quot;,
+        &quot;Node&quot;: &quot;nomad&quot;,
+        &quot;Address&quot;: &quot;192.168.139.24&quot;,
+        &quot;Datacenter&quot;: &quot;dc1&quot;,
+        &quot;TaggedAddresses&quot;: {
+            &quot;lan&quot;: &quot;192.168.139.24&quot;,
+            &quot;lan_ipv4&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan_ipv4&quot;: &quot;192.168.139.24&quot;
+        },
+        &quot;NodeMeta&quot;: {
+            &quot;consul-network-segment&quot;: &quot;&quot;,
+            &quot;consul-version&quot;: &quot;1.22.5&quot;
+        },
+        &quot;ServiceKind&quot;: &quot;&quot;,
+        &quot;ServiceID&quot;: &quot;_nomad-task-d6ec357a-55be-23b8-65ff-f95e01fd4170-group-servers-hello-world-servers-www&quot;,
+        &quot;ServiceName&quot;: &quot;hello-world-servers&quot;,
+        &quot;ServiceTags&quot;: [],
+        &quot;ServiceAddress&quot;: &quot;192.168.139.24&quot;,
+        &quot;ServiceTaggedAddresses&quot;: {
+            &quot;lan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            },
+            &quot;wan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            }
+        },
+        &quot;ServiceWeights&quot;: {
+            &quot;Passing&quot;: 1,
+            &quot;Warning&quot;: 1
+        },
+        &quot;ServiceMeta&quot;: {
+            &quot;external-source&quot;: &quot;nomad&quot;
+        },
+        &quot;ServicePort&quot;: 23747,
+        &quot;ServicePorts&quot;: null,
+        &quot;ServiceSocketPath&quot;: &quot;&quot;,
+        &quot;ServiceEnableTagOverride&quot;: false,
+        &quot;ServiceProxy&quot;: {
+            &quot;Mode&quot;: &quot;&quot;,
+            &quot;MeshGateway&quot;: {},
+            &quot;Expose&quot;: {}
+        },
+        &quot;ServiceConnect&quot;: {},
+        &quot;ServiceLocality&quot;: null,
+        &quot;CreateIndex&quot;: 32,
+        &quot;ModifyIndex&quot;: 32
+    }
+]
+</code></pre>
+<h2><a id="nomad" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nomad</h2>
+<p><a href="https://developer.hashicorp.com/nomad/tutorials/get-started/gs-install">install</a></p>
+<p><del>本地用的 orbstack，在 orb 创建虚拟机然后在里面部署 nomad，因为要调用 /var/run/docker.sock 不可能在装个 docker，直接把 mac 文件的 /var/run/docker.sock 做软链接拿到虚拟机里用了，虚拟机是可以直接访问 mac 文件的。</del></p>
+<p>直接在机器里重新装 docker，nomad 可以直接调用</p>
+<pre><code class="language-plain_text">$ sudo nomad agent -dev -bind 192.168.139.24 -network-interface=eth0
+$ export NOMAD_ADDR=http://localhost:4646
+</code></pre>
+<p><img src="media/17724375213917/17724446461001.png" alt="" /></p>
+<p>贴一个测试 job，会直接映射到主机端口，apisix 可直接访问到。</p>
+<pre><code class="language-plain_text">job &quot;hello-world&quot; {
+  # Specifies the datacenter where this job should be run
+  # This can be omitted and it will default to [&quot;*&quot;]
+  datacenters = [&quot;*&quot;]
 
-Host *
-  IdentityAgent agent.sock
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  ServerAliveInterval 15
+  meta {
+    # User-defined key/value pairs that can be used in your jobs.
+    # You can also use this meta block within Group and Task levels.
+    foo = &quot;bar&quot;
+  }
+
+  # A group defines a series of tasks that should be co-located
+  # on the same client (host). All tasks within a group will be
+  # placed on the same host.
+  group &quot;servers&quot; {
+
+    # Specifies the number of instances of this group that should be running.
+    # Use this to scale or parallelize your job.
+    # This can be omitted and it will default to 1.
+    count = 1
+
+    network {
+      port &quot;www&quot; {
+        to = 8001
+      }
+    }
+
+    service {
+      provider = &quot;consul&quot;
+      port     = &quot;www&quot;
+      address_mode = &quot;host&quot;
+    }
+
+    # Tasks are individual units of work that are run by Nomad.
+    task &quot;web&quot; {
+      # This particular task starts a simple web server within a Docker container
+      driver = &quot;docker&quot;
+
+      config {
+        image   = &quot;busybox:1&quot;
+        command = &quot;httpd&quot;
+        args    = [&quot;-v&quot;, &quot;-f&quot;, &quot;-p&quot;, &quot;${NOMAD_PORT_www}&quot;, &quot;-h&quot;, &quot;/local&quot;]
+        ports   = [&quot;www&quot;]
+      }
+
+      template {
+        data        = &lt;&lt;-EOF
+                      &lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+                      &lt;ul&gt;
+                        &lt;li&gt;Task: {{env &quot;NOMAD_TASK_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Group: {{env &quot;NOMAD_GROUP_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Job: {{env &quot;NOMAD_JOB_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Metadata value for foo: {{env &quot;NOMAD_META_foo&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Currently running on port: {{env &quot;NOMAD_PORT_www&quot;}}&lt;/li&gt;
+                      &lt;/ul&gt;
+                      EOF
+        destination = &quot;local/index.html&quot;
+      }
+
+      # Specify the maximum resources required to run the task
+      resources {
+        cpu    = 50
+        memory = 64
+      }
+    }
+  }
+}
 </code></pre>
-<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
-<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
-<p>client 会每隔多少s 发送一个 packet 到 server</p>
-<p>抓包看看</p>
-<p>no-time</p>
-<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
-<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
-<p>time</p>
-<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
-<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
-<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
-<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
+<h2><a id="apisix" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix</h2>
+<p><a href="https://apisix.apache.org/zh/docs/apisix/installation-guide/">install</a></p>
+<p>填加一个路由转发到 consul 中的 hello-world</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9180/apisix/admin/routes/1 -H &quot;X-API-KEY: edd1c9f034335f136f87ad84b625c8f1&quot; -X PUT -i -d '
+{
+    &quot;uri&quot;: &quot;/*&quot;,
+    &quot;upstream&quot;: {
+        &quot;service_name&quot;: &quot;hello-world-servers&quot;,
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;discovery_type&quot;: &quot;consul&quot;
+    }
+}'
+</code></pre>
+<h3><a id="admin-api" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>admin api</h3>
+<p>获取状态</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1|jq
 </code></pre>
 
 		</div>

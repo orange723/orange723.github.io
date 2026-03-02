@@ -4,7 +4,7 @@
   <title><![CDATA[orange723]]></title>
   <link href="https://orange723.github.io/atom.xml" rel="self"/>
   <link href="https://orange723.github.io/"/>
-  <updated>2025-12-22T00:14:53+08:00</updated>
+  <updated>2026-03-03T00:01:19+08:00</updated>
   <id>https://orange723.github.io/</id>
   <author>
     <name><![CDATA[]]></name>
@@ -12,6 +12,437 @@
   </author>
   <generator uri="http://www.coderforart.com/">CoderForArt</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[consul + nomad + apisix]]></title>
+    <link href="https://orange723.github.io/17724375213917.html"/>
+    <updated>2026-03-02T15:45:21+08:00</updated>
+    <id>https://orange723.github.io/17724375213917.html</id>
+    <content type="html"><![CDATA[
+<h2><a id="consul" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>consul</h2>
+<p>推荐看直播录制的视频，讲的很好 很轻松 <a href="https://www.youtube.com/watch?v=0H06VKvlTJQ&amp;list=PL81sUbsFNc5b8i2g2sB_tG-PuZxEdlDpK">Getting into HashiCorp Consul</a></p>
+<p>还有个生产部署推荐配置 <a href="https://developer.hashicorp.com/consul/tutorials/production-vms">production-vms</a></p>
+<p>推荐使用官方源直接安装 <a href="https://developer.hashicorp.com/consul/install">install</a> 配置文件和目录会直接配置好，无需自己规划</p>
+<pre><code class="language-plain_text"># 直接启动
+$ sudo consul agent -dev -bind 192.168.139.24 -client 0.0.0.0
+==&gt; Starting Consul agent...
+               Version: '1.22.5'
+            Build Date: '2026-02-26 11:50:53 +0000 UTC'
+               Node ID: '7da7829f-ccfd-2841-1805-540d3ee3c491'
+             Node name: 'consul'
+            Datacenter: 'dc1' (Segment: '&lt;all&gt;')
+                Server: true (Bootstrap: false)
+           Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, gRPC-TLS: 8503, DNS: 8600)
+          Cluster Addr: 192.168.139.130 (LAN: 8301, WAN: 8302)
+     Gossip Encryption: false
+      Auto-Encrypt-TLS: false
+           ACL Enabled: false
+     Reporting Enabled: false
+    ACL Default Policy: allow
+             HTTPS TLS: Verify Incoming: false, Verify Outgoing: false, Min Version: TLSv1_2
+              gRPC TLS: Verify Incoming: false, Min Version: TLSv1_2
+      Internal RPC TLS: Verify Incoming: false, Verify Outgoing: false (Verify Hostname: false), Min Version: TLSv1_2
+</code></pre>
+<p>获取服务状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/services
+{
+    &quot;consul&quot;: [],
+    &quot;nomad&quot;: [
+        &quot;serf&quot;,
+        &quot;rpc&quot;,
+        &quot;http&quot;
+    ],
+    &quot;nomad-client&quot;: [
+        &quot;http&quot;
+    ]
+}
+</code></pre>
+<p>获取单个服务详细状态</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:8500/v1/catalog/service/hello-world-servers
+[
+    {
+        &quot;ID&quot;: &quot;ff7990be-d401-8a26-3698-76ee6a04e0c5&quot;,
+        &quot;Node&quot;: &quot;nomad&quot;,
+        &quot;Address&quot;: &quot;192.168.139.24&quot;,
+        &quot;Datacenter&quot;: &quot;dc1&quot;,
+        &quot;TaggedAddresses&quot;: {
+            &quot;lan&quot;: &quot;192.168.139.24&quot;,
+            &quot;lan_ipv4&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan&quot;: &quot;192.168.139.24&quot;,
+            &quot;wan_ipv4&quot;: &quot;192.168.139.24&quot;
+        },
+        &quot;NodeMeta&quot;: {
+            &quot;consul-network-segment&quot;: &quot;&quot;,
+            &quot;consul-version&quot;: &quot;1.22.5&quot;
+        },
+        &quot;ServiceKind&quot;: &quot;&quot;,
+        &quot;ServiceID&quot;: &quot;_nomad-task-d6ec357a-55be-23b8-65ff-f95e01fd4170-group-servers-hello-world-servers-www&quot;,
+        &quot;ServiceName&quot;: &quot;hello-world-servers&quot;,
+        &quot;ServiceTags&quot;: [],
+        &quot;ServiceAddress&quot;: &quot;192.168.139.24&quot;,
+        &quot;ServiceTaggedAddresses&quot;: {
+            &quot;lan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            },
+            &quot;wan_ipv4&quot;: {
+                &quot;Address&quot;: &quot;192.168.139.24&quot;,
+                &quot;Port&quot;: 23747
+            }
+        },
+        &quot;ServiceWeights&quot;: {
+            &quot;Passing&quot;: 1,
+            &quot;Warning&quot;: 1
+        },
+        &quot;ServiceMeta&quot;: {
+            &quot;external-source&quot;: &quot;nomad&quot;
+        },
+        &quot;ServicePort&quot;: 23747,
+        &quot;ServicePorts&quot;: null,
+        &quot;ServiceSocketPath&quot;: &quot;&quot;,
+        &quot;ServiceEnableTagOverride&quot;: false,
+        &quot;ServiceProxy&quot;: {
+            &quot;Mode&quot;: &quot;&quot;,
+            &quot;MeshGateway&quot;: {},
+            &quot;Expose&quot;: {}
+        },
+        &quot;ServiceConnect&quot;: {},
+        &quot;ServiceLocality&quot;: null,
+        &quot;CreateIndex&quot;: 32,
+        &quot;ModifyIndex&quot;: 32
+    }
+]
+</code></pre>
+<h2><a id="nomad" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nomad</h2>
+<p><a href="https://developer.hashicorp.com/nomad/tutorials/get-started/gs-install">install</a></p>
+<p><del>本地用的 orbstack，在 orb 创建虚拟机然后在里面部署 nomad，因为要调用 /var/run/docker.sock 不可能在装个 docker，直接把 mac 文件的 /var/run/docker.sock 做软链接拿到虚拟机里用了，虚拟机是可以直接访问 mac 文件的。</del></p>
+<p>直接在机器里重新装 docker，nomad 可以直接调用</p>
+<pre><code class="language-plain_text">$ sudo nomad agent -dev -bind 192.168.139.24 -network-interface=eth0
+$ export NOMAD_ADDR=http://localhost:4646
+</code></pre>
+<p><img src="media/17724375213917/17724446461001.png" alt="" /></p>
+<p>贴一个测试 job，会直接映射到主机端口，apisix 可直接访问到。</p>
+<pre><code class="language-plain_text">job &quot;hello-world&quot; {
+  # Specifies the datacenter where this job should be run
+  # This can be omitted and it will default to [&quot;*&quot;]
+  datacenters = [&quot;*&quot;]
+
+  meta {
+    # User-defined key/value pairs that can be used in your jobs.
+    # You can also use this meta block within Group and Task levels.
+    foo = &quot;bar&quot;
+  }
+
+  # A group defines a series of tasks that should be co-located
+  # on the same client (host). All tasks within a group will be
+  # placed on the same host.
+  group &quot;servers&quot; {
+
+    # Specifies the number of instances of this group that should be running.
+    # Use this to scale or parallelize your job.
+    # This can be omitted and it will default to 1.
+    count = 1
+
+    network {
+      port &quot;www&quot; {
+        to = 8001
+      }
+    }
+
+    service {
+      provider = &quot;consul&quot;
+      port     = &quot;www&quot;
+      address_mode = &quot;host&quot;
+    }
+
+    # Tasks are individual units of work that are run by Nomad.
+    task &quot;web&quot; {
+      # This particular task starts a simple web server within a Docker container
+      driver = &quot;docker&quot;
+
+      config {
+        image   = &quot;busybox:1&quot;
+        command = &quot;httpd&quot;
+        args    = [&quot;-v&quot;, &quot;-f&quot;, &quot;-p&quot;, &quot;${NOMAD_PORT_www}&quot;, &quot;-h&quot;, &quot;/local&quot;]
+        ports   = [&quot;www&quot;]
+      }
+
+      template {
+        data        = &lt;&lt;-EOF
+                      &lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+                      &lt;ul&gt;
+                        &lt;li&gt;Task: {{env &quot;NOMAD_TASK_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Group: {{env &quot;NOMAD_GROUP_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Job: {{env &quot;NOMAD_JOB_NAME&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Metadata value for foo: {{env &quot;NOMAD_META_foo&quot;}}&lt;/li&gt;
+                        &lt;li&gt;Currently running on port: {{env &quot;NOMAD_PORT_www&quot;}}&lt;/li&gt;
+                      &lt;/ul&gt;
+                      EOF
+        destination = &quot;local/index.html&quot;
+      }
+
+      # Specify the maximum resources required to run the task
+      resources {
+        cpu    = 50
+        memory = 64
+      }
+    }
+  }
+}
+</code></pre>
+<h2><a id="apisix" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix</h2>
+<p><a href="https://apisix.apache.org/zh/docs/apisix/installation-guide/">install</a></p>
+<p>填加一个路由转发到 consul 中的 hello-world</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9180/apisix/admin/routes/1 -H &quot;X-API-KEY: edd1c9f034335f136f87ad84b625c8f1&quot; -X PUT -i -d '
+{
+    &quot;uri&quot;: &quot;/*&quot;,
+    &quot;upstream&quot;: {
+        &quot;service_name&quot;: &quot;hello-world-servers&quot;,
+        &quot;type&quot;: &quot;roundrobin&quot;,
+        &quot;discovery_type&quot;: &quot;consul&quot;
+    }
+}'
+</code></pre>
+<h3><a id="admin-api" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>admin api</h3>
+<p>获取状态</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1|jq
+</code></pre>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[PPHC 测试]]></title>
+    <link href="https://orange723.github.io/17720027672498.html"/>
+    <updated>2026-02-25T14:59:27+08:00</updated>
+    <id>https://orange723.github.io/17720027672498.html</id>
+    <content type="html"><![CDATA[
+<p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
+<p>作者姓名:吕文翰<br />
+原始网站地址:<a href="https://pphc.lvwenhan.com">https://pphc.lvwenhan.com</a></p>
+<h2><a id="nginx%E5%92%8C-apache%E9%9D%99%E6%80%81%E5%9B%BE%E7%89%87" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nginx 和 apache 静态图片</h2>
+<p>文中看到一张静态图片 “Nginx 的性能是 Apache 的四倍”</p>
+<p>nginx 和 apache 均未更改配置，直接使用容器启动 根目录替换为一张图片。</p>
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-nginx -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/share/nginx/html/jovan.jpg:ro -d nginx:stable
+</code></pre>
+<pre><code class="language-plain_text">$ oha -n 10000 -c 4 --connect-to 'pphc-nginx.orb.local:80:192.168.215.2:80' --latency-correction --disable-keepalive http://pphc-nginx.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	5859.5672 ms
+  Slowest:	21.9470 ms
+  Fastest:	1.2468 ms
+  Average:	2.3418 ms
+  Requests/sec:	1706.6107
+
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	4.08 GiB
+
+Response time histogram:
+   1.247 ms [1]    |
+   3.317 ms [9547] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.387 ms [433]  |■
+   7.457 ms [9]    |
+   9.527 ms [2]    |
+  11.597 ms [2]    |
+  13.667 ms [2]    |
+  15.737 ms [1]    |
+  17.807 ms [0]    |
+  19.877 ms [1]    |
+  21.947 ms [2]    |
+
+Response time distribution:
+  10.00% in 1.8269 ms
+  25.00% in 1.9920 ms
+  50.00% in 2.2289 ms
+  75.00% in 2.5561 ms
+  90.00% in 2.9806 ms
+  95.00% in 3.2815 ms
+  99.00% in 3.9765 ms
+  99.90% in 7.9387 ms
+  99.99% in 21.8587 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.1799 ms, 0.0535 ms, 3.3844 ms
+  DNS-lookup:	0.0029 ms, 0.0010 ms, 0.4548 ms
+
+Status code distribution:
+  [200] 10000 responses
+</code></pre>
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-apache -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/local/apache2/htdocs/jovan.jpg:ro httpd
+</code></pre>
+<pre><code class="language-plain_text">oha -n 10000 -c 4 --connect-to 'pphc-apache.orb.local:80:192.168.215.3:80' --latency-correction --disable-keepalive http://pphc-apache.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	6991.0027 ms
+  Slowest:	22.5767 ms
+  Fastest:	1.4700 ms
+  Average:	2.7935 ms
+  Requests/sec:	1430.4100
+
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	3.42 GiB
+
+Response time histogram:
+   1.470 ms [1]    |
+   3.581 ms [9035] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.691 ms [904]  |■■■
+   7.802 ms [43]   |
+   9.913 ms [7]    |
+  12.023 ms [3]    |
+  14.134 ms [3]    |
+  16.245 ms [0]    |
+  18.355 ms [0]    |
+  20.466 ms [0]    |
+  22.577 ms [4]    |
+
+Response time distribution:
+  10.00% in 2.1455 ms
+  25.00% in 2.3568 ms
+  50.00% in 2.6547 ms
+  75.00% in 3.0646 ms
+  90.00% in 3.5604 ms
+  95.00% in 3.9060 ms
+  99.00% in 4.9914 ms
+  99.90% in 9.9304 ms
+  99.99% in 22.5364 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.2219 ms, 0.0607 ms, 2.7639 ms
+  DNS-lookup:	0.0044 ms, 0.0010 ms, 0.4934 ms
+
+Status code distribution:
+  [200] 10000 responses
+</code></pre>
+<p>能看到实际 nginx 和 apache 差别没那么大，或许是在特定年代的特殊情况，不过两次请求都有一个问题 “总会有几个请求处理时间过长，尽管大部分请求会很快完成”</p>
+<h2><a id="apisix-nomad-consul%E6%9E%B6%E6%9E%84%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix + nomad + consul 架构测试</h2>
+<p>文中说到 api 网关能玩出花来，本地弄了个 apisix，顺便结合 nomad 和 consul 测试下。</p>
+<p>先测试下 apisix，根据官方文档配置了个 route，通过 api 看看结果</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1 | jq
+{
+  &quot;total&quot;: 1,
+  &quot;list&quot;: [
+    {
+      &quot;key&quot;: &quot;/apisix/routes/00000000000000000015&quot;,
+      &quot;value&quot;: {
+        &quot;status&quot;: 1,
+        &quot;id&quot;: &quot;00000000000000000015&quot;,
+        &quot;enable_websocket&quot;: false,
+        &quot;update_time&quot;: 1772193933,
+        &quot;priority&quot;: 0,
+        &quot;name&quot;: &quot;getting-started-ip&quot;,
+        &quot;upstream&quot;: {
+          &quot;pass_host&quot;: &quot;pass&quot;,
+          &quot;tls&quot;: {
+            &quot;verify&quot;: false
+          },
+          &quot;nodes&quot;: [
+            {
+              &quot;priority&quot;: 0,
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;port&quot;: 80,
+              &quot;weight&quot;: 0
+            }
+          ],
+          &quot;type&quot;: &quot;roundrobin&quot;,
+          &quot;hash_on&quot;: &quot;vars&quot;,
+          &quot;checks&quot;: {
+            &quot;active&quot;: {
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;type&quot;: &quot;http&quot;,
+              &quot;healthy&quot;: {
+                &quot;http_statuses&quot;: [
+                  200
+                ],
+                &quot;interval&quot;: 1,
+                &quot;successes&quot;: 200
+              },
+              &quot;https_verify_certificate&quot;: false,
+              &quot;port&quot;: 80,
+              &quot;timeout&quot;: 2
+            }
+          },
+          &quot;scheme&quot;: &quot;http&quot;
+        },
+        &quot;methods&quot;: [
+          &quot;GET&quot;
+        ],
+        &quot;uri&quot;: &quot;/ip&quot;,
+        &quot;create_time&quot;: 1772193933
+      },
+      &quot;modifiedIndex&quot;: 16,
+      &quot;createdIndex&quot;: 16
+    }
+  ]
+}
+</code></pre>
+<p>直接将请求转发到 httpbin.org 了</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9080/ip
+{
+  &quot;origin&quot;: &quot;192.168.117.1, 185.220.238.225&quot;
+}
+</code></pre>
+<p>nomad 也是很有趣的服务管理部署应用，和 terraform 是同公司，它只是做服务管理 像服务发现这类就交给 consul 测试的话配置起来不复杂，我的想法是这样：用 consul 将 nomad 和 apisix 连通，consul 也能给 nomad 管理的容器做健康检查 服务发现，apisix 找上游服务器通过 consul。</p>
+<p>最简单的架构，此状态下最基础是 consul</p>
+<p><img src="media/17720027672498/design-1-1.png" alt="design-1" /></p>
+<p>配置过程可查看 <a href="17724375213917.html">consul + nomad + apisix</a></p>
+<p>最后结果如下</p>
+<pre><code class="language-plain_text">$ curl -s 127.0.0.1:9080
+&lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;Task: web&lt;/li&gt;
+  &lt;li&gt;Group: servers&lt;/li&gt;
+  &lt;li&gt;Job: hello-world&lt;/li&gt;
+  &lt;li&gt;Metadata value for foo: bar&lt;/li&gt;
+  &lt;li&gt;Currently running on port: 8001&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>如果要作为生产环境需要考虑的有很多，上面仅是测试</p>
+<ul>
+<li>consul 高可用，单独部署还是让 nomad 管理部署</li>
+<li>consul acl 策略，访问更安全</li>
+<li>nomad 的多机器</li>
+<li>nomad 网络，除了服务发现还有服务暴露，即使有 api 网关作为转发，要考虑各个容器间是二层转发还是三层 flannel/calico</li>
+<li>apisix 高可用，前提是 etcd 高可用，服务层是无状态的 容量不够横向扩展</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Claude code 使用 Doubao-Seed-Code]]></title>
+    <link href="https://orange723.github.io/17685326962696.html"/>
+    <updated>2026-01-16T11:04:56+08:00</updated>
+    <id>https://orange723.github.io/17685326962696.html</id>
+    <content type="html"><![CDATA[
+<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
+<p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
+<pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
+</code></pre>
+<p><a href="https://github.com/anthropics/claude-code">claude-code</a></p>
+<pre><code class="language-plain_text">$ curl -fsSL https://claude.ai/install.sh | bash
+
+                    or
+
+$ npm install -g @anthropic-ai/claude-code
+</code></pre>
+<h2><a id="doubao-seed-code" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Doubao-Seed-Code</h2>
+<ul>
+<li>登录火山云 - <a href="https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement">https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement</a></li>
+<li>生成 api 并开通 Doubao-Seed-Code 模型</li>
+<li>本地调用 claude-code-router，ccr ui 可打开页面控制</li>
+<li>添加供应商，doubao 的供应商部分选择 volcengine</li>
+<li>ccr ui 中设置 claude-code 文件路径</li>
+<li>重启 ccr</li>
+<li>本地执行 ccr code</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Terraform 使用]]></title>
@@ -204,9 +635,244 @@ configs:
       MYSQL_HOST=db
       MYSQL_DB=message
 </code></pre>
+<h2><a id="wireguard%E7%BB%84%E7%BD%91%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>wireguard 组网测试</h2>
+<p>没用 uncloud 之前也没用过 wireguard 看了下 uncloud 的 blog <a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/">connect-docker-containers-across-hosts-wireguard</a> 不是很复杂，想要测试下 wireguard 组网效果</p>
+<p>官方的图更直接</p>
+<p><img src="https://uncloud.run/assets/images/wireguard-overlay-7a728453ea899fe8b5ca48e88d9e4421.png" alt="" /></p>
+<p>整体流程是(括号1代表第一台机器，括号2代表第二台)</p>
+<p>docker bridge(1) -&gt; iptables(1) -&gt; wireguard(1) -&gt; wireguard(2) -&gt; iptables(2) -&gt; docker bridge(2)</p>
+<p>创建新的 bridge 网络，通过 iptables 将 bridge 网段流量转发到 wireguard，两台机器的 wireguard 之间做了 tunnel，另外一台机器的 wireguard 接收到流量通过 iptables 规则转发到 bridge 网络下的容器。</p>
+<p>我的环境</p>
+<p><img src="media/17659794748401/docker-wireguard.png" alt="docker-wireguard" /></p>
+<p>先提前互 ping 下，免的访问不了白测试</p>
+<pre><code class="language-plain_text"># Machine 1
+$ ping 74.48.78.11
+PING 74.48.78.11 (74.48.78.11) 56(84) bytes of data.
+64 bytes from 74.48.78.11: icmp_seq=1 ttl=48 time=189 ms
+64 bytes from 74.48.78.11: icmp_seq=2 ttl=48 time=181 ms
+
+# Machine 2
+$ ping 101.200.150.26
+PING 101.200.150.26 (101.200.150.26) 56(84) bytes of data.
+64 bytes from 101.200.150.26: icmp_seq=1 ttl=50 time=193 ms
+64 bytes from 101.200.150.26: icmp_seq=2 ttl=50 time=193 ms
+</code></pre>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network create --subnet 10.200.1.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+18ca4396c2977a987d3238f4a6b83d4dd3a0ceabad25c7c1f670a967c6b1cdef
+
+# Machine 2
+$ docker network create --subnet 10.200.2.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+04c3ec0b2eaba837c5e974bdc6c76ed4dda8c10349fd3cb75af3506b0e2bac63
+</code></pre>
+<pre><code class="language-plain_text"># 两边分别执行，确保云厂商方面安全组开通 51820
+$ iptables -I INPUT -p udp --dport 51820 -j ACCEPT
+# 安装 wireguard 生成配置
+$ apt update &amp;&amp; apt install wireguard
+$ umask 077
+$ wg genkey &gt; privatekey
+$ wg pubkey &lt; privatekey &gt; publickey
+</code></pre>
+<p>PrivateKey 填本机的，PublicKey 则要填对端的</p>
+<p>原文：</p>
+<p>PrivateKey = &lt;replace with 'privatekey' file content from Machine 1&gt;<br />
+PublicKey = &lt;replace with 'publickey' file content from Machine 2&gt;</p>
+<pre><code class="language-plain_text"># 生成 wg 配置
+# Machine 1
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = kKaGXES+s2mFVYTxEMN/KTJ0k/a0S9bv8JxeVz0bdnA=
+
+[Peer]
+PublicKey = Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.2.0/24
+# Public IP of Machine 2
+Endpoint = 74.48.78.11:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# Machine 2
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = MBLrCQ2eVCga+unX3IIKPSnyzsyh1SwkmRIkIryX+0k=
+
+[Peer]
+PublicKey = TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.1.0/24
+# Public IP of Machine 2
+Endpoint = 101.200.150.26:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# 分别启动
+$ wg-quick up wg0
+</code></pre>
+<p>查看 wg 状态</p>
+<pre><code class="language-plain_text"># Machine 1
+$ wg show
+interface: wg0
+  public key: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  private key: (hidden)
+  listening port: 51820
+
+peer: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  endpoint: 74.48.78.11:51820
+  allowed ips: 10.200.2.0/24
+  latest handshake: 45 seconds ago
+  transfer: 116.21 KiB received, 41.36 KiB sent
+  persistent keepalive: every 25 seconds
+  
+# Machine 2
+$ wg show
+interface: wg0
+  public key: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  private key: (hidden)
+  listening port: 51820
+
+peer: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  endpoint: 101.200.150.26:51820
+  allowed ips: 10.200.1.0/24
+  latest handshake: 1 minute, 4 seconds ago
+  transfer: 39.93 KiB received, 116.46 KiB sent
+  persistent keepalive: every 25 seconds
+</code></pre>
+<p>配置 iptables 规则，允许 wg 到 bridge 网络</p>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network ls -f name=multi-host
+NETWORK ID     NAME         DRIVER    SCOPE
+18ca4396c297   multi-host   bridge    local
+$ iptables -I DOCKER-USER -i wg0 -o br-18ca4396c297 -j ACCEPT
+
+# Machine 2
+$ docker network ls
+NETWORK ID     NAME         DRIVER    SCOPE
+e4613839f6f6   bridge       bridge    local
+f1954f4aff63   host         host      local
+04c3ec0b2eab   multi-host   bridge    local
+7fb9f0ad47ba   none         null      local
+$ iptables -I DOCKER-USER -i wg0 -o br-04c3ec0b2eab -j ACCEPT
+</code></pre>
+<p>最后配置下本机容器出网通过 wg 网卡的策略</p>
+<pre><code class="language-plain_text"># Machine 1
+$ iptables -t nat -I POSTROUTING -s 10.200.1.0/24 -o wg0 -j RETURN
+
+# Machine 2
+$ iptables -t nat -I POSTROUTING -s 10.200.2.0/24 -o wg0 -j RETURN
+</code></pre>
+<p>测试下互通性</p>
+<pre><code class="language-plain_text"># Machine 2
+$ docker run -d --name whoami --network multi-host traefik/whoami
+$ docker inspect b992403e1e4f|grep 10.200
+                    &quot;Gateway&quot;: &quot;10.200.2.1&quot;,
+                    &quot;IPAddress&quot;: &quot;10.200.2.2&quot;,
+                    
+# Machine 1
+$ docker run -it --rm --network multi-host busybox ping 10.200.2.2
+PING 10.200.2.2 (10.200.2.2): 56 data bytes
+64 bytes from 10.200.2.2: seq=0 ttl=62 time=194.198 ms
+64 bytes from 10.200.2.2: seq=1 ttl=62 time=190.275 ms
+64 bytes from 10.200.2.2: seq=2 ttl=62 time=198.435 ms
+64 bytes from 10.200.2.2: seq=3 ttl=62 time=196.896 ms
+64 bytes from 10.200.2.2: seq=4 ttl=62 time=197.444 ms
+^C
+--- 10.200.2.2 ping statistics ---
+6 packets transmitted, 5 packets received, 16% packet loss
+round-trip min/avg/max = 190.275/195.449/198.435 ms
+$ docker run -it --rm --network multi-host alpine/curl http://10.200.2.2
+Hostname: b992403e1e4f
+IP: 127.0.0.1
+IP: ::1
+IP: 10.200.2.2
+RemoteAddr: 10.200.1.2:60960
+GET / HTTP/1.1
+Host: 10.200.2.2
+User-Agent: curl/8.17.0
+Accept: */*
+</code></pre>
+<p>能看到互相通信没问题，就是延迟对比直 ping 会高一点点，毕竟本身两台机器就不近</p>
+<p>在 1 机器把 iptables 规则导出看看</p>
+<pre><code class="language-plain_text"># filter
+$ iptables -S -v
+-P INPUT ACCEPT -c 608049 168734434
+-P FORWARD DROP -c 0 0
+-P OUTPUT ACCEPT -c 0 0
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT
+-A FORWARD -c 270 22213 -j DOCKER-USER
+-A FORWARD -c 147 12070 -j DOCKER-FORWARD
+-A DOCKER ! -i docker0 -o docker0 -c 0 0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -c 0 0 -j DROP
+-A DOCKER-BRIDGE -o docker0 -c 0 0 -j DOCKER
+-A DOCKER-BRIDGE -o br-18ca4396c297 -c 0 0 -j DOCKER
+-A DOCKER-CT -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-CT -o br-18ca4396c297 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-CT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-INTERNAL
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-BRIDGE
+-A DOCKER-FORWARD -i docker0 -c 40 3360 -j ACCEPT
+-A DOCKER-FORWARD -i br-18ca4396c297 -c 107 8710 -j ACCEPT
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT
+
+# nat
+$ iptables -t nat -S -v
+-P PREROUTING ACCEPT -c 668150 42644933
+-P INPUT ACCEPT -c 0 0
+-P OUTPUT ACCEPT -c 7495 569953
+-P POSTROUTING ACCEPT -c 7501 570385
+-N DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL -c 667962 42630817 -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -c 0 0 -j DOCKER
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN
+-A POSTROUTING -s 10.200.1.0/24 ! -o br-18ca4396c297 -c 0 0 -j MASQUERADE
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -c 2 168 -j MASQUERADE
+</code></pre>
+<p>关键是这三条</p>
+<pre><code class="language-plain_text">-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT # 允许 wg 入网
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT # 允许 input 是 wg0 设备到 br-18ca4396c297 设备
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN # 从容器出网走 wg 然后转发出去
+</code></pre>
+<p>原文还说 DOCKER-USER 规则会优先 DOCKER 链处理，所以添加在 DOCKER-USER，以后在自定义容器规则可以参考，查询确实如此</p>
+<p><img src="media/17659794748401/17724308235955.png" alt="" /></p>
+<p>测试将 DOCKER-USER 的规则配置到 DOCKER rule 下也能正常工作，不过 docker 重启 DOCKER 里手动加的规则就会消失</p>
+<pre><code class="language-plain_text">$ iptables -I DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+$ iptables -S
+-P INPUT ACCEPT
+-P FORWARD DROP
+-P OUTPUT ACCEPT
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -j ACCEPT
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD
+-A DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+-A DOCKER ! -i docker0 -o docker0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -j DROP
+</code></pre>
+<p>原文也说了局限性，容器互相之间通过 ip 访问 没有服务发现，无法通过名称互相访问</p>
+<p><a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/#dns-resolution">DNS resolution</a></p>
+<pre><code class="language-plain_text">DNS resolution
+The main limitation of this setup is that containers can't find each other by name across machines. You need to use their IP addresses directly or implement a service discovery solution like Consul or CoreDNS.
+
+For small deployments, you can assign static IPs to containers and use those IPs in your app configuration. But service discovery is essential for larger and more dynamic deployments.
+</code></pre>
 <h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>不用 Kubernetes 情况下，用 uncloud 基本可以平替，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>不用 Kubernetes 情况下，用 uncloud 可以<del>平替</del>(平替谈不上，uncloud只是个多机管理容器的服务)测试玩玩，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>wireguard 这部分如果机器距离较远，该有的延迟不会变只是机器能互相通信，从稳定性上来说 服务器距离较远还是不建议组网，自己玩玩尚可，企业有需求不如直接用云厂商做 peer 或者像 gcp 那样各个区域本身就是通的，延迟低也不额外付费，只需规划好 ip 即可。</p>
 <p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
+<p>另外相比 uncloud 我觉得 <a href="https://www.hashicorp.com/en/products/nomad">nomad</a> 会更纯粹，只是负责容器管理 服务发现交给 <a href="https://www.hashicorp.com/en/products/consul">consul</a> 搭配 <a href="https://apisix.apache.org/">apisix</a> 网关，我觉得从管理和稳定性方面会更好。</p>
 <p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
 
 ]]></content>
@@ -233,14 +899,18 @@ configs:
 <h2><a id="network" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>network</h2>
 <p><a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
 <p><a href="https://www.lifewire.com/layers-of-the-osi-model-illustrated-818017">The Layers of the OSI Model Illustrated</a></p>
+<p><a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/">uncloud network</a></p>
 <h2><a id="monitor" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>monitor</h2>
 <p><a href="https://samber.github.io/awesome-prometheus-alerts/rules">awesome-prometheus-alerts</a></p>
 <h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
 <p><a href="https://www.digitalocean.com/community/tutorials/iptables-essentials-common-firewall-rules-and-commands">iptables-essentials-common-firewall-rules-and-commands</a></p>
 <p><a href="https://evanhahn.com/scripts-i-wrote-that-i-use-all-the-time/">Scripts I wrote that I use all the time</a></p>
 <p><a href="https://docs.runme.dev/usage/stdin">Working with Stdin, Stdout, and Stderr</a></p>
+<p><a href="https://help.cloudcone.com/en-us/article/how-to-secure-your-server-from-abuse-and-prevent-ip-blacklisting-p4m1d0/#1-4-protect-any-services-you-run">How to secure your server from abuse and prevent IP blacklisting</a></p>
 <h2><a id="machine-price" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>machine price</h2>
 <p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
+<h2><a id="%E9%9D%A2%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>面试</h2>
+<p><a href="https://become-a-programmer.2baxb.me/cheng-wei-qiu-zhi-zhe/qiu-zhi-yu-jian-li">求职与简历</a></p>
 
 ]]></content>
   </entry>
@@ -1663,7 +2333,7 @@ tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   
     <content type="html"><![CDATA[
 <h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
 <pre><code class="language-plain_text">sudo apt update
-sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
+sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset btop git ca-certificates tmux jq curl gpg file
 </code></pre>
 <h2><a id="cloud-init" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>cloud-init</h2>
 <pre><code class="language-plain_text">#cloud-config
@@ -1788,6 +2458,29 @@ no_ssh_fingerprints: true
 ssh:
   emit_keys_to_console: false
 </code></pre>
+<h2><a id="golang" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>golang</h2>
+<p><a href="https://github.com/voidint/g">g</a></p>
+<pre><code class="language-plain_text"># It is recommended to clear the `GOROOT`, `GOBIN`, and other environment variables before installation.
+$ curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash
+$ cat &lt;&lt; 'EOF' &gt;&gt; ~/.bashrc
+# Check if the alias 'g' exists before trying to unalias it
+if [[ -n $(alias g 2&gt;/dev/null) ]]; then
+    unalias g
+fi
+EOF
+$ source &quot;$HOME/.g/env&quot;
+
+$ g ls-remote stable
+$ g install stable
+</code></pre>
+<h2><a id="node" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>node</h2>
+<p><a href="https://github.com/nvm-sh/nvm">nvm</a></p>
+<pre><code class="language-plain_text">$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+$ nvm install --lts
+$ nvm use --lts
+</code></pre>
+<p>使用 nvm 要注意多版本，比如 gemini 装到 A 版本 node，但目前是在用 B 版本 node，调用会提示找不到</p>
 
 ]]></content>
   </entry>
@@ -2219,6 +2912,17 @@ $ netstat -s|grep -E &quot;LISTEN|overflow&quot;
     <id>https://orange723.github.io/17622327813502.html</id>
     <content type="html"><![CDATA[
 <h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
+<h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
+<p>/etc/ssh/sshd_config</p>
+<pre><code class="language-plain_text">UsePAM no
+PasswordAuthentication no
+</code></pre>
+<p>/etc/ssh/sshd_config.d/50-cloud-init.conf</p>
+<pre><code class="language-plain_text"># 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
+PasswordAuthentication yes
+</code></pre>
+<p>有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。</p>
+<p>如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目录</p>
 <h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
 <p>~/.ssh/config</p>
 <pre><code class="language-plain_text"># 通过跳板机做转发

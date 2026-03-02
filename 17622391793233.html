@@ -120,7 +120,7 @@
 		<div class="entry-content" itemprop="articleBody">
 			<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
 <pre><code class="language-plain_text">sudo apt update
-sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
+sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset btop git ca-certificates tmux jq curl gpg file
 </code></pre>
 <h2><a id="cloud-init" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>cloud-init</h2>
 <pre><code class="language-plain_text">#cloud-config
@@ -245,6 +245,29 @@ no_ssh_fingerprints: true
 ssh:
   emit_keys_to_console: false
 </code></pre>
+<h2><a id="golang" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>golang</h2>
+<p><a href="https://github.com/voidint/g">g</a></p>
+<pre><code class="language-plain_text"># It is recommended to clear the `GOROOT`, `GOBIN`, and other environment variables before installation.
+$ curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash
+$ cat &lt;&lt; 'EOF' &gt;&gt; ~/.bashrc
+# Check if the alias 'g' exists before trying to unalias it
+if [[ -n $(alias g 2&gt;/dev/null) ]]; then
+    unalias g
+fi
+EOF
+$ source &quot;$HOME/.g/env&quot;
+
+$ g ls-remote stable
+$ g install stable
+</code></pre>
+<h2><a id="node" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>node</h2>
+<p><a href="https://github.com/nvm-sh/nvm">nvm</a></p>
+<pre><code class="language-plain_text">$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+
+$ nvm install --lts
+$ nvm use --lts
+</code></pre>
+<p>使用 nvm 要注意多版本，比如 gemini 装到 A 版本 node，但目前是在用 B 版本 node，调用会提示找不到</p>
 
 		</div>
 	</article>

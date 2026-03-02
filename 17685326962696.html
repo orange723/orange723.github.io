@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	ssh 使用 - orange723
+  	Claude code 使用 Doubao-Seed-Code - orange723
   	
 	</title>
 
@@ -116,48 +116,30 @@
 			<div class="mid-col-container"> <div id="content" class="inner">
 
 	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">ssh 使用</h1>
+		<h1 class="title" itemprop="name">Claude code 使用 Doubao-Seed-Code</h1>
 		<div class="entry-content" itemprop="articleBody">
-			<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
-<h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
-<p>/etc/ssh/sshd_config</p>
-<pre><code class="language-plain_text">UsePAM no
-PasswordAuthentication no
+			<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+<h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
+<p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
+<pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
 </code></pre>
-<p>/etc/ssh/sshd_config.d/50-cloud-init.conf</p>
-<pre><code class="language-plain_text"># 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
-PasswordAuthentication yes
-</code></pre>
-<p>有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。</p>
-<p>如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目录</p>
-<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
-<p>~/.ssh/config</p>
-<pre><code class="language-plain_text"># 通过跳板机做转发
-Host beszel
-  Hostname localhost
-  User root
-  ProxyJump orange723
-  LocalForward 8090 localhost:8090
+<p><a href="https://github.com/anthropics/claude-code">claude-code</a></p>
+<pre><code class="language-plain_text">$ curl -fsSL https://claude.ai/install.sh | bash
 
-Host *
-  IdentityAgent agent.sock
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  ServerAliveInterval 15
+                    or
+
+$ npm install -g @anthropic-ai/claude-code
 </code></pre>
-<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
-<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
-<p>client 会每隔多少s 发送一个 packet 到 server</p>
-<p>抓包看看</p>
-<p>no-time</p>
-<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
-<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
-<p>time</p>
-<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
-<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
-<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
-<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
-</code></pre>
+<h2><a id="doubao-seed-code" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>Doubao-Seed-Code</h2>
+<ul>
+<li>登录火山云 - <a href="https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement">https://console.volcengine.com/ark/region:ark+cn-beijing/openManagement</a></li>
+<li>生成 api 并开通 Doubao-Seed-Code 模型</li>
+<li>本地调用 claude-code-router，ccr ui 可打开页面控制</li>
+<li>添加供应商，doubao 的供应商部分选择 volcengine</li>
+<li>ccr ui 中设置 claude-code 文件路径</li>
+<li>重启 ccr</li>
+<li>本地执行 ccr code</li>
+</ul>
 
 		</div>
 	</article>

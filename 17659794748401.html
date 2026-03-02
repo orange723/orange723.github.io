@@ -242,9 +242,244 @@ configs:
       MYSQL_HOST=db
       MYSQL_DB=message
 </code></pre>
+<h2><a id="wireguard%E7%BB%84%E7%BD%91%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>wireguard 组网测试</h2>
+<p>没用 uncloud 之前也没用过 wireguard 看了下 uncloud 的 blog <a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/">connect-docker-containers-across-hosts-wireguard</a> 不是很复杂，想要测试下 wireguard 组网效果</p>
+<p>官方的图更直接</p>
+<p><img src="https://uncloud.run/assets/images/wireguard-overlay-7a728453ea899fe8b5ca48e88d9e4421.png" alt="" /></p>
+<p>整体流程是(括号1代表第一台机器，括号2代表第二台)</p>
+<p>docker bridge(1) -&gt; iptables(1) -&gt; wireguard(1) -&gt; wireguard(2) -&gt; iptables(2) -&gt; docker bridge(2)</p>
+<p>创建新的 bridge 网络，通过 iptables 将 bridge 网段流量转发到 wireguard，两台机器的 wireguard 之间做了 tunnel，另外一台机器的 wireguard 接收到流量通过 iptables 规则转发到 bridge 网络下的容器。</p>
+<p>我的环境</p>
+<p><img src="media/17659794748401/docker-wireguard.png" alt="docker-wireguard" /></p>
+<p>先提前互 ping 下，免的访问不了白测试</p>
+<pre><code class="language-plain_text"># Machine 1
+$ ping 74.48.78.11
+PING 74.48.78.11 (74.48.78.11) 56(84) bytes of data.
+64 bytes from 74.48.78.11: icmp_seq=1 ttl=48 time=189 ms
+64 bytes from 74.48.78.11: icmp_seq=2 ttl=48 time=181 ms
+
+# Machine 2
+$ ping 101.200.150.26
+PING 101.200.150.26 (101.200.150.26) 56(84) bytes of data.
+64 bytes from 101.200.150.26: icmp_seq=1 ttl=50 time=193 ms
+64 bytes from 101.200.150.26: icmp_seq=2 ttl=50 time=193 ms
+</code></pre>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network create --subnet 10.200.1.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+18ca4396c2977a987d3238f4a6b83d4dd3a0ceabad25c7c1f670a967c6b1cdef
+
+# Machine 2
+$ docker network create --subnet 10.200.2.0/24 -o com.docker.network.bridge.trusted_host_interfaces=&quot;wg0&quot; multi-host
+04c3ec0b2eaba837c5e974bdc6c76ed4dda8c10349fd3cb75af3506b0e2bac63
+</code></pre>
+<pre><code class="language-plain_text"># 两边分别执行，确保云厂商方面安全组开通 51820
+$ iptables -I INPUT -p udp --dport 51820 -j ACCEPT
+# 安装 wireguard 生成配置
+$ apt update &amp;&amp; apt install wireguard
+$ umask 077
+$ wg genkey &gt; privatekey
+$ wg pubkey &lt; privatekey &gt; publickey
+</code></pre>
+<p>PrivateKey 填本机的，PublicKey 则要填对端的</p>
+<p>原文：</p>
+<p>PrivateKey = &lt;replace with 'privatekey' file content from Machine 1&gt;<br />
+PublicKey = &lt;replace with 'publickey' file content from Machine 2&gt;</p>
+<pre><code class="language-plain_text"># 生成 wg 配置
+# Machine 1
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = kKaGXES+s2mFVYTxEMN/KTJ0k/a0S9bv8JxeVz0bdnA=
+
+[Peer]
+PublicKey = Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.2.0/24
+# Public IP of Machine 2
+Endpoint = 74.48.78.11:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# Machine 2
+$ cat /etc/wireguard/wg0.conf
+[Interface]
+ListenPort = 51820
+PrivateKey = MBLrCQ2eVCga+unX3IIKPSnyzsyh1SwkmRIkIryX+0k=
+
+[Peer]
+PublicKey = TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+# IP ranges for which a peer will route traffic: Docker subnet on Machine 2
+AllowedIPs = 10.200.1.0/24
+# Public IP of Machine 2
+Endpoint = 101.200.150.26:51820
+# Periodically send keepalive packets to keep NAT/firewall mapping alive
+PersistentKeepalive = 25
+
+# 分别启动
+$ wg-quick up wg0
+</code></pre>
+<p>查看 wg 状态</p>
+<pre><code class="language-plain_text"># Machine 1
+$ wg show
+interface: wg0
+  public key: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  private key: (hidden)
+  listening port: 51820
+
+peer: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  endpoint: 74.48.78.11:51820
+  allowed ips: 10.200.2.0/24
+  latest handshake: 45 seconds ago
+  transfer: 116.21 KiB received, 41.36 KiB sent
+  persistent keepalive: every 25 seconds
+  
+# Machine 2
+$ wg show
+interface: wg0
+  public key: Y8ENSMHYspa1x6Hfnj1YgZL0xSrOzBHeV7i6f6UZbhQ=
+  private key: (hidden)
+  listening port: 51820
+
+peer: TJOqJi0AuPP3GOOYFmq8jAsmak/hgKRfEpAH2nJNiVk=
+  endpoint: 101.200.150.26:51820
+  allowed ips: 10.200.1.0/24
+  latest handshake: 1 minute, 4 seconds ago
+  transfer: 39.93 KiB received, 116.46 KiB sent
+  persistent keepalive: every 25 seconds
+</code></pre>
+<p>配置 iptables 规则，允许 wg 到 bridge 网络</p>
+<pre><code class="language-plain_text"># Machine 1
+$ docker network ls -f name=multi-host
+NETWORK ID     NAME         DRIVER    SCOPE
+18ca4396c297   multi-host   bridge    local
+$ iptables -I DOCKER-USER -i wg0 -o br-18ca4396c297 -j ACCEPT
+
+# Machine 2
+$ docker network ls
+NETWORK ID     NAME         DRIVER    SCOPE
+e4613839f6f6   bridge       bridge    local
+f1954f4aff63   host         host      local
+04c3ec0b2eab   multi-host   bridge    local
+7fb9f0ad47ba   none         null      local
+$ iptables -I DOCKER-USER -i wg0 -o br-04c3ec0b2eab -j ACCEPT
+</code></pre>
+<p>最后配置下本机容器出网通过 wg 网卡的策略</p>
+<pre><code class="language-plain_text"># Machine 1
+$ iptables -t nat -I POSTROUTING -s 10.200.1.0/24 -o wg0 -j RETURN
+
+# Machine 2
+$ iptables -t nat -I POSTROUTING -s 10.200.2.0/24 -o wg0 -j RETURN
+</code></pre>
+<p>测试下互通性</p>
+<pre><code class="language-plain_text"># Machine 2
+$ docker run -d --name whoami --network multi-host traefik/whoami
+$ docker inspect b992403e1e4f|grep 10.200
+                    &quot;Gateway&quot;: &quot;10.200.2.1&quot;,
+                    &quot;IPAddress&quot;: &quot;10.200.2.2&quot;,
+                    
+# Machine 1
+$ docker run -it --rm --network multi-host busybox ping 10.200.2.2
+PING 10.200.2.2 (10.200.2.2): 56 data bytes
+64 bytes from 10.200.2.2: seq=0 ttl=62 time=194.198 ms
+64 bytes from 10.200.2.2: seq=1 ttl=62 time=190.275 ms
+64 bytes from 10.200.2.2: seq=2 ttl=62 time=198.435 ms
+64 bytes from 10.200.2.2: seq=3 ttl=62 time=196.896 ms
+64 bytes from 10.200.2.2: seq=4 ttl=62 time=197.444 ms
+^C
+--- 10.200.2.2 ping statistics ---
+6 packets transmitted, 5 packets received, 16% packet loss
+round-trip min/avg/max = 190.275/195.449/198.435 ms
+$ docker run -it --rm --network multi-host alpine/curl http://10.200.2.2
+Hostname: b992403e1e4f
+IP: 127.0.0.1
+IP: ::1
+IP: 10.200.2.2
+RemoteAddr: 10.200.1.2:60960
+GET / HTTP/1.1
+Host: 10.200.2.2
+User-Agent: curl/8.17.0
+Accept: */*
+</code></pre>
+<p>能看到互相通信没问题，就是延迟对比直 ping 会高一点点，毕竟本身两台机器就不近</p>
+<p>在 1 机器把 iptables 规则导出看看</p>
+<pre><code class="language-plain_text"># filter
+$ iptables -S -v
+-P INPUT ACCEPT -c 608049 168734434
+-P FORWARD DROP -c 0 0
+-P OUTPUT ACCEPT -c 0 0
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT
+-A FORWARD -c 270 22213 -j DOCKER-USER
+-A FORWARD -c 147 12070 -j DOCKER-FORWARD
+-A DOCKER ! -i docker0 -o docker0 -c 0 0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -c 0 0 -j DROP
+-A DOCKER-BRIDGE -o docker0 -c 0 0 -j DOCKER
+-A DOCKER-BRIDGE -o br-18ca4396c297 -c 0 0 -j DOCKER
+-A DOCKER-CT -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-CT -o br-18ca4396c297 -m conntrack --ctstate RELATED,ESTABLISHED -c 0 0 -j ACCEPT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-CT
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-INTERNAL
+-A DOCKER-FORWARD -c 147 12070 -j DOCKER-BRIDGE
+-A DOCKER-FORWARD -i docker0 -c 40 3360 -j ACCEPT
+-A DOCKER-FORWARD -i br-18ca4396c297 -c 107 8710 -j ACCEPT
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT
+
+# nat
+$ iptables -t nat -S -v
+-P PREROUTING ACCEPT -c 668150 42644933
+-P INPUT ACCEPT -c 0 0
+-P OUTPUT ACCEPT -c 7495 569953
+-P POSTROUTING ACCEPT -c 7501 570385
+-N DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL -c 667962 42630817 -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -c 0 0 -j DOCKER
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN
+-A POSTROUTING -s 10.200.1.0/24 ! -o br-18ca4396c297 -c 0 0 -j MASQUERADE
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -c 2 168 -j MASQUERADE
+</code></pre>
+<p>关键是这三条</p>
+<pre><code class="language-plain_text">-A INPUT -p udp -m udp --dport 51820 -c 2385 192148 -j ACCEPT # 允许 wg 入网
+-A DOCKER-USER -i wg0 -o br-18ca4396c297 -c 123 10143 -j ACCEPT # 允许 input 是 wg0 设备到 br-18ca4396c297 设备
+-A POSTROUTING -s 10.200.1.0/24 -o wg0 -c 6 432 -j RETURN # 从容器出网走 wg 然后转发出去
+</code></pre>
+<p>原文还说 DOCKER-USER 规则会优先 DOCKER 链处理，所以添加在 DOCKER-USER，以后在自定义容器规则可以参考，查询确实如此</p>
+<p><img src="media/17659794748401/17724308235955.png" alt="" /></p>
+<p>测试将 DOCKER-USER 的规则配置到 DOCKER rule 下也能正常工作，不过 docker 重启 DOCKER 里手动加的规则就会消失</p>
+<pre><code class="language-plain_text">$ iptables -I DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+$ iptables -S
+-P INPUT ACCEPT
+-P FORWARD DROP
+-P OUTPUT ACCEPT
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A INPUT -p udp -m udp --dport 51820 -j ACCEPT
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD
+-A DOCKER -i wg0 -o br-18ca4396c297 -j ACCEPT
+-A DOCKER ! -i docker0 -o docker0 -j DROP
+-A DOCKER ! -i br-18ca4396c297 -o br-18ca4396c297 -j DROP
+</code></pre>
+<p>原文也说了局限性，容器互相之间通过 ip 访问 没有服务发现，无法通过名称互相访问</p>
+<p><a href="https://uncloud.run/blog/connect-docker-containers-across-hosts-wireguard/#dns-resolution">DNS resolution</a></p>
+<pre><code class="language-plain_text">DNS resolution
+The main limitation of this setup is that containers can't find each other by name across machines. You need to use their IP addresses directly or implement a service discovery solution like Consul or CoreDNS.
+
+For small deployments, you can assign static IPs to containers and use those IPs in your app configuration. But service discovery is essential for larger and more dynamic deployments.
+</code></pre>
 <h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>不用 Kubernetes 情况下，用 uncloud 基本可以平替，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>不用 Kubernetes 情况下，用 uncloud 可以<del>平替</del>(平替谈不上，uncloud只是个多机管理容器的服务)测试玩玩，多机器通过 wireguard 组网 每个机器都会部署 caddy 接收流量，在小流量的情况下单台机器也足够，对域名做 A 记录添加多个 IP 会分流，通过 caddy 内部的 upstreams 变量会负载到所有机器，这时 A 记录添加一个也是可以的，如果机器在不同地域通过 dns 做地域区分 cloudflare 也有此功能，做 cicd 时 build 和 deploy 阶段也可分开，是在本地 ci 机器上 build 后 push image 到远端机器，这种形式 github action 就能实现。</p>
+<p>wireguard 这部分如果机器距离较远，该有的延迟不会变只是机器能互相通信，从稳定性上来说 服务器距离较远还是不建议组网，自己玩玩尚可，企业有需求不如直接用云厂商做 peer 或者像 gcp 那样各个区域本身就是通的，延迟低也不额外付费，只需规划好 ip 即可。</p>
 <p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
+<p>另外相比 uncloud 我觉得 <a href="https://www.hashicorp.com/en/products/nomad">nomad</a> 会更纯粹，只是负责容器管理 服务发现交给 <a href="https://www.hashicorp.com/en/products/consul">consul</a> 搭配 <a href="https://apisix.apache.org/">apisix</a> 网关，我觉得从管理和稳定性方面会更好。</p>
 <p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
 
 		</div>

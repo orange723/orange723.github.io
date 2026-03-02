@@ -4,7 +4,7 @@
 	<meta charset="utf-8">
 	<title>  
 	  
-  	ssh 使用 - orange723
+  	PPHC 测试 - orange723
   	
 	</title>
 
@@ -116,48 +116,199 @@
 			<div class="mid-col-container"> <div id="content" class="inner">
 
 	<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
-		<h1 class="title" itemprop="name">ssh 使用</h1>
+		<h1 class="title" itemprop="name">PPHC 测试</h1>
 		<div class="entry-content" itemprop="articleBody">
-			<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
-<h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
-<p>/etc/ssh/sshd_config</p>
-<pre><code class="language-plain_text">UsePAM no
-PasswordAuthentication no
+			<p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
+<p>作者姓名:吕文翰<br />
+原始网站地址:<a href="https://pphc.lvwenhan.com">https://pphc.lvwenhan.com</a></p>
+<h2><a id="nginx%E5%92%8C-apache%E9%9D%99%E6%80%81%E5%9B%BE%E7%89%87" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nginx 和 apache 静态图片</h2>
+<p>文中看到一张静态图片 “Nginx 的性能是 Apache 的四倍”</p>
+<p>nginx 和 apache 均未更改配置，直接使用容器启动 根目录替换为一张图片。</p>
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-nginx -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/share/nginx/html/jovan.jpg:ro -d nginx:stable
 </code></pre>
-<p>/etc/ssh/sshd_config.d/50-cloud-init.conf</p>
-<pre><code class="language-plain_text"># 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
-PasswordAuthentication yes
-</code></pre>
-<p>有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。</p>
-<p>如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目录</p>
-<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
-<p>~/.ssh/config</p>
-<pre><code class="language-plain_text"># 通过跳板机做转发
-Host beszel
-  Hostname localhost
-  User root
-  ProxyJump orange723
-  LocalForward 8090 localhost:8090
+<pre><code class="language-plain_text">$ oha -n 10000 -c 4 --connect-to 'pphc-nginx.orb.local:80:192.168.215.2:80' --latency-correction --disable-keepalive http://pphc-nginx.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	5859.5672 ms
+  Slowest:	21.9470 ms
+  Fastest:	1.2468 ms
+  Average:	2.3418 ms
+  Requests/sec:	1706.6107
 
-Host *
-  IdentityAgent agent.sock
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  ServerAliveInterval 15
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	4.08 GiB
+
+Response time histogram:
+   1.247 ms [1]    |
+   3.317 ms [9547] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.387 ms [433]  |■
+   7.457 ms [9]    |
+   9.527 ms [2]    |
+  11.597 ms [2]    |
+  13.667 ms [2]    |
+  15.737 ms [1]    |
+  17.807 ms [0]    |
+  19.877 ms [1]    |
+  21.947 ms [2]    |
+
+Response time distribution:
+  10.00% in 1.8269 ms
+  25.00% in 1.9920 ms
+  50.00% in 2.2289 ms
+  75.00% in 2.5561 ms
+  90.00% in 2.9806 ms
+  95.00% in 3.2815 ms
+  99.00% in 3.9765 ms
+  99.90% in 7.9387 ms
+  99.99% in 21.8587 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.1799 ms, 0.0535 ms, 3.3844 ms
+  DNS-lookup:	0.0029 ms, 0.0010 ms, 0.4548 ms
+
+Status code distribution:
+  [200] 10000 responses
 </code></pre>
-<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
-<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
-<p>client 会每隔多少s 发送一个 packet 到 server</p>
-<p>抓包看看</p>
-<p>no-time</p>
-<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
-<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
-<p>time</p>
-<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
-<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
-<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
-<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
+<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-apache -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/local/apache2/htdocs/jovan.jpg:ro httpd
 </code></pre>
+<pre><code class="language-plain_text">oha -n 10000 -c 4 --connect-to 'pphc-apache.orb.local:80:192.168.215.3:80' --latency-correction --disable-keepalive http://pphc-apache.orb.local/jovan.jpg
+Summary:
+  Success rate:	100.00%
+  Total:	6991.0027 ms
+  Slowest:	22.5767 ms
+  Fastest:	1.4700 ms
+  Average:	2.7935 ms
+  Requests/sec:	1430.4100
+
+  Total data:	23.88 GiB
+  Size/request:	2.45 MiB
+  Size/sec:	3.42 GiB
+
+Response time histogram:
+   1.470 ms [1]    |
+   3.581 ms [9035] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+   5.691 ms [904]  |■■■
+   7.802 ms [43]   |
+   9.913 ms [7]    |
+  12.023 ms [3]    |
+  14.134 ms [3]    |
+  16.245 ms [0]    |
+  18.355 ms [0]    |
+  20.466 ms [0]    |
+  22.577 ms [4]    |
+
+Response time distribution:
+  10.00% in 2.1455 ms
+  25.00% in 2.3568 ms
+  50.00% in 2.6547 ms
+  75.00% in 3.0646 ms
+  90.00% in 3.5604 ms
+  95.00% in 3.9060 ms
+  99.00% in 4.9914 ms
+  99.90% in 9.9304 ms
+  99.99% in 22.5364 ms
+
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.2219 ms, 0.0607 ms, 2.7639 ms
+  DNS-lookup:	0.0044 ms, 0.0010 ms, 0.4934 ms
+
+Status code distribution:
+  [200] 10000 responses
+</code></pre>
+<p>能看到实际 nginx 和 apache 差别没那么大，或许是在特定年代的特殊情况，不过两次请求都有一个问题 “总会有几个请求处理时间过长，尽管大部分请求会很快完成”</p>
+<h2><a id="apisix-nomad-consul%E6%9E%B6%E6%9E%84%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix + nomad + consul 架构测试</h2>
+<p>文中说到 api 网关能玩出花来，本地弄了个 apisix，顺便结合 nomad 和 consul 测试下。</p>
+<p>先测试下 apisix，根据官方文档配置了个 route，通过 api 看看结果</p>
+<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1 | jq
+{
+  &quot;total&quot;: 1,
+  &quot;list&quot;: [
+    {
+      &quot;key&quot;: &quot;/apisix/routes/00000000000000000015&quot;,
+      &quot;value&quot;: {
+        &quot;status&quot;: 1,
+        &quot;id&quot;: &quot;00000000000000000015&quot;,
+        &quot;enable_websocket&quot;: false,
+        &quot;update_time&quot;: 1772193933,
+        &quot;priority&quot;: 0,
+        &quot;name&quot;: &quot;getting-started-ip&quot;,
+        &quot;upstream&quot;: {
+          &quot;pass_host&quot;: &quot;pass&quot;,
+          &quot;tls&quot;: {
+            &quot;verify&quot;: false
+          },
+          &quot;nodes&quot;: [
+            {
+              &quot;priority&quot;: 0,
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;port&quot;: 80,
+              &quot;weight&quot;: 0
+            }
+          ],
+          &quot;type&quot;: &quot;roundrobin&quot;,
+          &quot;hash_on&quot;: &quot;vars&quot;,
+          &quot;checks&quot;: {
+            &quot;active&quot;: {
+              &quot;host&quot;: &quot;httpbin.org&quot;,
+              &quot;type&quot;: &quot;http&quot;,
+              &quot;healthy&quot;: {
+                &quot;http_statuses&quot;: [
+                  200
+                ],
+                &quot;interval&quot;: 1,
+                &quot;successes&quot;: 200
+              },
+              &quot;https_verify_certificate&quot;: false,
+              &quot;port&quot;: 80,
+              &quot;timeout&quot;: 2
+            }
+          },
+          &quot;scheme&quot;: &quot;http&quot;
+        },
+        &quot;methods&quot;: [
+          &quot;GET&quot;
+        ],
+        &quot;uri&quot;: &quot;/ip&quot;,
+        &quot;create_time&quot;: 1772193933
+      },
+      &quot;modifiedIndex&quot;: 16,
+      &quot;createdIndex&quot;: 16
+    }
+  ]
+}
+</code></pre>
+<p>直接将请求转发到 httpbin.org 了</p>
+<pre><code class="language-plain_text">$ curl http://127.0.0.1:9080/ip
+{
+  &quot;origin&quot;: &quot;192.168.117.1, 185.220.238.225&quot;
+}
+</code></pre>
+<p>nomad 也是很有趣的服务管理部署应用，和 terraform 是同公司，它只是做服务管理 像服务发现这类就交给 consul 测试的话配置起来不复杂，我的想法是这样：用 consul 将 nomad 和 apisix 连通，consul 也能给 nomad 管理的容器做健康检查 服务发现，apisix 找上游服务器通过 consul。</p>
+<p>最简单的架构，此状态下最基础是 consul</p>
+<p><img src="media/17720027672498/design-1-1.png" alt="design-1" /></p>
+<p>配置过程可查看 <a href="17724375213917.html">consul + nomad + apisix</a></p>
+<p>最后结果如下</p>
+<pre><code class="language-plain_text">$ curl -s 127.0.0.1:9080
+&lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
+&lt;ul&gt;
+  &lt;li&gt;Task: web&lt;/li&gt;
+  &lt;li&gt;Group: servers&lt;/li&gt;
+  &lt;li&gt;Job: hello-world&lt;/li&gt;
+  &lt;li&gt;Metadata value for foo: bar&lt;/li&gt;
+  &lt;li&gt;Currently running on port: 8001&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+<p>如果要作为生产环境需要考虑的有很多，上面仅是测试</p>
+<ul>
+<li>consul 高可用，单独部署还是让 nomad 管理部署</li>
+<li>consul acl 策略，访问更安全</li>
+<li>nomad 的多机器</li>
+<li>nomad 网络，除了服务发现还有服务暴露，即使有 api 网关作为转发，要考虑各个容器间是二层转发还是三层 flannel/calico</li>
+<li>apisix 高可用，前提是 etcd 高可用，服务层是无状态的 容量不够横向扩展</li>
+</ul>
 
 		</div>
 	</article>
