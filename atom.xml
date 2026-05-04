@@ -4,7 +4,7 @@
     <subtitle></subtitle>
     <link href="https://orange723.github.io/atom.xml" rel="self"/>
     <link href="https://orange723.github.io/"/>
-    <updated>2026-05-04T14:43:03+08:00</updated>
+    <updated>2026-05-04T16:18:15+08:00</updated>
     <id>https://orange723.github.io/</id>
     <author>
         <name>orange723</name>
@@ -541,8 +541,192 @@ cloud func 和 cloud run 使用的 resource 是不同的，但是假如你有个
         <id>https://orange723.github.io/17663324445184.html</id>
         <published>2025-12-21T23:54:04+08:00</published>
         <updated>2025-12-21T23:54:04+08:00</updated>
-        <summary></summary>
-        <content type="html"><![CDATA[]]></content>
+        <summary>环境 orbstack 两台 vm
+d1: client
+d2: docker + caddy
+基础信息
+d1
+$ ip addr show eth0 | grep inet
+    inet 192.168.139.208/24 metric 100 brd 192.168.139.255 scope global dynamic eth0
+
+$ curl -s -v 192.168.139.184|head
+*   Trying 192.168.139.184:80...
+* Connected to 192.168.139.184 (192.168.139.184) port 80
+&g</summary>
+        <content type="html"><![CDATA[<p>环境 orbstack 两台 vm</p>
+<p>d1: client<br />
+d2: docker + caddy</p>
+<h2><a id="%E5%9F%BA%E7%A1%80%E4%BF%A1%E6%81%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>基础信息</h2>
+<h3><a id="d1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>d1</h3>
+<pre><code class="language-plain_text">$ ip addr show eth0 | grep inet
+    inet 192.168.139.208/24 metric 100 brd 192.168.139.255 scope global dynamic eth0
+</code></pre>
+<pre><code class="language-plain_text">$ curl -s -v 192.168.139.184|head
+*   Trying 192.168.139.184:80...
+* Connected to 192.168.139.184 (192.168.139.184) port 80
+&gt; GET / HTTP/1.1
+&gt; Host: 192.168.139.184
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt;
+&lt; HTTP/1.1 200 OK
+&lt; Accept-Ranges: bytes
+&lt; Content-Length: 18753
+&lt; Content-Type: text/html; charset=utf-8
+&lt; Etag: &quot;dhu1h5rv30g0egx&quot;
+&lt; Last-Modified: Wed, 15 Apr 2026 21:16:48 GMT
+&lt; Server: Caddy
+&lt; Vary: Accept-Encoding
+&lt; Date: Mon, 04 May 2026 07:21:36 GMT
+</code></pre>
+<h3><a id="d2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>d2</h3>
+<pre><code class="language-plain_text">$ docker run -it --rm -p 80:80 caddy
+</code></pre>
+<pre><code class="language-plain_text">$ ip addr show eth0 | grep inet
+    inet 192.168.139.184/24 metric 100 brd 192.168.139.255 scope global dynamic eth0
+    
+$ ip addr show docker0 | grep inet
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+    
+$ ip route
+default via 192.168.139.1 dev eth0 proto dhcp src 192.168.139.184 metric 100
+0.250.250.200 via 192.168.139.1 dev eth0 proto dhcp src 192.168.139.184 metric 100
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1
+192.168.139.0/24 dev eth0 proto kernel scope link src 192.168.139.184 metric 100
+192.168.139.1 dev eth0 proto dhcp scope link src 192.168.139.184 metric 100
+</code></pre>
+<pre><code class="language-plain_text">$ sudo docker inspect 47981fb7a43f|grep IPAddress
+                    &quot;IPAddress&quot;: &quot;172.17.0.2&quot;,
+</code></pre>
+<p>filter</p>
+<pre><code class="language-plain_text">$ sudo iptables -S
+-P INPUT ACCEPT
+-P FORWARD ACCEPT
+-P OUTPUT ACCEPT
+-N DOCKER
+-N DOCKER-BRIDGE
+-N DOCKER-CT
+-N DOCKER-FORWARD
+-N DOCKER-INTERNAL
+-N DOCKER-USER
+-A FORWARD -j DOCKER-USER
+-A FORWARD -j DOCKER-FORWARD
+-A DOCKER -d 172.17.0.2/32 ! -i docker0 -o docker0 -p tcp -m tcp --dport 80 -j ACCEPT
+-A DOCKER ! -i docker0 -o docker0 -j DROP
+-A DOCKER-BRIDGE -o docker0 -j DOCKER
+-A DOCKER-CT -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A DOCKER-FORWARD -j DOCKER-CT
+-A DOCKER-FORWARD -j DOCKER-INTERNAL
+-A DOCKER-FORWARD -j DOCKER-BRIDGE
+-A DOCKER-FORWARD -i docker0 -j ACCEPT
+</code></pre>
+<p>nat</p>
+<pre><code class="language-plain_text">$ sudo iptables -S -t nat
+-P PREROUTING ACCEPT
+-P INPUT ACCEPT
+-P OUTPUT ACCEPT
+-P POSTROUTING ACCEPT
+-N DOCKER
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A DOCKER ! -i docker0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 172.17.0.2:80
+</code></pre>
+<p>主要看这四条，filter允许 172.17.0.2 80端口访问，nat POSTROUTING 出网时做 DNAT</p>
+<pre><code class="language-plain_text">-A DOCKER -d 172.17.0.2/32 ! -i docker0 -o docker0 -p tcp -m tcp --dport 80 -j ACCEPT
+
+-A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
+-A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
+-A DOCKER ! -i docker0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 172.17.0.2:80
+</code></pre>
+<h2><a id="tcpdumpconntrack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>tcpdump/conntrack</h2>
+<p>d2</p>
+<pre><code class="language-plain_text">$ tcpdump -i eth0 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-eth0.pcap">eth0.pcap</a></p>
+<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.28.png" alt="" /></p>
+<pre><code class="language-plain_text">$ tcpdump -i docker0 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-docker0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-docker0.pcap">docker0.pcap</a></p>
+<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.42.png" alt="" /></p>
+<pre><code class="language-plain_text">$ tcpdump -i veth4535c98 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-veth4535c98.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-veth4535c98.pcap">veth4535c98.pcap</a></p>
+<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.52.png" alt="" /></p>
+<p>能看到每个网卡 Time 部分都不一样，从 veth -&gt; docker0 -&gt; eth0 是越来越大的，可以简单理解为转发损耗</p>
+<p>再次访问，通过 conntrack 能看到是 src=172.17.0.2 就是容器的 ip</p>
+<pre><code class="language-plain_text">$ conntrack -L | grep 80
+conntrack v1.4.8 (conntrack-tools): 1 flow entries have been shown.
+tcp      6 119 TIME_WAIT src=192.168.139.208 dst=192.168.139.184 sport=59290 dport=80 src=172.17.0.2 dst=192.168.139.208 sport=80 dport=59290 [ASSURED] mark=0 use=1
+</code></pre>
+<p>通过抓包也能看到容器回包是 veth -&gt; docker0 -&gt; eth0</p>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>放一个 ai 总结，会更加清楚</p>
+<pre><code class="language-plain_text">  完整路径还原
+
+  容器内 eth0
+    ↓  (回包发出，二层走 veth pair)
+  veth4535c98 (host 端)         ← 第 1 次被抓到
+    ↓  (这个 veth 本身就是 docker0 的一个 port)
+  docker0 桥                      ← 第 2 次被抓到（同一包）
+    ↓  (Linux 网桥决定：目的 IP 192.168.139.208 不在桥本地网段，
+         走三层路由 → 路由表指向 eth0)
+  内核路由 / POSTROUTING
+    ↓  (在 POSTROUTING 链做反向 NAT：
+         conntrack 还原 src 172.17.0.2:80 → 192.168.139.184:80)
+  eth0 出去                       ← 第 3 次被抓到
+    ↓
+  vm-client
+
+  你之前问的&quot;veth 是直接回还是要经过 docker0&quot;
+
+  从抓包铁证：
+
+  1. 数据链路层上看，veth 的 host 端就是 docker0 的一个端口——这俩在同一个 Linux bridge 上。包从容器侧 veth 出来，自动就在 docker0 桥上了。
+  2. 但是包不会在 docker0 上&quot;消失&quot;或&quot;反弹&quot;。docker0 是一个二层桥，桥要做转发决策：
+    • 目的 MAC 是不是桥上其他端口能到？→ 不是（vm-client 的 MAC 不在桥上）
+    • 目的 IP 是不是 docker0 自己（172.17.0.1）？→ 不是
+    • 那就走三层路由，交给内核的路由子系统
+  3. 内核路由查表：192.168.139.208 → 走 eth0
+  4. 在 eth0 出去之前，POSTROUTING 链触发，conntrack 反向 NAT 把 src 改回 vm-docker IP
+
+  所以&quot;veth → docker0 → eth0&quot;这个顺序是对的，但要理解：
+  • veth host 端和 docker0 是同一个桥域，包跨这两个抓包点其实是&quot;桥内部转发&quot;，没有真正的物理跳跃
+  • 真正的&quot;跳&quot;是从 docker0 上行到 IP 路由层 → 再下行到 eth0——这一步包做了 NAT 改写
+
+  你看到时间戳几乎相同的现象
+
+  ┌─────────┬────────┬───────┐
+  │ 抓包点  │ 时间戳 │ Δ     │
+  ├─────────┼────────┼───────┤
+  │ veth    │ 676821 │ -     │
+  │ docker0 │ 676834 │ +13µs │
+  │ eth0    │ 676842 │ +8µs  │
+  └─────────┴────────┴───────┘
+
+  整个 veth → docker0 → eth0 全程 21 微秒。这说明三个抓包点在数据流上是串行的同一个包，不是分别独立产生的。
+
+  还有一个有趣的细节
+
+  请求方向（S 第一行）：
+
+  docker0:  192.168.139.208 &gt; 172.17.0.2.80      ← DNAT 后 (dst 已改)
+  veth:     192.168.139.208 &gt; 172.17.0.2.80      ← DNAT 后 (dst 已改)
+  eth0:     192.168.139.208 &gt; 192.168.139.184.80 ← DNAT 前 (dst 还是 vm-docker)
+
+  入向 DNAT 发生在 PREROUTING（在 eth0 之后、docker0 之前），所以你看到 eth0 抓到的包目的 IP 还是 vm-docker，而 docker0/veth 抓到时已经被改成容器 IP 了。
+
+  回包方向（S. 第二行）：
+
+  veth:     172.17.0.2.80 &gt; 192.168.139.208      ← 反向 NAT 前
+  docker0:  172.17.0.2.80 &gt; 192.168.139.208      ← 反向 NAT 前
+  eth0:     192.168.139.184.80 &gt; 192.168.139.208 ← 反向 NAT 后 (src 已改)
+
+  回包反向 NAT 发生在 POSTROUTING（在 docker0/veth 之后、eth0 之前），所以 docker0 上看到的源 IP 还是容器 IP，eth0 上看到的源 IP 已经是 vm-docker IP 了。
+
+  这跟我之前讲的 NAT 时机完美对应。你这个实验做得非常漂亮，三个抓包点正好把 NAT 的&quot;前/中/后&quot;三个状态都看到了。
+</code></pre>
+]]></content>
         
     </entry>
     
