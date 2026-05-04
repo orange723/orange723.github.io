@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)">
-<title>Docker 流量路径 - orange723 - orange723</title>
+<title>ipvs - orange723 - orange723</title>
 <meta name="description" content="">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%23f97316'/%3E%3Ccircle cx='16' cy='16' r='14' fill='%23f97316' fill-opacity='0.18'/%3E%3C/svg%3E">
 <link rel="alternate" type="application/atom+xml" title="orange723" href="atom.xml">
@@ -39,212 +39,171 @@
 
 <main class="layout">
  <div class="main">
-    <article class="post">
-        <header class="post-header">
-            <h1 class="post-title">Docker 流量路径</h1>
-            <div class="post-meta">
-                <time datetime="2025-12-21T23:54:04+08:00">2025/12/21</time>
-                
+    <div class="timeline-header">
+        <h2 class="timeline-title">#ipvs - orange723</h2>
+        <span class="timeline-count">1 posts</span>
+    </div>
+
+    <div class="echo-list">
+        
+        <article class="echo">
+            <div class="echo-meta">
+                <time datetime="2026-05-04T16:19:23+08:00">2026/05/04</time>
                 
             </div>
-        </header>
 
-        <div class="post-content">
-            <p>环境 orbstack 两台 vm</p>
-<p>d1: client</p>
-<p>d2: docker + caddy</p>
-<h2><a id="%E5%9F%BA%E7%A1%80%E4%BF%A1%E6%81%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>基础信息</h2>
-<h3><a id="d1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>d1</h3>
-<pre><code class="language-plain_text">$ ip addr show eth0 | grep inet
-    inet 192.168.139.208/24 metric 100 brd 192.168.139.255 scope global dynamic eth0
-</code></pre>
-<pre><code class="language-plain_text">$ curl -s -v 192.168.139.184|head
-*   Trying 192.168.139.184:80...
-* Connected to 192.168.139.184 (192.168.139.184) port 80
-&gt; GET / HTTP/1.1
-&gt; Host: 192.168.139.184
-&gt; User-Agent: curl/8.5.0
-&gt; Accept: */*
-&gt;
-&lt; HTTP/1.1 200 OK
-&lt; Accept-Ranges: bytes
-&lt; Content-Length: 18753
-&lt; Content-Type: text/html; charset=utf-8
-&lt; Etag: &quot;dhu1h5rv30g0egx&quot;
-&lt; Last-Modified: Wed, 15 Apr 2026 21:16:48 GMT
-&lt; Server: Caddy
-&lt; Vary: Accept-Encoding
-&lt; Date: Mon, 04 May 2026 07:21:36 GMT
-</code></pre>
-<h3><a id="d2" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>d2</h3>
-<pre><code class="language-plain_text">$ docker run -it --rm -p 80:80 caddy
-</code></pre>
-<pre><code class="language-plain_text">$ ip addr show eth0 | grep inet
-    inet 192.168.139.184/24 metric 100 brd 192.168.139.255 scope global dynamic eth0
-    
-$ ip addr show docker0 | grep inet
-    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
-    
-$ ip route
-default via 192.168.139.1 dev eth0 proto dhcp src 192.168.139.184 metric 100
-0.250.250.200 via 192.168.139.1 dev eth0 proto dhcp src 192.168.139.184 metric 100
-172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1
-192.168.139.0/24 dev eth0 proto kernel scope link src 192.168.139.184 metric 100
-192.168.139.1 dev eth0 proto dhcp scope link src 192.168.139.184 metric 100
-</code></pre>
-<pre><code class="language-plain_text">$ sudo docker inspect 47981fb7a43f|grep IPAddress
-                    &quot;IPAddress&quot;: &quot;172.17.0.2&quot;,
-</code></pre>
-<p>filter</p>
-<pre><code class="language-plain_text">$ sudo iptables -S
--P INPUT ACCEPT
--P FORWARD ACCEPT
--P OUTPUT ACCEPT
--N DOCKER
--N DOCKER-BRIDGE
--N DOCKER-CT
--N DOCKER-FORWARD
--N DOCKER-INTERNAL
--N DOCKER-USER
--A FORWARD -j DOCKER-USER
--A FORWARD -j DOCKER-FORWARD
--A DOCKER -d 172.17.0.2/32 ! -i docker0 -o docker0 -p tcp -m tcp --dport 80 -j ACCEPT
--A DOCKER ! -i docker0 -o docker0 -j DROP
--A DOCKER-BRIDGE -o docker0 -j DOCKER
--A DOCKER-CT -o docker0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
--A DOCKER-FORWARD -j DOCKER-CT
--A DOCKER-FORWARD -j DOCKER-INTERNAL
--A DOCKER-FORWARD -j DOCKER-BRIDGE
--A DOCKER-FORWARD -i docker0 -j ACCEPT
-</code></pre>
-<p>nat</p>
-<pre><code class="language-plain_text">$ sudo iptables -S -t nat
--P PREROUTING ACCEPT
--P INPUT ACCEPT
--P OUTPUT ACCEPT
--P POSTROUTING ACCEPT
--N DOCKER
--A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
--A OUTPUT ! -d 127.0.0.0/8 -m addrtype --dst-type LOCAL -j DOCKER
--A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
--A DOCKER ! -i docker0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 172.17.0.2:80
-</code></pre>
-<p>主要看这四条，filter允许 172.17.0.2 80端口访问，nat POSTROUTING 出网时做 DNAT</p>
-<pre><code class="language-plain_text">-A DOCKER -d 172.17.0.2/32 ! -i docker0 -o docker0 -p tcp -m tcp --dport 80 -j ACCEPT
+            <h3 class="echo-title"><a href="17778827637791.html">ipvs nat</a></h3>
 
--A PREROUTING -m addrtype --dst-type LOCAL -j DOCKER
--A POSTROUTING -s 172.17.0.0/16 ! -o docker0 -j MASQUERADE
--A DOCKER ! -i docker0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 172.17.0.2:80
+            <div class="echo-excerpt"><p>orbstack</p>
+<p>vm-1: client</p>
+<p>d1: caddy * 2</p>
+<p>ipvs: lb</p>
+<pre><code class="language-plain_text">apt install -y ipvsadm conntrack tcpdump iproute2 net-tools curl iptables
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.conf.all.rp_filter=0
+sysctl -w net.ipv4.conf.eth0.rp_filter=0
+
+modprobe ip_vs
+modprobe ip_vs_rr
+modprobe ip_vs_wrr
+modprobe ip_vs_sh
+modprobe ip_vs_lc
+
+ipvsadm -ln
+iptables -t nat -S
+ip addr show eth0
 </code></pre>
-<h2><a id="tcpdumpconntrack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>tcpdump/conntrack</h2>
-<p>d2</p>
-<pre><code class="language-plain_text">$ tcpdump -i eth0 -s0 -X -nn 'tcp port 80' -w docker/d2-eth0.pcap --print
+<h2><a id="%E5%AE%9E%E9%AA%8Ca%EF%BC%9A%E7%BB%8F%E5%85%B8-nat%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8D%E5%8A%A0-snat%EF%BC%8C%E8%AE%BF%E9%97%AE%E5%A4%B1%E8%B4%A5%EF%BC%89" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>实验 A：经典 NAT 模式（不加 SNAT，访问失败）</h2>
+<pre><code class="language-plain_text">ipvsadm -C
+ipvsadm -A -t 192.168.139.29:80 -s rr
+ipvsadm -a -t 192.168.139.29:80 -r 192.168.139.184:80 -m       # -m = NAT (Masq)
+ipvsadm -a -t 192.168.139.29:80 -r 192.168.139.184:81 -m
+ipvsadm -ln
+
+没有任何 iptables 规则，没有开 vs.conntrack。
 </code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-eth0.pcap">eth0.pcap</a></p>
-<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.28.png" alt="" /></p>
-<pre><code class="language-plain_text">$ tcpdump -i docker0 -s0 -X -nn 'tcp port 80' -w docker/d2-docker0.pcap --print
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80' -w ipvs/not-snat/nat-vm-1-eth0.pcap --print
 </code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-docker0.pcap">docker0.pcap</a></p>
-<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.42.png" alt="" /></p>
-<pre><code class="language-plain_text">$ tcpdump -i veth4535c98 -s0 -X -nn 'tcp port 80' -w docker/d2-veth4535c98.pcap --print
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-vm-1-eth0.pcap">nat-vm-1-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.33.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/not-snat/nat-ipvs-eth0.pcap --print
 </code></pre>
-<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-veth4535c98.pcap">veth4535c98.pcap</a></p>
-<p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.52.png" alt="" /></p>
-<p>能看到每个网卡 Time 部分都不一样，从 veth -&gt; docker0 -&gt; eth0 是越来越大的，可以简单理解为转发损耗</p>
-<p>再次访问，通过 conntrack 能看到是 src=172.17.0.2 就是容器的 ip</p>
-<pre><code class="language-plain_text">$ conntrack -L | grep 80
-conntrack v1.4.8 (conntrack-tools): 1 flow entries have been shown.
-tcp      6 119 TIME_WAIT src=192.168.139.208 dst=192.168.139.184 sport=59290 dport=80 src=172.17.0.2 dst=192.168.139.208 sport=80 dport=59290 [ASSURED] mark=0 use=1
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-ipvs-eth0.pcap">nat-ipvs-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.46.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/not-snat/nat-d2-eth0.pcap --print
 </code></pre>
-<p>通过抓包也能看到容器回包是 veth -&gt; docker0 -&gt; eth0</p>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-d2-eth0.pcap">nat-d2-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.57.png" alt="" /></p>
+<pre><code class="language-plain_text">$ ipvsadm -lnc
+IPVS connection entries
+pro expire state       source             virtual            destination
+TCP 00:59  SYN_RECV    192.168.139.68:37564 192.168.139.29:80  192.168.139.184:80
+</code></pre>
+<p>能看到一直卡在 SYN_RECV 所以 curl 会卡住</p>
+<h2><a id="%E5%AE%9E%E9%AA%8Cb%EF%BC%9Anat-snat%EF%BC%88fullnat%EF%BC%8C%E5%B7%A5%E4%BD%9C%EF%BC%89" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>实验 B：NAT + SNAT（FullNAT，工作）</h2>
+<p>开启 conntrack</p>
+<pre><code class="language-plain_text">iptables -t nat -A POSTROUTING -d 192.168.139.184 -p tcp --dport 80 -j SNAT --to 192.168.139.29
+iptables -t nat -A POSTROUTING -d 192.168.139.184 -p tcp --dport 81 -j SNAT --to 192.168.139.29
+
+sysctl -w net.ipv4.vs.conntrack=1
+iptables -t nat -S POSTROUTING
+</code></pre>
+<pre><code class="language-plain_text">ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.139.29:80 rr
+  -&gt; 192.168.139.184:80           Masq    1      0          1
+  -&gt; 192.168.139.184:81           Masq    1      0          1
+</code></pre>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80' -w ipvs/snat/nat-vm-1-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-vm-1-eth0.pcap">nat-vm-1-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.55.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/snat/nat-ipvs-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-ipvs-eth0.pcap">nat-ipvs-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.45.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/snat/nat-d2-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-d2-eth0.pcap">nat-d2-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.34.png" alt="" /></p>
+<pre><code class="language-plain_text">conntrack -L
+tcp      6 84 TIME_WAIT src=192.168.139.68 dst=192.168.139.29 sport=43856 dport=80 src=192.168.139.184 dst=192.168.139.29 sport=80 dport=43856 [ASSURED] mark=0 use=1
+tcp      6 46 TIME_WAIT src=192.168.139.68 dst=192.168.139.29 sport=47380 dport=80 src=192.168.139.184 dst=192.168.139.29 sport=81 dport=47380 [ASSURED] mark=0 use=1
+conntrack v1.4.8 (conntrack-tools): 2 flow entries have been shown.
+</code></pre>
+<p>加了规则后链路通了，不过会有新的问题 在 vm-1 抓包能看到发起了重试，这很奇怪</p>
+<p>叫 ai 分析了下</p>
+<p>根因：net.ipv4.vs.conntrack=1 让 IPVS 跟 conntrack 共存，在连接刚建立的瞬间存在状态机竞争窗口，invalid 状态的包被丢</p>
+<pre><code class="language-plain_text">看 ipvs 视角，前 3 个 GET 的入向包都没有对应的出向（没有转发出去）：
+
+18:58:32.335745  ipvs 入向收到 GET（第 2 次重传）
+               ← 没有对应的出向！
+18:58:32.544XXX  ipvs 入向收到 GET（第 3 次重传）
+               ← 也没有出向！
+18:58:32.951XXX  ipvs 入向收到 GET（第 4 次重传）
+18:58:32.951XXX  ipvs 出向转给 d2  ← 这次才转发！
+
+ipvs 把前 3 个数据包丢了！
+
+为什么？这是 IPVS + conntrack 的一个经典 race condition
+
+T0: SYN              → IPVS 建立连接 → DNAT 到 d2:81 → 转发
+  SYN-ACK          → ipvs → 反向 NAT → 回 vm-1
+  ACK              → ipvs → 转发到 d2
+T0+1ms: GET 数据包到达 ipvs
+  │
+  ├─ IPVS 已经知道这条 conn 转给 d2:81
+  ├─ 但是 conntrack 表里这条连接还在 SYN_RECV 状态？
+  │  或者 conntrack 在 GET 这一刻刚好被 d2 的 SYN-ACK 推到 ESTABLISHED，
+  │  但 SNAT 状态机短暂混乱
+  │
+  └─ 结果：包被 conntrack 标记为 invalid 或丢弃
+第 2 次重传 (200ms 后)：仍然有问题，丢
+第 3 次重传 (400ms 后)：仍然有问题，丢
+第 4 次重传 (800ms 后)：状态稳定了，终于通过！
+
+这是开了 net.ipv4.vs.conntrack=1 之后的已知副作用——IPVS 和 conntrack 两套状态机共存，握手完成的瞬间存在竞争窗口。
+</code></pre>
 <h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
-<p>放一个 ai 总结，会更加清楚</p>
-<pre><code class="language-plain_text">  完整路径还原
+<p>NAT 模式</p>
+<pre><code class="language-plain_text">client ─请求─► director ──NAT──► RS
 
-  容器内 eth0
-    ↓  (回包发出，二层走 veth pair)
-  veth4535c98 (host 端)         ← 第 1 次被抓到
-    ↓  (这个 veth 本身就是 docker0 的一个 port)
-  docker0 桥                      ← 第 2 次被抓到（同一包）
-    ↓  (Linux 网桥决定：目的 IP 192.168.139.208 不在桥本地网段，
-         走三层路由 → 路由表指向 eth0)
-  内核路由 / POSTROUTING
-    ↓  (在 POSTROUTING 链做反向 NAT：
-         conntrack 还原 src 172.17.0.2:80 → 192.168.139.184:80)
-  eth0 出去                       ← 第 3 次被抓到
-    ↓
-  vm-client
+client ◄───响应────── director ◄───响应─── RS
 
-  你之前问的&quot;veth 是直接回还是要经过 docker0&quot;
+                     ↑
+                     └ 必经之路！双向流量都过 director
 
-  从抓包铁证：
-
-  1. 数据链路层上看，veth 的 host 端就是 docker0 的一个端口——这俩在同一个 Linux bridge 上。包从容器侧 veth 出来，自动就在 docker0 桥上了。
-  2. 但是包不会在 docker0 上&quot;消失&quot;或&quot;反弹&quot;。docker0 是一个二层桥，桥要做转发决策：
-    • 目的 MAC 是不是桥上其他端口能到？→ 不是（vm-client 的 MAC 不在桥上）
-    • 目的 IP 是不是 docker0 自己（172.17.0.1）？→ 不是
-    • 那就走三层路由，交给内核的路由子系统
-  3. 内核路由查表：192.168.139.208 → 走 eth0
-  4. 在 eth0 出去之前，POSTROUTING 链触发，conntrack 反向 NAT 把 src 改回 vm-docker IP
-
-  所以&quot;veth → docker0 → eth0&quot;这个顺序是对的，但要理解：
-  • veth host 端和 docker0 是同一个桥域，包跨这两个抓包点其实是&quot;桥内部转发&quot;，没有真正的物理跳跃
-  • 真正的&quot;跳&quot;是从 docker0 上行到 IP 路由层 → 再下行到 eth0——这一步包做了 NAT 改写
-
-  你看到时间戳几乎相同的现象
-
-  ┌─────────┬────────┬───────┐
-  │ 抓包点  │ 时间戳 │ Δ     │
-  ├─────────┼────────┼───────┤
-  │ veth    │ 676821 │ -     │
-  │ docker0 │ 676834 │ +13µs │
-  │ eth0    │ 676842 │ +8µs  │
-  └─────────┴────────┴───────┘
-
-  整个 veth → docker0 → eth0 全程 21 微秒。这说明三个抓包点在数据流上是串行的同一个包，不是分别独立产生的。
-
-  还有一个有趣的细节
-
-  请求方向（S 第一行）：
-
-  docker0:  192.168.139.208 &gt; 172.17.0.2.80      ← DNAT 后 (dst 已改)
-  veth:     192.168.139.208 &gt; 172.17.0.2.80      ← DNAT 后 (dst 已改)
-  eth0:     192.168.139.208 &gt; 192.168.139.184.80 ← DNAT 前 (dst 还是 vm-docker)
-
-  入向 DNAT 发生在 PREROUTING（在 eth0 之后、docker0 之前），所以你看到 eth0 抓到的包目的 IP 还是 vm-docker，而 docker0/veth 抓到时已经被改成容器 IP 了。
-
-  回包方向（S. 第二行）：
-
-  veth:     172.17.0.2.80 &gt; 192.168.139.208      ← 反向 NAT 前
-  docker0:  172.17.0.2.80 &gt; 192.168.139.208      ← 反向 NAT 前
-  eth0:     192.168.139.184.80 &gt; 192.168.139.208 ← 反向 NAT 后 (src 已改)
-
-  回包反向 NAT 发生在 POSTROUTING（在 docker0/veth 之后、eth0 之前），所以 docker0 上看到的源 IP 还是容器 IP，eth0 上看到的源 IP 已经是 vm-docker IP 了。
-
-  这跟我之前讲的 NAT 时机完美对应。你这个实验做得非常漂亮，三个抓包点正好把 NAT 的&quot;前/中/后&quot;三个状态都看到了。
+所有包：源/目的 IP 都被改写
 </code></pre>
+<p>DR 模式</p>
+<pre><code class="language-plain_text">client ─请求─► director ──仅改MAC──► RS
 
-        </div>
+client ◄────响应────────────────────  RS
+     └─ 直接回，回程不经过 director！
 
-        
-        </div>
-        
-    </article>
+请求包：IP 不变，只换二层目的 MAC
+响应包：直接二层送出（看起来像 RS 自己就是 VIP）
+</code></pre>
+</div>
+            <a class="echo-readmore" href="17778827637791.html">阅读全文 →</a>
 
-    <nav class="post-nav">
+            <div class="echo-tags">
+                
+                <a href="tag_ipvs.html">#ipvs</a>
+                
+                <a href="tag_iptables.html">#iptables</a>
+                
+            </div>
+        </article>
         
-        <a class="prev" href="17663325089626.html">
-            <span class="label">← 上一篇</span>
-            Terraform 使用
-        </a>
-        
-        
-        <a class="next" href="17659794748401.html">
-            <span class="label">下一篇 →</span>
-            uncloud 初体验
-        </a>
-        
-    </nav>
+    </div>
+
+    <div class="pager">
+        <a href="" class="pager-prev">← 上一页</a>
+        <a href="" class="pager-next">下一页 →</a>
+    </div>
 </div>
  <aside class="sidebar">
     <section class="profile">

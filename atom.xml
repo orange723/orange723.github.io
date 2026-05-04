@@ -4,12 +4,198 @@
     <subtitle></subtitle>
     <link href="https://orange723.github.io/atom.xml" rel="self"/>
     <link href="https://orange723.github.io/"/>
-    <updated>2026-05-04T16:18:15+08:00</updated>
+    <updated>2026-05-04T20:12:40+08:00</updated>
     <id>https://orange723.github.io/</id>
     <author>
         <name>orange723</name>
         
     </author>
+    
+    <entry>
+        <title>iptables</title>
+        <link href="https://orange723.github.io/17778942784352.html"/>
+        <id>https://orange723.github.io/17778942784352.html</id>
+        <published>2026-05-04T19:31:18+08:00</published>
+        <updated>2026-05-04T19:31:18+08:00</updated>
+        <summary>表
+iptables 有 5 张表：
+• filter（默认）：决定&quot;放过/丢弃&quot;
+• nat：做 NAT，专门改写源/目的 IP 和端口
+• mangle：改 TTL、TOS 等
+• raw：在 conntrack 之前操作
+• security：SELinux 用
+</summary>
+        <content type="html"><![CDATA[<h2><a id="%E8%A1%A8" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>表</h2>
+<p>iptables 有 5 张表：</p>
+<p>• filter（默认）：决定&quot;放过/丢弃&quot;<br />
+• nat：做 NAT，专门改写源/目的 IP 和端口<br />
+• mangle：改 TTL、TOS 等<br />
+• raw：在 conntrack 之前操作<br />
+• security：SELinux 用</p>
+]]></content>
+        
+        <category term="iptables"/>
+        
+    </entry>
+    
+    <entry>
+        <title>ipvs nat</title>
+        <link href="https://orange723.github.io/17778827637791.html"/>
+        <id>https://orange723.github.io/17778827637791.html</id>
+        <published>2026-05-04T16:19:23+08:00</published>
+        <updated>2026-05-04T16:19:23+08:00</updated>
+        <summary>orbstack
+vm-1: client
+d1: caddy * 2
+ipvs: lb
+apt install -y ipvsadm conntrack tcpdump iproute2 net-tools curl iptables
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.conf.all.rp_filter=0
+sysctl -w net.ipv4.conf.eth0.rp_filter=0
+
+modprobe ip_vs
+modprobe ip_vs_rr
+modprobe ip_vs_wrr
+modprobe ip_vs_</summary>
+        <content type="html"><![CDATA[<p>orbstack</p>
+<p>vm-1: client</p>
+<p>d1: caddy * 2</p>
+<p>ipvs: lb</p>
+<pre><code class="language-plain_text">apt install -y ipvsadm conntrack tcpdump iproute2 net-tools curl iptables
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.conf.all.rp_filter=0
+sysctl -w net.ipv4.conf.eth0.rp_filter=0
+
+modprobe ip_vs
+modprobe ip_vs_rr
+modprobe ip_vs_wrr
+modprobe ip_vs_sh
+modprobe ip_vs_lc
+
+ipvsadm -ln
+iptables -t nat -S
+ip addr show eth0
+</code></pre>
+<h2><a id="%E5%AE%9E%E9%AA%8Ca%EF%BC%9A%E7%BB%8F%E5%85%B8-nat%E6%A8%A1%E5%BC%8F%EF%BC%88%E4%B8%8D%E5%8A%A0-snat%EF%BC%8C%E8%AE%BF%E9%97%AE%E5%A4%B1%E8%B4%A5%EF%BC%89" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>实验 A：经典 NAT 模式（不加 SNAT，访问失败）</h2>
+<pre><code class="language-plain_text">ipvsadm -C
+ipvsadm -A -t 192.168.139.29:80 -s rr
+ipvsadm -a -t 192.168.139.29:80 -r 192.168.139.184:80 -m       # -m = NAT (Masq)
+ipvsadm -a -t 192.168.139.29:80 -r 192.168.139.184:81 -m
+ipvsadm -ln
+
+没有任何 iptables 规则，没有开 vs.conntrack。
+</code></pre>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80' -w ipvs/not-snat/nat-vm-1-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-vm-1-eth0.pcap">nat-vm-1-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.33.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/not-snat/nat-ipvs-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-ipvs-eth0.pcap">nat-ipvs-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.46.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/not-snat/nat-d2-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/not-snat/nat-d2-eth0.pcap">nat-d2-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2018.54.57.png" alt="" /></p>
+<pre><code class="language-plain_text">$ ipvsadm -lnc
+IPVS connection entries
+pro expire state       source             virtual            destination
+TCP 00:59  SYN_RECV    192.168.139.68:37564 192.168.139.29:80  192.168.139.184:80
+</code></pre>
+<p>能看到一直卡在 SYN_RECV 所以 curl 会卡住</p>
+<h2><a id="%E5%AE%9E%E9%AA%8Cb%EF%BC%9Anat-snat%EF%BC%88fullnat%EF%BC%8C%E5%B7%A5%E4%BD%9C%EF%BC%89" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>实验 B：NAT + SNAT（FullNAT，工作）</h2>
+<p>开启 conntrack</p>
+<pre><code class="language-plain_text">iptables -t nat -A POSTROUTING -d 192.168.139.184 -p tcp --dport 80 -j SNAT --to 192.168.139.29
+iptables -t nat -A POSTROUTING -d 192.168.139.184 -p tcp --dport 81 -j SNAT --to 192.168.139.29
+
+sysctl -w net.ipv4.vs.conntrack=1
+iptables -t nat -S POSTROUTING
+</code></pre>
+<pre><code class="language-plain_text">ipvsadm -ln
+IP Virtual Server version 1.2.1 (size=4096)
+Prot LocalAddress:Port Scheduler Flags
+  -&gt; RemoteAddress:Port           Forward Weight ActiveConn InActConn
+TCP  192.168.139.29:80 rr
+  -&gt; 192.168.139.184:80           Masq    1      0          1
+  -&gt; 192.168.139.184:81           Masq    1      0          1
+</code></pre>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80' -w ipvs/snat/nat-vm-1-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-vm-1-eth0.pcap">nat-vm-1-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.55.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/snat/nat-ipvs-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-ipvs-eth0.pcap">nat-ipvs-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.45.png" alt="" /></p>
+<pre><code class="language-plain_text">tcpdump -i eth0 -s0 -X -nn 'port 80 or port 81' -w ipvs/snat/nat-d2-eth0.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/ipvs/snat/nat-d2-eth0.pcap">nat-d2-eth0.pcap</a></p>
+<p><img src="media/17778827637791/%E6%88%AA%E5%B1%8F2026-05-04%2019.04.34.png" alt="" /></p>
+<pre><code class="language-plain_text">conntrack -L
+tcp      6 84 TIME_WAIT src=192.168.139.68 dst=192.168.139.29 sport=43856 dport=80 src=192.168.139.184 dst=192.168.139.29 sport=80 dport=43856 [ASSURED] mark=0 use=1
+tcp      6 46 TIME_WAIT src=192.168.139.68 dst=192.168.139.29 sport=47380 dport=80 src=192.168.139.184 dst=192.168.139.29 sport=81 dport=47380 [ASSURED] mark=0 use=1
+conntrack v1.4.8 (conntrack-tools): 2 flow entries have been shown.
+</code></pre>
+<p>加了规则后链路通了，不过会有新的问题 在 vm-1 抓包能看到发起了重试，这很奇怪</p>
+<p>叫 ai 分析了下</p>
+<p>根因：net.ipv4.vs.conntrack=1 让 IPVS 跟 conntrack 共存，在连接刚建立的瞬间存在状态机竞争窗口，invalid 状态的包被丢</p>
+<pre><code class="language-plain_text">看 ipvs 视角，前 3 个 GET 的入向包都没有对应的出向（没有转发出去）：
+
+18:58:32.335745  ipvs 入向收到 GET（第 2 次重传）
+               ← 没有对应的出向！
+18:58:32.544XXX  ipvs 入向收到 GET（第 3 次重传）
+               ← 也没有出向！
+18:58:32.951XXX  ipvs 入向收到 GET（第 4 次重传）
+18:58:32.951XXX  ipvs 出向转给 d2  ← 这次才转发！
+
+ipvs 把前 3 个数据包丢了！
+
+为什么？这是 IPVS + conntrack 的一个经典 race condition
+
+T0: SYN              → IPVS 建立连接 → DNAT 到 d2:81 → 转发
+  SYN-ACK          → ipvs → 反向 NAT → 回 vm-1
+  ACK              → ipvs → 转发到 d2
+T0+1ms: GET 数据包到达 ipvs
+  │
+  ├─ IPVS 已经知道这条 conn 转给 d2:81
+  ├─ 但是 conntrack 表里这条连接还在 SYN_RECV 状态？
+  │  或者 conntrack 在 GET 这一刻刚好被 d2 的 SYN-ACK 推到 ESTABLISHED，
+  │  但 SNAT 状态机短暂混乱
+  │
+  └─ 结果：包被 conntrack 标记为 invalid 或丢弃
+第 2 次重传 (200ms 后)：仍然有问题，丢
+第 3 次重传 (400ms 后)：仍然有问题，丢
+第 4 次重传 (800ms 后)：状态稳定了，终于通过！
+
+这是开了 net.ipv4.vs.conntrack=1 之后的已知副作用——IPVS 和 conntrack 两套状态机共存，握手完成的瞬间存在竞争窗口。
+</code></pre>
+<h2><a id="%E6%80%BB%E7%BB%93" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>总结</h2>
+<p>NAT 模式</p>
+<pre><code class="language-plain_text">client ─请求─► director ──NAT──► RS
+
+client ◄───响应────── director ◄───响应─── RS
+
+                     ↑
+                     └ 必经之路！双向流量都过 director
+
+所有包：源/目的 IP 都被改写
+</code></pre>
+<p>DR 模式</p>
+<pre><code class="language-plain_text">client ─请求─► director ──仅改MAC──► RS
+
+client ◄────响应────────────────────  RS
+     └─ 直接回，回程不经过 director！
+
+请求包：IP 不变，只换二层目的 MAC
+响应包：直接二层送出（看起来像 RS 自己就是 VIP）
+</code></pre>
+]]></content>
+        
+        <category term="ipvs"/>
+        
+        <category term="iptables"/>
+        
+    </entry>
     
     <entry>
         <title>consul + nomad + apisix</title>
@@ -554,8 +740,8 @@ $ curl -s -v 192.168.139.184|head
 * Connected to 192.168.139.184 (192.168.139.184) port 80
 &g</summary>
         <content type="html"><![CDATA[<p>环境 orbstack 两台 vm</p>
-<p>d1: client<br />
-d2: docker + caddy</p>
+<p>d1: client</p>
+<p>d2: docker + caddy</p>
 <h2><a id="%E5%9F%BA%E7%A1%80%E4%BF%A1%E6%81%AF" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>基础信息</h2>
 <h3><a id="d1" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>d1</h3>
 <pre><code class="language-plain_text">$ ip addr show eth0 | grep inet
@@ -641,15 +827,15 @@ default via 192.168.139.1 dev eth0 proto dhcp src 192.168.139.184 metric 100
 </code></pre>
 <h2><a id="tcpdumpconntrack" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>tcpdump/conntrack</h2>
 <p>d2</p>
-<pre><code class="language-plain_text">$ tcpdump -i eth0 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-eth0.pcap --print
+<pre><code class="language-plain_text">$ tcpdump -i eth0 -s0 -X -nn 'tcp port 80' -w docker/d2-eth0.pcap --print
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-eth0.pcap">eth0.pcap</a></p>
 <p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.28.png" alt="" /></p>
-<pre><code class="language-plain_text">$ tcpdump -i docker0 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-docker0.pcap --print
+<pre><code class="language-plain_text">$ tcpdump -i docker0 -s0 -X -nn 'tcp port 80' -w docker/d2-docker0.pcap --print
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-docker0.pcap">docker0.pcap</a></p>
 <p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.42.png" alt="" /></p>
-<pre><code class="language-plain_text">$ tcpdump -i veth4535c98 -s0 -X -nn 'tcp port 80' -w /Users/gongjianyu/Desktop/pcap/docker/d2-veth4535c98.pcap --print
+<pre><code class="language-plain_text">$ tcpdump -i veth4535c98 -s0 -X -nn 'tcp port 80' -w docker/d2-veth4535c98.pcap --print
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/docker/d2-veth4535c98.pcap">veth4535c98.pcap</a></p>
 <p><img src="media/17663324445184/%E6%88%AA%E5%B1%8F2026-05-04%2015.49.52.png" alt="" /></p>

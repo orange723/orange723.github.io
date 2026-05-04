@@ -2,9 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
     <loc>https://orange723.github.io/</loc>
-    <lastmod>2026-05-04T16:18:18+08:00</lastmod>
+    <lastmod>2026-05-04T20:12:43+08:00</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
+</url>
+
+<url>
+    <loc>https://orange723.github.io/17778942784352.html</loc>
+    <lastmod>2026-05-04T19:31:18+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+</url>
+
+<url>
+    <loc>https://orange723.github.io/17778827637791.html</loc>
+    <lastmod>2026-05-04T16:19:23+08:00</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
 </url>
 
 <url>
