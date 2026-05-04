@@ -1,25 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
-
-  <title><![CDATA[orange723]]></title>
-  <link href="https://orange723.github.io/atom.xml" rel="self"/>
-  <link href="https://orange723.github.io/"/>
-  <updated>2026-03-03T00:01:19+08:00</updated>
-  <id>https://orange723.github.io/</id>
-  <author>
-    <name><![CDATA[]]></name>
+    <title>orange723</title>
+    <subtitle></subtitle>
+    <link href="https://orange723.github.io/atom.xml" rel="self"/>
+    <link href="https://orange723.github.io/"/>
+    <updated>2026-05-04T14:41:13+08:00</updated>
+    <id>https://orange723.github.io/</id>
+    <author>
+        <name>orange723</name>
+        
+    </author>
     
-  </author>
-  <generator uri="http://www.coderforart.com/">CoderForArt</generator>
-
-  
-  <entry>
-    <title type="html"><![CDATA[consul + nomad + apisix]]></title>
-    <link href="https://orange723.github.io/17724375213917.html"/>
-    <updated>2026-03-02T15:45:21+08:00</updated>
-    <id>https://orange723.github.io/17724375213917.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="consul" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>consul</h2>
+    <entry>
+        <title>consul + nomad + apisix</title>
+        <link href="https://orange723.github.io/17724375213917.html"/>
+        <id>https://orange723.github.io/17724375213917.html</id>
+        <published>2026-03-02T15:45:21+08:00</published>
+        <updated>2026-03-02T15:45:21+08:00</updated>
+        <summary>consul
+推荐看直播录制的视频，讲的很好 很轻松 Getting into HashiCorp Consul
+还有个生产部署推荐配置 production-vms
+推荐使用官方源直接安装 install 配置文件和目录会直接配置好，无需自己规划
+# 直接启动
+$ sudo consul agent -dev -bind 192.168.139.24 -client 0.0.0.0
+==&gt; Starting Consul agent...
+               Version: '1.22.5'
+            Build Date: '2026-02-26 11:50</summary>
+        <content type="html"><![CDATA[<h2><a id="consul" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>consul</h2>
 <p>推荐看直播录制的视频，讲的很好 很轻松 <a href="https://www.youtube.com/watch?v=0H06VKvlTJQ&amp;list=PL81sUbsFNc5b8i2g2sB_tG-PuZxEdlDpK">Getting into HashiCorp Consul</a></p>
 <p>还有个生产部署推荐配置 <a href="https://developer.hashicorp.com/consul/tutorials/production-vms">production-vms</a></p>
 <p>推荐使用官方源直接安装 <a href="https://developer.hashicorp.com/consul/install">install</a> 配置文件和目录会直接配置好，无需自己规划</p>
@@ -207,17 +214,26 @@ $ export NOMAD_ADDR=http://localhost:4646
 <p>获取状态</p>
 <pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1|jq
 </code></pre>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[PPHC 测试]]></title>
-    <link href="https://orange723.github.io/17720027672498.html"/>
-    <updated>2026-02-25T14:59:27+08:00</updated>
-    <id>https://orange723.github.io/17720027672498.html</id>
-    <content type="html"><![CDATA[
-<p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
+        
+    </entry>
+    
+    <entry>
+        <title>PPHC 测试</title>
+        <link href="https://orange723.github.io/17720027672498.html"/>
+        <id>https://orange723.github.io/17720027672498.html</id>
+        <published>2026-02-25T14:59:27+08:00</published>
+        <updated>2026-02-25T14:59:27+08:00</updated>
+        <summary>PPHC
+作者姓名:吕文翰
+原始网站地址:https://pphc.lvwenhan.com
+nginx 和 apache 静态图片
+文中看到一张静态图片 “Nginx 的性能是 Apache 的四倍”
+nginx 和 apache 均未更改配置，直接使用容器启动 根目录替换为一张图片。
+$ docker run --rm -dit --name pphc-nginx -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/share/nginx/html/jovan.jpg:ro -d nginx:stable
+
+$ oha </summary>
+        <content type="html"><![CDATA[<p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
 <p>作者姓名:吕文翰<br />
 原始网站地址:<a href="https://pphc.lvwenhan.com">https://pphc.lvwenhan.com</a></p>
 <h2><a id="nginx%E5%92%8C-apache%E9%9D%99%E6%80%81%E5%9B%BE%E7%89%87" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nginx 和 apache 静态图片</h2>
@@ -408,17 +424,32 @@ Status code distribution:
 <li>nomad 网络，除了服务发现还有服务暴露，即使有 api 网关作为转发，要考虑各个容器间是二层转发还是三层 flannel/calico</li>
 <li>apisix 高可用，前提是 etcd 高可用，服务层是无状态的 容量不够横向扩展</li>
 </ul>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Claude code 使用 Doubao-Seed-Code]]></title>
-    <link href="https://orange723.github.io/17685326962696.html"/>
-    <updated>2026-01-16T11:04:56+08:00</updated>
-    <id>https://orange723.github.io/17685326962696.html</id>
-    <content type="html"><![CDATA[
-<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+        
+    </entry>
+    
+    <entry>
+        <title>Claude code 使用 Doubao-Seed-Code</title>
+        <link href="https://orange723.github.io/17685326962696.html"/>
+        <id>https://orange723.github.io/17685326962696.html</id>
+        <published>2026-01-16T11:04:56+08:00</published>
+        <updated>2026-01-16T11:04:56+08:00</updated>
+        <summary>开源模型质变：Claude Code 超级小白入门指南 
+安装
+claude-code-router
+$ npm install -g @musistudio/claude-code-router
+
+claude-code
+$ curl -fsSL https://claude.ai/install.sh | bash
+
+                    or
+
+$ npm install -g @anthropic-ai/claude-code
+
+Doubao-Seed-Code
+
+登录火山云 - https://console.volcengine.com/ark/region:ar</summary>
+        <content type="html"><![CDATA[<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
 <h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
 <p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
 <pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
@@ -440,17 +471,26 @@ $ npm install -g @anthropic-ai/claude-code
 <li>重启 ccr</li>
 <li>本地执行 ccr code</li>
 </ul>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Terraform 使用]]></title>
-    <link href="https://orange723.github.io/17663325089626.html"/>
-    <updated>2025-12-21T23:55:08+08:00</updated>
-    <id>https://orange723.github.io/17663325089626.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="import" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>import</h2>
+        
+    </entry>
+    
+    <entry>
+        <title>Terraform 使用</title>
+        <link href="https://orange723.github.io/17663325089626.html"/>
+        <id>https://orange723.github.io/17663325089626.html</id>
+        <published>2025-12-21T23:55:08+08:00</published>
+        <updated>2025-12-21T23:55:08+08:00</updated>
+        <summary>import
+将已经创建的机器转换成 terraform 并管理
+resource &quot;google_compute_instance&quot; &quot;compute-00&quot; {}
+
+$ terraform import google_compute_instance.compute-00 projects/PROJECT_ID/zones/REGION/instances/compute-00
+
+gcp lb
+
+cloud func 和 cloud run 使用的 resource 是不同的，但是假如你有个 cloud func 它其实是会先创建一个 cloud r</summary>
+        <content type="html"><![CDATA[<h2><a id="import" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>import</h2>
 <p>将已经创建的机器转换成 terraform 并管理</p>
 <pre><code class="language-main.tf">resource &quot;google_compute_instance&quot; &quot;compute-00&quot; {}
 </code></pre>
@@ -491,27 +531,39 @@ $ npm install -g @anthropic-ai/claude-code
       }
     }
 </code></pre>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Docker 流量路径]]></title>
-    <link href="https://orange723.github.io/17663324445184.html"/>
-    <updated>2025-12-21T23:54:04+08:00</updated>
-    <id>https://orange723.github.io/17663324445184.html</id>
-    <content type="html"><![CDATA[
+        
+    </entry>
+    
+    <entry>
+        <title>Docker 流量路径</title>
+        <link href="https://orange723.github.io/17663324445184.html"/>
+        <id>https://orange723.github.io/17663324445184.html</id>
+        <published>2025-12-21T23:54:04+08:00</published>
+        <updated>2025-12-21T23:54:04+08:00</updated>
+        <summary></summary>
+        <content type="html"><![CDATA[]]></content>
+        
+    </entry>
+    
+    <entry>
+        <title>uncloud 初体验</title>
+        <link href="https://orange723.github.io/17659794748401.html"/>
+        <id>https://orange723.github.io/17659794748401.html</id>
+        <published>2025-12-17T21:51:14+08:00</published>
+        <updated>2025-12-17T21:51:14+08:00</updated>
+        <summary>uncloud
+安装
+quick-start
+注意项：
+- mac 上使用 1password 的 ssh-agent，需覆盖 SSH_AUTH_SOCK 变量
+- 使用私钥登录要写全路径，不然执行 uc 会提示找不到私钥
+- 多集群可通过指定上下文区分 -c, --context string
+- 因为域名和 dns 原因，并未直接安装 caddy 和 dns
+$ export SSH_AUTH_SOCK=~/Library/Group\ Containers/com.1password/t/agent.sock
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[uncloud 初体验]]></title>
-    <link href="https://orange723.github.io/17659794748401.html"/>
-    <updated>2025-12-17T21:51:14+08:00</updated>
-    <id>https://orange723.github.io/17659794748401.html</id>
-    <content type="html"><![CDATA[
-<p><a href="https://uncloud.run/">uncloud</a></p>
+$ uc machine init root@example.com --n</summary>
+        <content type="html"><![CDATA[<p><a href="https://uncloud.run/">uncloud</a></p>
 <h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
 <p><a href="https://github.com/psviderski/uncloud/?tab=readme-ov-file#-quick-start">quick-start</a></p>
 <p>注意项：<br />
@@ -874,17 +926,28 @@ For small deployments, you can assign static IPs to containers and use those IPs
 <p>在更新 caddy 时会出现配置同步较慢问题，比如更新了 caddy config，重新 uc deploy 后 uc caddy config 会发现配置只会有默认 caddy 内容，路由信息不会更新的很快，或者 caddy config 写错了会导致 caddy 启动只有默认配置，由于只有一台机器并且还是 ip ssl，多域名暂未测试，可以借助 caddy 配置文件检测来规避文件编写错误问题，caddy 是支持零停机更新的 在多域名多服务情况下应该不会出现此问题。</p>
 <p>另外相比 uncloud 我觉得 <a href="https://www.hashicorp.com/en/products/nomad">nomad</a> 会更纯粹，只是负责容器管理 服务发现交给 <a href="https://www.hashicorp.com/en/products/consul">consul</a> 搭配 <a href="https://apisix.apache.org/">apisix</a> 网关，我觉得从管理和稳定性方面会更好。</p>
 <p><img src="media/17659794748401/uncloud.png" alt="uncloud" /></p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[文章链接]]></title>
-    <link href="https://orange723.github.io/17643154634631.html"/>
-    <updated>2025-11-28T15:37:43+08:00</updated>
-    <id>https://orange723.github.io/17643154634631.html</id>
-    <content type="html"><![CDATA[
-<p>放一些工作当中借鉴过的文档。</p>
+        
+    </entry>
+    
+    <entry>
+        <title>文章链接</title>
+        <link href="https://orange723.github.io/17643154634631.html"/>
+        <id>https://orange723.github.io/17643154634631.html</id>
+        <published>2025-11-28T15:37:43+08:00</published>
+        <updated>2025-11-28T15:37:43+08:00</updated>
+        <summary>放一些工作当中借鉴过的文档。
+devops
+roadmap devops
+learning devops
+运维的未来是平台工程
+关于高可用的系统
+什么是 DDoS 攻击?
+Microservices architecture on Google Cloud
+Using SSH over the HTTPS port
+terraform
+Directory Structure and Modules Terraform on GCP — Organize your Terraform configurations using a clear directory structure and mod</summary>
+        <content type="html"><![CDATA[<p>放一些工作当中借鉴过的文档。</p>
 <h2><a id="devops" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>devops</h2>
 <p><a href="https://roadmap.sh/devops">roadmap devops</a></p>
 <p><a href="https://github.com/Pradumnasaraf/DevOps">learning devops</a></p>
@@ -911,17 +974,30 @@ For small deployments, you can assign static IPs to containers and use those IPs
 <p><a href="https://gcloud-compute.com/">gcloud-compute</a></p>
 <h2><a id="%E9%9D%A2%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>面试</h2>
 <p><a href="https://become-a-programmer.2baxb.me/cheng-wei-qiu-zhi-zhe/qiu-zhi-yu-jian-li">求职与简历</a></p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[一个数据包的生命周期]]></title>
-    <link href="https://orange723.github.io/17634557278324.html"/>
-    <updated>2025-11-18T16:48:47+08:00</updated>
-    <id>https://orange723.github.io/17634557278324.html</id>
-    <content type="html"><![CDATA[
-<p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
+        
+        <category term="terraform"/>
+        
+        <category term="devops"/>
+        
+    </entry>
+    
+    <entry>
+        <title>一个数据包的生命周期</title>
+        <link href="https://orange723.github.io/17634557278324.html"/>
+        <id>https://orange723.github.io/17634557278324.html</id>
+        <published>2025-11-18T16:48:47+08:00</published>
+        <updated>2025-11-18T16:48:47+08:00</updated>
+        <summary>实验流程来自：01｜一个数据包的网络之旅：网络是如何工作的？
+也可以阅读此文章：life-of-a-packet-in-the-linux-kernel
+通过一个 HTTP 请求来观察数据包的旅程
+$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
+
+packet.pcap
+
+$ curl -o /dev/null -v http://example.com
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  </summary>
+        <content type="html"><![CDATA[<p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
 <p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
 <h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
 <pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
@@ -1106,17 +1182,35 @@ NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
 </code></pre>
 <p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
 <p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Kubeadm 部署]]></title>
-    <link href="https://orange723.github.io/17633538272989.html"/>
-    <updated>2025-11-17T12:30:27+08:00</updated>
-    <id>https://orange723.github.io/17633538272989.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="docker-cri-docker" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>docker + cri-docker</h2>
+        
+        <category term="http"/>
+        
+        <category term="tcp"/>
+        
+    </entry>
+    
+    <entry>
+        <title>Kubeadm 部署</title>
+        <link href="https://orange723.github.io/17633538272989.html"/>
+        <id>https://orange723.github.io/17633538272989.html</id>
+        <published>2025-11-17T12:30:27+08:00</published>
+        <updated>2025-11-17T12:30:27+08:00</updated>
+        <summary>docker + cri-docker
+docker
+cri-docker
+install cri-docker
+docker proxy
+kubeadm
+install kubeadm
+flannal
+$ sudo modprobe br_netfilter
+$ sudo apt update
+$ sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset
+
+flannel deployment
+Failed to check br_netfilter: stat /proc/s</summary>
+        <content type="html"><![CDATA[<h2><a id="docker-cri-docker" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>docker + cri-docker</h2>
 <p><a href="https://docs.docker.com/engine/install/ubuntu/">docker</a></p>
 <p><a href="https://github.com/Mirantis/cri-dockerd">cri-docker</a></p>
 <p><a href="https://mirantis.github.io/cri-dockerd/usage/install-manually/">install cri-docker</a></p>
@@ -1131,17 +1225,30 @@ $ sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsa
 <p><a href="https://github.com/flannel-io/flannel">flannel deployment</a></p>
 <p><a href="https://www.google.com/search?q=Failed+to+check+br_netfilter%3A+stat+%2Fproc%2Fsys%2Fnet%2Fbridge%2Fbridge-nf-call-iptables%3A+no+such+file+or+directory&amp;rlz=1C5BAPC_en__1171__1171&amp;ie=UTF-8">Failed to check br_netfilter: stat /proc/sys/net/bridge/bridge-nf-call-iptables: no such file or directory</a></p>
 <p><a href="https://github.com/flannel-io/flannel/issues/728#issuecomment-325347810">pod cidr not assgned</a></p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Kubernetes Service 流量路径]]></title>
-    <link href="https://orange723.github.io/17631942404298.html"/>
-    <updated>2025-11-15T16:10:40+08:00</updated>
-    <id>https://orange723.github.io/17631942404298.html</id>
-    <content type="html"><![CDATA[
-<p><a href="17633538272989.html">Kubeadm 部署</a></p>
+        
+        <category term="kubernetes"/>
+        
+    </entry>
+    
+    <entry>
+        <title>Kubernetes Service 流量路径</title>
+        <link href="https://orange723.github.io/17631942404298.html"/>
+        <id>https://orange723.github.io/17631942404298.html</id>
+        <published>2025-11-15T16:10:40+08:00</published>
+        <updated>2025-11-15T16:10:40+08:00</updated>
+        <summary>Kubeadm 部署
+$ kubeadm init --cri-socket=unix:///run/cri-dockerd.sock --ignore-preflight-errors=mem --pod-network-cidr=10.244.0.0/16
+
+$ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+
+Service NodePort
+入网
+nginx deployment 单副本，service 为 nodeport
+apiVersion: apps/v1
+kind: Deployment
+met</summary>
+        <content type="html"><![CDATA[<p><a href="17633538272989.html">Kubeadm 部署</a></p>
 <pre><code class="language-plain_text">$ kubeadm init --cri-socket=unix:///run/cri-dockerd.sock --ignore-preflight-errors=mem --pod-network-cidr=10.244.0.0/16
 
 $ kubectl taint nodes --all node-role.kubernetes.io/control-plane-
@@ -1590,17 +1697,41 @@ Address                  HWtype  HWaddress           Flags Mask            Iface
 </code></pre>
 <p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/flannel/node/flannel-1-hostgw-ping.pcap">flannel-1-hostgw-ping.pcap</a></p>
 <p><img src="media/17631942404298/17633752529419.png" alt="" /></p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[TCP 数据的发送和接收]]></title>
-    <link href="https://orange723.github.io/17627609182209.html"/>
-    <updated>2025-11-10T15:48:38+08:00</updated>
-    <id>https://orange723.github.io/17627609182209.html</id>
-    <content type="html"><![CDATA[
-<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+        
+        <category term="kubernetes"/>
+        
+        <category term="service"/>
+        
+        <category term="flannel"/>
+        
+        <category term="vxlan"/>
+        
+        <category term="host-gw"/>
+        
+    </entry>
+    
+    <entry>
+        <title>TCP 数据的发送和接收</title>
+        <link href="https://orange723.github.io/17627609182209.html"/>
+        <id>https://orange723.github.io/17627609182209.html</id>
+        <published>2025-11-10T15:48:38+08:00</published>
+        <updated>2025-11-10T15:48:38+08:00</updated>
+        <summary>实验流程来自 知识星球：程序员踩坑案例分享
+TCP 超时重传
+TCP 基于时间的重传
+vm-1
+
+$ sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp-send-receive-time-retries.pcap --print
+
+vm-1-tcp-send-receive-time-retries.pcap
+
+当连接建立好后，vm-2 拦截 vm-1 发的包
+$ sudo iptables -A INPUT -p tcp --sport 9527 -j DROP
+
+vm-1 发送数据
+$ nc -k -l 192.16</summary>
+        <content type="html"><![CDATA[<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
 <h2><a id="tcp%E8%B6%85%E6%97%B6%E9%87%8D%E4%BC%A0" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 超时重传</h2>
 <h3><a id="tcp%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E7%9A%84%E9%87%8D%E4%BC%A0" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP 基于时间的重传</h3>
 <pre><code class="language-plain_text">vm-1
@@ -2003,17 +2134,29 @@ tcp window update - 有缓冲区可以处理，请继续发送</p>
 <p><a href="https://milestone-of-se.nesuke.com/knowhow/wireshark/wireshark-tcp-window-zero-update-full/">wireshark-tcp-window-zero-update-full</a></p>
 <h2><a id="tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a><del>TCP 拥塞控制</del></h2>
 <p>此部分暂时不做测试，接触的较少。</p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[TCP 连接的关闭]]></title>
-    <link href="https://orange723.github.io/17624942962052.html"/>
-    <updated>2025-11-07T13:44:56+08:00</updated>
-    <id>https://orange723.github.io/17624942962052.html</id>
-    <content type="html"><![CDATA[
-<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+        
+        <category term="tcp"/>
+        
+    </entry>
+    
+    <entry>
+        <title>TCP 连接的关闭</title>
+        <link href="https://orange723.github.io/17624942962052.html"/>
+        <id>https://orange723.github.io/17624942962052.html</id>
+        <published>2025-11-07T13:44:56+08:00</published>
+        <updated>2025-11-07T13:44:56+08:00</updated>
+        <summary>实验流程来自 知识星球：程序员踩坑案例分享
+断开连接
+同样 vm-2 连接 vm-1，然后 vm-2 做为客户端断开连接
+sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close.pcap --print
+
+vm-1-tcp_close.pcap
+
+很正常的三次握手连接之后四次挥手关闭连接，一切正常
+在看 vm-2 上的连接状态，正常进入 TIME_WAIT 等待 2 * MSL 时间是 60s，没有重试就是在等待
+$ sudo netstat -anpo|grep Recv-Q;sudo netstat -anpo</summary>
+        <content type="html"><![CDATA[<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
 <h2><a id="%E6%96%AD%E5%BC%80%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>断开连接</h2>
 <p>同样 vm-2 连接 vm-1，然后 vm-2 做为客户端断开连接</p>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp_close.pcap --print
@@ -2321,17 +2464,34 @@ tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   
 <h2><a id="tcp-close%E7%8A%B6%E6%80%81" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>TCP_CLOSE 状态</h2>
 <p>没找到合适的，自己画了个</p>
 <p><img src="media/17624942962052/tcp-close-1.png" alt="tcp-close" /></p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[机器初始化]]></title>
-    <link href="https://orange723.github.io/17622391793233.html"/>
-    <updated>2025-11-04T14:52:59+08:00</updated>
-    <id>https://orange723.github.io/17622391793233.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
+        
+        <category term="tcp"/>
+        
+    </entry>
+    
+    <entry>
+        <title>机器初始化</title>
+        <link href="https://orange723.github.io/17622391793233.html"/>
+        <id>https://orange723.github.io/17622391793233.html</id>
+        <published>2025-11-04T14:52:59+08:00</published>
+        <updated>2025-11-04T14:52:59+08:00</updated>
+        <summary>linux
+sudo apt update
+sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset btop git ca-certificates tmux jq curl gpg file
+
+cloud-init
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - bridge-utils
+  - make
+  - cmake
+  - pkg-config
+  - build-ess</summary>
+        <content type="html"><![CDATA[<h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
 <pre><code class="language-plain_text">sudo apt update
 sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset btop git ca-certificates tmux jq curl gpg file
 </code></pre>
@@ -2481,17 +2641,33 @@ $ nvm install --lts
 $ nvm use --lts
 </code></pre>
 <p>使用 nvm 要注意多版本，比如 gemini 装到 A 版本 node，但目前是在用 B 版本 node，调用会提示找不到</p>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[TCP 连接的建立]]></title>
-    <link href="https://orange723.github.io/17622389809452.html"/>
-    <updated>2025-11-04T14:49:40+08:00</updated>
-    <id>https://orange723.github.io/17622389809452.html</id>
-    <content type="html"><![CDATA[
-<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
+        
+    </entry>
+    
+    <entry>
+        <title>TCP 连接的建立</title>
+        <link href="https://orange723.github.io/17622389809452.html"/>
+        <id>https://orange723.github.io/17622389809452.html</id>
+        <published>2025-11-04T14:49:40+08:00</published>
+        <updated>2025-11-04T14:49:40+08:00</updated>
+        <summary>实验流程来自 知识星球：程序员踩坑案例分享
+创建连接
+sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp.pcap --print
+
+vm-1-tcp.pcap
+
+当时碰到个问题，在 vm-1 用 &quot;nc -k -l vm-1 9527&quot;，vm-2 连接 vm-1 时 vm-1 窗口收不到消息
+在两台 vm 里 hosts 文件加了对端的机器名和 ip
+vm-1
+198.19.249.151 vm-2
+
+vm-2
+198.19.249.111 vm-1
+
+vm-1 上抓包看下
+sudo tcpdump </summary>
+        <content type="html"><![CDATA[<p>实验流程来自 知识星球：程序员踩坑案例分享</p>
 <h2><a id="%E5%88%9B%E5%BB%BA%E8%BF%9E%E6%8E%A5" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>创建连接</h2>
 <pre><code class="language-plain_text">sudo tcpdump -s0 -X -nn &quot;tcp port 9527&quot; -w vm-1-tcp.pcap --print
 </code></pre>
@@ -2901,17 +3077,31 @@ $ netstat -s|grep -E &quot;LISTEN|overflow&quot;
     TCPSackRecovery: 1741
     18 congestion windows recovered without slow start after partial ack
 </code></pre>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[ssh 使用]]></title>
-    <link href="https://orange723.github.io/17622327813502.html"/>
-    <updated>2025-11-04T13:06:21+08:00</updated>
-    <id>https://orange723.github.io/17622327813502.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
+        
+        <category term="tcp"/>
+        
+    </entry>
+    
+    <entry>
+        <title>ssh 使用</title>
+        <link href="https://orange723.github.io/17622327813502.html"/>
+        <id>https://orange723.github.io/17622327813502.html</id>
+        <published>2025-11-04T13:06:21+08:00</published>
+        <updated>2025-11-04T13:06:21+08:00</updated>
+        <summary>server
+禁用密码登录
+/etc/ssh/sshd_config
+UsePAM no
+PasswordAuthentication no
+
+/etc/ssh/sshd_config.d/50-cloud-init.conf
+# 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
+PasswordAuthentication yes
+
+有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。
+如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目</summary>
+        <content type="html"><![CDATA[<h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
 <h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
 <p>/etc/ssh/sshd_config</p>
 <pre><code class="language-plain_text">UsePAM no
@@ -2951,17 +3141,26 @@ Host *
 <h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
 <pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
 </code></pre>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[深入剖析 Kubernetes]]></title>
-    <link href="https://orange723.github.io/17608597754550.html"/>
-    <updated>2025-10-19T15:42:55+08:00</updated>
-    <id>https://orange723.github.io/17608597754550.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+        
+    </entry>
+    
+    <entry>
+        <title>深入剖析 Kubernetes</title>
+        <link href="https://orange723.github.io/17608597754550.html"/>
+        <id>https://orange723.github.io/17608597754550.html</id>
+        <published>2025-10-19T15:42:55+08:00</published>
+        <updated>2025-10-19T15:42:55+08:00</updated>
+        <summary>01
+云计算已经蜕变成 虚拟机和账单
+改变一切的是 docker 镜像 解决了本地和云端环境一致的问题
+05
+容器技术的核心功能，就是通过约束和修改进程的动态表现，从而为其创造出一个边界
+Cgroups技术是用来制造约束的主要手段，而Namespace技术则是用来修改进程视图的主要方法
+Docker 容器这个听起来玄而又玄的概念，实际上是在创建容器进程时，指定了这个进程所需要启用的一组 Namespace 参数。这样，容器就只能“看”到当前 Namespace 所限定的资源、文件、设备、状态，或者配置。而对于宿主机以及其他不相关的程序，它就完全看不到了。
+容器，其实是一种特殊的进程而已。
+06</summary>
+        <content type="html"><![CDATA[<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
 <p>云计算已经蜕变成 虚拟机和账单</p>
 <p>改变一切的是 docker 镜像 解决了本地和云端环境一致的问题</p>
 <h2><a id="05" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>05</h2>
@@ -3053,17 +3252,25 @@ readnessProbe 是否能被Service使用</p>
 <li>Felix。它是一个 DaemonSet，负责在宿主机上插入路由规则（即：写入 Linux 内核的 FIB 转发信息库），以及维护 Calico 所需的网络设备等工作。</li>
 <li>BIRD。它就是 BGP 的客户端，专门负责在集群里分发路由规则信息。</li>
 </ol>
-
 ]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[容器实战高手课]]></title>
-    <link href="https://orange723.github.io/17403208106259.html"/>
-    <updated>2025-02-23T22:26:50+08:00</updated>
-    <id>https://orange723.github.io/17403208106259.html</id>
-    <content type="html"><![CDATA[
-<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
+        
+    </entry>
+    
+    <entry>
+        <title>容器实战高手课</title>
+        <link href="https://orange723.github.io/17403208106259.html"/>
+        <id>https://orange723.github.io/17403208106259.html</id>
+        <published>2025-02-23T22:26:50+08:00</published>
+        <updated>2025-02-23T22:26:50+08:00</updated>
+        <summary>01
+在容器中，1 号进程永远不会响应 SIGKILL 和 SIGSTOP 这两个特权信号；
+对于其他的信号，如果用户自己注册了 handler，1 号进程可以响应。
+SIGTERM 可以程序自己注册，所以 1 号进程是可以响应的
+02
+进程 “活着” 的时候只有两个状态：运行态（TASK_RUNNING）和睡眠态（TASK_INTERRUPTIBLE，TASK_UNINTERRUPTIBLE）
+如果你想让容器里的进程避免过多僵尸进程，1需要限制容器的pids.max 是容器需要做的，2是程序的父进程要处理子进程进行回收
+进程退出会调用do_exit() 它有两个状态 EXIT_DEAD EX</summary>
+        <content type="html"><![CDATA[<h2><a id="01" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>01</h2>
 <p>在容器中，1 号进程永远不会响应 SIGKILL 和 SIGSTOP 这两个特权信号；</p>
 <p>对于其他的信号，如果用户自己注册了 handler，1 号进程可以响应。</p>
 <p>SIGTERM 可以程序自己注册，所以 1 号进程是可以响应的</p>
@@ -3095,8 +3302,8 @@ readnessProbe 是否能被Service使用</p>
 <p>其实 Linux capabilities 就是把 Linux root 用户原来所有的特权做了细化，可以更加细粒度地给进程赋予不同权限</p>
 <p>getcap $(which ping)<br />
 setcap -r $(which ping)</p>
-
 ]]></content>
-  </entry>
-  
+        
+    </entry>
+    
 </feed>

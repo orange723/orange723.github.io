@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)">
-<title>PPHC 测试 - orange723 - orange723</title>
+<title>http - orange723 - orange723</title>
 <meta name="description" content="">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%23f97316'/%3E%3Ccircle cx='16' cy='16' r='14' fill='%23f97316' fill-opacity='0.18'/%3E%3C/svg%3E">
 <link rel="alternate" type="application/atom+xml" title="orange723" href="atom.xml">
@@ -39,230 +39,224 @@
 
 <main class="layout">
  <div class="main">
-    <article class="post">
-        <header class="post-header">
-            <h1 class="post-title">PPHC 测试</h1>
-            <div class="post-meta">
-                <time datetime="2026-02-25T14:59:27+08:00">2026/02/25</time>
-                
+    <div class="timeline-header">
+        <h2 class="timeline-title">#http - orange723</h2>
+        <span class="timeline-count">1 posts</span>
+    </div>
+
+    <div class="echo-list">
+        
+        <article class="echo">
+            <div class="echo-meta">
+                <time datetime="2025-11-18T16:48:47+08:00">2025/11/18</time>
                 
             </div>
-        </header>
 
-        <div class="post-content">
-            <p><a href="https://github.com/johnlui/PPHC/tree/main">PPHC</a></p>
-<p>作者姓名:吕文翰<br />
-原始网站地址:<a href="https://pphc.lvwenhan.com">https://pphc.lvwenhan.com</a></p>
-<h2><a id="nginx%E5%92%8C-apache%E9%9D%99%E6%80%81%E5%9B%BE%E7%89%87" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>nginx 和 apache 静态图片</h2>
-<p>文中看到一张静态图片 “Nginx 的性能是 Apache 的四倍”</p>
-<p>nginx 和 apache 均未更改配置，直接使用容器启动 根目录替换为一张图片。</p>
-<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-nginx -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/share/nginx/html/jovan.jpg:ro -d nginx:stable
+            <h3 class="echo-title"><a href="17634557278324.html">一个数据包的生命周期</a></h3>
+
+            <div class="echo-excerpt"><p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
+<p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
+<h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
 </code></pre>
-<pre><code class="language-plain_text">$ oha -n 10000 -c 4 --connect-to 'pphc-nginx.orb.local:80:192.168.215.2:80' --latency-correction --disable-keepalive http://pphc-nginx.orb.local/jovan.jpg
-Summary:
-  Success rate:	100.00%
-  Total:	5859.5672 ms
-  Slowest:	21.9470 ms
-  Fastest:	1.2468 ms
-  Average:	2.3418 ms
-  Requests/sec:	1706.6107
-
-  Total data:	23.88 GiB
-  Size/request:	2.45 MiB
-  Size/sec:	4.08 GiB
-
-Response time histogram:
-   1.247 ms [1]    |
-   3.317 ms [9547] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-   5.387 ms [433]  |■
-   7.457 ms [9]    |
-   9.527 ms [2]    |
-  11.597 ms [2]    |
-  13.667 ms [2]    |
-  15.737 ms [1]    |
-  17.807 ms [0]    |
-  19.877 ms [1]    |
-  21.947 ms [2]    |
-
-Response time distribution:
-  10.00% in 1.8269 ms
-  25.00% in 1.9920 ms
-  50.00% in 2.2289 ms
-  75.00% in 2.5561 ms
-  90.00% in 2.9806 ms
-  95.00% in 3.2815 ms
-  99.00% in 3.9765 ms
-  99.90% in 7.9387 ms
-  99.99% in 21.8587 ms
-
-
-Details (average, fastest, slowest):
-  DNS+dialup:	0.1799 ms, 0.0535 ms, 3.3844 ms
-  DNS-lookup:	0.0029 ms, 0.0010 ms, 0.4548 ms
-
-Status code distribution:
-  [200] 10000 responses
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/packet.pcap">packet.pcap</a></p>
+<p><img src="media/17634557278324/17643195146767.png" alt="" /></p>
+<pre><code class="language-plain_text">$ curl -o /dev/null -v http://example.com
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host example.com:80 was resolved.
+* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
+* Connected to example.com (23.215.0.136) port 80
+&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt;
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
+&lt;
+{ [513 bytes data]
+100   513  100   513    0     0    418      0  0:00:01  0:00:01 --:--:--   418
+* Connection #0 to host example.com left intact
 </code></pre>
-<pre><code class="language-plain_text">$ docker run --rm -dit --name pphc-apache -v /Downloads/jovan-vasiljevic-l6qGo5zKswU-unsplash.jpg:/usr/local/apache2/htdocs/jovan.jpg:ro httpd
+<p>先是 dns 解析，知道 ip 后和 23.215.0.136:80 tcp 连接</p>
+<pre><code class="language-plain_text">* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
 </code></pre>
-<pre><code class="language-plain_text">oha -n 10000 -c 4 --connect-to 'pphc-apache.orb.local:80:192.168.215.3:80' --latency-correction --disable-keepalive http://pphc-apache.orb.local/jovan.jpg
-Summary:
-  Success rate:	100.00%
-  Total:	6991.0027 ms
-  Slowest:	22.5767 ms
-  Fastest:	1.4700 ms
-  Average:	2.7935 ms
-  Requests/sec:	1430.4100
-
-  Total data:	23.88 GiB
-  Size/request:	2.45 MiB
-  Size/sec:	3.42 GiB
-
-Response time histogram:
-   1.470 ms [1]    |
-   3.581 ms [9035] |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-   5.691 ms [904]  |■■■
-   7.802 ms [43]   |
-   9.913 ms [7]    |
-  12.023 ms [3]    |
-  14.134 ms [3]    |
-  16.245 ms [0]    |
-  18.355 ms [0]    |
-  20.466 ms [0]    |
-  22.577 ms [4]    |
-
-Response time distribution:
-  10.00% in 2.1455 ms
-  25.00% in 2.3568 ms
-  50.00% in 2.6547 ms
-  75.00% in 3.0646 ms
-  90.00% in 3.5604 ms
-  95.00% in 3.9060 ms
-  99.00% in 4.9914 ms
-  99.90% in 9.9304 ms
-  99.99% in 22.5364 ms
-
-
-Details (average, fastest, slowest):
-  DNS+dialup:	0.2219 ms, 0.0607 ms, 2.7639 ms
-  DNS-lookup:	0.0044 ms, 0.0010 ms, 0.4934 ms
-
-Status code distribution:
-  [200] 10000 responses
+<p>连接成功后发送 GET / 请求</p>
+<pre><code class="language-plain_text">&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
 </code></pre>
-<p>能看到实际 nginx 和 apache 差别没那么大，或许是在特定年代的特殊情况，不过两次请求都有一个问题 “总会有几个请求处理时间过长，尽管大部分请求会很快完成”</p>
-<h2><a id="apisix-nomad-consul%E6%9E%B6%E6%9E%84%E6%B5%8B%E8%AF%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>apisix + nomad + consul 架构测试</h2>
-<p>文中说到 api 网关能玩出花来，本地弄了个 apisix，顺便结合 nomad 和 consul 测试下。</p>
-<p>先测试下 apisix，根据官方文档配置了个 route，通过 api 看看结果</p>
-<pre><code class="language-plain_text">$ curl -s http://127.0.0.1:9180/apisix/admin/routes\?api_key\=edd1c9f034335f136f87ad84b625c8f1 | jq
-{
-  &quot;total&quot;: 1,
-  &quot;list&quot;: [
-    {
-      &quot;key&quot;: &quot;/apisix/routes/00000000000000000015&quot;,
-      &quot;value&quot;: {
-        &quot;status&quot;: 1,
-        &quot;id&quot;: &quot;00000000000000000015&quot;,
-        &quot;enable_websocket&quot;: false,
-        &quot;update_time&quot;: 1772193933,
-        &quot;priority&quot;: 0,
-        &quot;name&quot;: &quot;getting-started-ip&quot;,
-        &quot;upstream&quot;: {
-          &quot;pass_host&quot;: &quot;pass&quot;,
-          &quot;tls&quot;: {
-            &quot;verify&quot;: false
-          },
-          &quot;nodes&quot;: [
-            {
-              &quot;priority&quot;: 0,
-              &quot;host&quot;: &quot;httpbin.org&quot;,
-              &quot;port&quot;: 80,
-              &quot;weight&quot;: 0
-            }
-          ],
-          &quot;type&quot;: &quot;roundrobin&quot;,
-          &quot;hash_on&quot;: &quot;vars&quot;,
-          &quot;checks&quot;: {
-            &quot;active&quot;: {
-              &quot;host&quot;: &quot;httpbin.org&quot;,
-              &quot;type&quot;: &quot;http&quot;,
-              &quot;healthy&quot;: {
-                &quot;http_statuses&quot;: [
-                  200
-                ],
-                &quot;interval&quot;: 1,
-                &quot;successes&quot;: 200
-              },
-              &quot;https_verify_certificate&quot;: false,
-              &quot;port&quot;: 80,
-              &quot;timeout&quot;: 2
-            }
-          },
-          &quot;scheme&quot;: &quot;http&quot;
-        },
-        &quot;methods&quot;: [
-          &quot;GET&quot;
-        ],
-        &quot;uri&quot;: &quot;/ip&quot;,
-        &quot;create_time&quot;: 1772193933
-      },
-      &quot;modifiedIndex&quot;: 16,
-      &quot;createdIndex&quot;: 16
-    }
-  ]
-}
+<p>example.com 回复 http 状态码 200，在通过抓包看本地机器 192.168.139.111 发起了 tcp 连接关闭</p>
+<pre><code class="language-plain_text">&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
 </code></pre>
-<p>直接将请求转发到 httpbin.org 了</p>
-<pre><code class="language-plain_text">$ curl http://127.0.0.1:9080/ip
-{
-  &quot;origin&quot;: &quot;192.168.117.1, 185.220.238.225&quot;
-}
-</code></pre>
-<p>nomad 也是很有趣的服务管理部署应用，和 terraform 是同公司，它只是做服务管理 像服务发现这类就交给 consul 测试的话配置起来不复杂，我的想法是这样：用 consul 将 nomad 和 apisix 连通，consul 也能给 nomad 管理的容器做健康检查 服务发现，apisix 找上游服务器通过 consul。</p>
-<p>最简单的架构，此状态下最基础是 consul</p>
-<p><img src="media/17720027672498/design-1-1.png" alt="design-1" /></p>
-<p>配置过程可查看 <a href="17724375213917.html">consul + nomad + apisix</a></p>
-<p>最后结果如下</p>
-<pre><code class="language-plain_text">$ curl -s 127.0.0.1:9080
-&lt;h1&gt;Hello, Nomad!&lt;/h1&gt;
-&lt;ul&gt;
-  &lt;li&gt;Task: web&lt;/li&gt;
-  &lt;li&gt;Group: servers&lt;/li&gt;
-  &lt;li&gt;Job: hello-world&lt;/li&gt;
-  &lt;li&gt;Metadata value for foo: bar&lt;/li&gt;
-  &lt;li&gt;Currently running on port: 8001&lt;/li&gt;
-&lt;/ul&gt;
-</code></pre>
-<p>如果要作为生产环境需要考虑的有很多，上面仅是测试</p>
-<ul>
-<li>consul 高可用，单独部署还是让 nomad 管理部署</li>
-<li>consul acl 策略，访问更安全</li>
-<li>nomad 的多机器</li>
-<li>nomad 网络，除了服务发现还有服务暴露，即使有 api 网关作为转发，要考虑各个容器间是二层转发还是三层 flannel/calico</li>
-<li>apisix 高可用，前提是 etcd 高可用，服务层是无状态的 容量不够横向扩展</li>
-</ul>
-
-        </div>
-
+<h2><a id="%E7%BD%91%E7%BB%9C%E5%88%86%E5%B1%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>网络分层</h2>
+<p><img src="media/17634557278324/17643204166689.jpg" alt="" /></p>
+<p><img src="media/17634557278324/17643204810489.jpg" alt="" /></p>
+<p>图片来自：<a href="https://time.geekbang.org/column/article/846257">网络架构实战课</a></p>
+<h2><a id="%E7%A9%BF%E8%BF%87%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%B1%80%E5%9F%9F%E7%BD%91" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>穿过客户端局域网</h2>
+<p>一句话总结：同局域网 arp 查询 mac 直接发送，不同局域网路由发送</p>
+<p>计算下我的 ip 和 example.com 的 ip 在不在同一局域网</p>
+<pre><code class="language-plain_text">$ ifconfig
+eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.139.111  netmask 255.255.255.0  broadcast 192.168.139.255
+        inet6 fd07:b51a:cc66:0:a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x0&lt;global&gt;
+        inet6 fe80::a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether a2:db:de:a3:9c:b5  txqueuelen 1000  (Ethernet)
+        RX packets 46016  bytes 17701736 (17.7 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 330  bytes 29500 (29.5 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
         
-        </div>
+# 128 64 32 16 8 4 2 1
+# 这里的对比是拿本机的子网掩码去和目的ip和本机ip对比，网络位相同则在同一网络
         
-    </article>
+本机：192.168.139.111 子网掩码：255.255.255.0
 
-    <nav class="post-nav">
+IP：         11000000.10101000.10001011.01101111
+子网掩码：     11111111.11111111.11111111.00000000
+按位与运算：    11000000.10101000.10001011.00000000
+网络位：        192.168.139.0
+
+example.com：23.215.0.136
+
+IP：          00010111.11010111.00000000.10001000
+子网掩码：      11111111.11111111.11111111.00000000
+按位与运算：     00010111.11010111.00000000.00000000
+网络位：         23.215.0.0
+</code></pre>
+<p>既然不在一定会走路由规则，能看到走 192.168.139.1 网关设备是 eth0</p>
+<pre><code class="language-plain_text">$ ip route get 23.215.0.136
+23.215.0.136 via 192.168.139.1 dev eth0 src 192.168.139.111 uid 501
+    cache
+</code></pre>
+<p>网关一定是和主机在同一网络，观察下 arp 是怎么工作的</p>
+<pre><code class="language-plain_text">$ sudo arp -d 192.168.139.1
+
+$ sudo tcpdump -s0 -X -nn &quot;arp&quot; -w arp.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/arp.pcap">arp.pcap</a></p>
+<p><img src="media/17634557278324/17643230353738.png" alt="" /></p>
+<pre><code class="language-plain_text">$ arp -n
+Address                  HWtype  HWaddress           Flags Mask            Iface
+192.168.139.1            ether   da:9b:d0:54:e0:02   C                     eth0
+</code></pre>
+<p>traceroute 查看也是一样，虽然解析的 ip 不同但不影响</p>
+<pre><code class="language-plain_text">$ sudo traceroute -n -I example.com
+traceroute to example.com (23.220.75.232), 30 hops max, 60 byte packets
+ 1  192.168.139.1  0.036 ms  0.014 ms  0.005 ms
+ 2  192.168.1.1  4.661 ms  4.647 ms  4.642 ms
+ 3  * 100.101.0.1  12.028 ms *
+ 4  * * *
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  * * *
+13  * * *
+14  23.220.75.232  186.684 ms  186.577 ms  260.319 ms
+</code></pre>
+<p>推荐使用 <a href="https://github.com/nxtrace/NTrace-core">NextTrace</a></p>
+<p>在服务器上测试中间设备会响应 icmp 协议，可能是个人住址经过的设备屏蔽了 icmp</p>
+<pre><code class="language-plain_text">$ traceroute -I -n -m 50 example.com
+traceroute to example.com (23.220.75.245), 50 hops max, 60 byte packets
+ 1  10.59.252.86  1.378 ms  1.446 ms  1.442 ms
+ 2  11.73.60.253  1.937 ms * *
+ 3  26.25.187.33  1.519 ms  1.529 ms  1.630 ms
+ 4  10.216.220.118  3.104 ms  3.179 ms  3.160 ms
+ 5  10.216.229.106  3.177 ms  3.178 ms  3.232 ms
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  219.158.5.174  178.130 ms  178.125 ms  178.145 ms
+13  * * *
+14  154.54.77.53  162.103 ms  162.088 ms  162.185 ms
+15  154.54.63.70  157.864 ms  157.916 ms  157.911 ms
+16  154.54.47.165  238.095 ms  238.125 ms  243.526 ms
+17  154.54.169.178  260.650 ms  260.635 ms  260.638 ms
+18  154.54.29.134  249.462 ms  249.394 ms  248.589 ms
+19  154.54.40.249  249.505 ms  249.495 ms *
+20  154.54.165.26  247.671 ms  249.877 ms  250.234 ms
+21  154.54.166.58  251.909 ms  252.616 ms  252.628 ms
+22  154.54.44.86  254.282 ms  254.289 ms  254.572 ms
+23  154.54.27.118  250.352 ms  252.829 ms  252.919 ms
+24  38.104.84.101  236.554 ms  236.499 ms  236.548 ms
+25  218.30.54.6  242.952 ms  242.911 ms  242.916 ms
+26  * * *
+27  * * *
+28  * * *
+29  23.220.75.245  239.147 ms  236.590 ms  239.235 ms
+</code></pre>
+<h2><a id="%E6%8E%A8%E8%8D%90%E6%A1%88%E4%BE%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐案例</h2>
+<p>分析了下此篇文章的问题，很有趣 <a href="https://www.kawabangga.com/posts/7066">0.01% 的概率超时问题</a></p>
+<p>我的回答是：</p>
+<pre><code class="language-plain_text">两个包还有个区别
+
+正常的：server 会给 client 发 zerowindow 随后又发 window update，server 处理的慢但节奏在 server 这里。
+
+超时的：没看到窗口更新的包 都是 client 给 server 发送，2136 包到 2149包能看到重试 15次。
+
+要说 server 处理的慢，只看到一次超时后面全部正常，你说中间设备处理的有问题吧 它还只有0.01的超时概率
+</code></pre>
+<p>作者给了回复：</p>
+<pre><code class="language-plain_text">zero window 在这里其实是一个好的现象。
+
+数据进入的处理路径是：
+
+NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
+
+正常的：
+
+正是因为 kernel 处理的速度够快，才能填满 buffer，应用程序处理的不够快，导致 buffer 填满了，接收端发送 zero window 让发送端暂停发送。
+
+超时的：
+
+因为 kernel 处理的带宽（由于没有开启 LRO）变慢，导致无法填满 buffer，所以不会出现 zero window。同时，由于 NIC 收包比较快，很可呢是 kernel 处理不过来，导致了丢包。
+</code></pre>
+<p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
+<p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
+</div>
+            <a class="echo-readmore" href="17634557278324.html">阅读全文 →</a>
+
+            <div class="echo-tags">
+                
+                <a href="tag_http.html">#http</a>
+                
+                <a href="tag_tcp.html">#tcp</a>
+                
+            </div>
+        </article>
         
-        <a class="prev" href="17724375213917.html">
-            <span class="label">← 上一篇</span>
-            consul + nomad + apisix
-        </a>
-        
-        
-        <a class="next" href="17685326962696.html">
-            <span class="label">下一篇 →</span>
-            Claude code 使用 Doubao-Seed-Code
-        </a>
-        
-    </nav>
+    </div>
+
+    <div class="pager">
+        <a href="" class="pager-prev">← 上一页</a>
+        <a href="" class="pager-next">下一页 →</a>
+    </div>
 </div>
  <aside class="sidebar">
     <section class="profile">

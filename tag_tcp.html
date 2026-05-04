@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#fafaf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)">
-<title>orange723 - orange723</title>
+<title>tcp - orange723 - orange723</title>
 <meta name="description" content="">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='10' fill='%23f97316'/%3E%3Ccircle cx='16' cy='16' r='14' fill='%23f97316' fill-opacity='0.18'/%3E%3C/svg%3E">
 <link rel="alternate" type="application/atom+xml" title="orange723" href="atom.xml">
@@ -40,11 +40,216 @@
 <main class="layout">
  <div class="main">
     <div class="timeline-header">
-        <h2 class="timeline-title">orange723</h2>
-        <span class="timeline-count">5 posts</span>
+        <h2 class="timeline-title">#tcp - orange723</h2>
+        <span class="timeline-count">4 posts</span>
     </div>
 
     <div class="echo-list">
+        
+        <article class="echo">
+            <div class="echo-meta">
+                <time datetime="2025-11-18T16:48:47+08:00">2025/11/18</time>
+                
+            </div>
+
+            <h3 class="echo-title"><a href="17634557278324.html">一个数据包的生命周期</a></h3>
+
+            <div class="echo-excerpt"><p>实验流程来自：<a href="https://time.geekbang.org/column/article/846257">01｜一个数据包的网络之旅：网络是如何工作的？</a></p>
+<p>也可以阅读此文章：<a href="https://www.0xkato.xyz/life-of-a-packet-in-the-linux-kernel/">life-of-a-packet-in-the-linux-kernel</a></p>
+<h2><a id="%E9%80%9A%E8%BF%87%E4%B8%80%E4%B8%AAhttp%E8%AF%B7%E6%B1%82%E6%9D%A5%E8%A7%82%E5%AF%9F%E6%95%B0%E6%8D%AE%E5%8C%85%E7%9A%84%E6%97%85%E7%A8%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>通过一个 HTTP 请求来观察数据包的旅程</h2>
+<pre><code class="language-plain_text">$ sudo tcpdump -s0 -X -nn &quot;tcp port 80&quot; -w packet.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/packet.pcap">packet.pcap</a></p>
+<p><img src="media/17634557278324/17643195146767.png" alt="" /></p>
+<pre><code class="language-plain_text">$ curl -o /dev/null -v http://example.com
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Host example.com:80 was resolved.
+* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
+* Connected to example.com (23.215.0.136) port 80
+&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+&gt;
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
+&lt;
+{ [513 bytes data]
+100   513  100   513    0     0    418      0  0:00:01  0:00:01 --:--:--   418
+* Connection #0 to host example.com left intact
+</code></pre>
+<p>先是 dns 解析，知道 ip 后和 23.215.0.136:80 tcp 连接</p>
+<pre><code class="language-plain_text">* IPv6: 2600:1406:5e00:6::17ce:bc1b, 2600:1408:ec00:36::1736:7f24, 2600:1406:bc00:53::b81e:94ce, 2600:1408:ec00:36::1736:7f31, 2600:1406:5e00:6::17ce:bc12, 2600:1406:bc00:53::b81e:94c8
+* IPv4: 23.215.0.136, 23.192.228.80, 23.220.75.232, 23.220.75.245, 23.192.228.84, 23.215.0.138
+*   Trying 23.215.0.136:80...
+</code></pre>
+<p>连接成功后发送 GET / 请求</p>
+<pre><code class="language-plain_text">&gt; GET / HTTP/1.1
+&gt; Host: example.com
+&gt; User-Agent: curl/8.5.0
+&gt; Accept: */*
+</code></pre>
+<p>example.com 回复 http 状态码 200，在通过抓包看本地机器 192.168.139.111 发起了 tcp 连接关闭</p>
+<pre><code class="language-plain_text">&lt; HTTP/1.1 200 OK
+&lt; Content-Type: text/html
+&lt; ETag: &quot;bc2473a18e003bdb249eba5ce893033f:1760028122.592274&quot;
+&lt; Last-Modified: Thu, 09 Oct 2025 16:42:02 GMT
+&lt; Cache-Control: max-age=86000
+&lt; Date: Fri, 28 Nov 2025 08:31:14 GMT
+&lt; Content-Length: 513
+&lt; Connection: keep-alive
+</code></pre>
+<h2><a id="%E7%BD%91%E7%BB%9C%E5%88%86%E5%B1%82" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>网络分层</h2>
+<p><img src="media/17634557278324/17643204166689.jpg" alt="" /></p>
+<p><img src="media/17634557278324/17643204810489.jpg" alt="" /></p>
+<p>图片来自：<a href="https://time.geekbang.org/column/article/846257">网络架构实战课</a></p>
+<h2><a id="%E7%A9%BF%E8%BF%87%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%B1%80%E5%9F%9F%E7%BD%91" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>穿过客户端局域网</h2>
+<p>一句话总结：同局域网 arp 查询 mac 直接发送，不同局域网路由发送</p>
+<p>计算下我的 ip 和 example.com 的 ip 在不在同一局域网</p>
+<pre><code class="language-plain_text">$ ifconfig
+eth0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500
+        inet 192.168.139.111  netmask 255.255.255.0  broadcast 192.168.139.255
+        inet6 fd07:b51a:cc66:0:a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x0&lt;global&gt;
+        inet6 fe80::a0db:deff:fea3:9cb5  prefixlen 64  scopeid 0x20&lt;link&gt;
+        ether a2:db:de:a3:9c:b5  txqueuelen 1000  (Ethernet)
+        RX packets 46016  bytes 17701736 (17.7 MB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 330  bytes 29500 (29.5 KB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+        
+# 128 64 32 16 8 4 2 1
+# 这里的对比是拿本机的子网掩码去和目的ip和本机ip对比，网络位相同则在同一网络
+        
+本机：192.168.139.111 子网掩码：255.255.255.0
+
+IP：         11000000.10101000.10001011.01101111
+子网掩码：     11111111.11111111.11111111.00000000
+按位与运算：    11000000.10101000.10001011.00000000
+网络位：        192.168.139.0
+
+example.com：23.215.0.136
+
+IP：          00010111.11010111.00000000.10001000
+子网掩码：      11111111.11111111.11111111.00000000
+按位与运算：     00010111.11010111.00000000.00000000
+网络位：         23.215.0.0
+</code></pre>
+<p>既然不在一定会走路由规则，能看到走 192.168.139.1 网关设备是 eth0</p>
+<pre><code class="language-plain_text">$ ip route get 23.215.0.136
+23.215.0.136 via 192.168.139.1 dev eth0 src 192.168.139.111 uid 501
+    cache
+</code></pre>
+<p>网关一定是和主机在同一网络，观察下 arp 是怎么工作的</p>
+<pre><code class="language-plain_text">$ sudo arp -d 192.168.139.1
+
+$ sudo tcpdump -s0 -X -nn &quot;arp&quot; -w arp.pcap --print
+</code></pre>
+<p><a href="https://github.com/orange723/tcpdump-pcap-file/blob/main/example.com/arp.pcap">arp.pcap</a></p>
+<p><img src="media/17634557278324/17643230353738.png" alt="" /></p>
+<pre><code class="language-plain_text">$ arp -n
+Address                  HWtype  HWaddress           Flags Mask            Iface
+192.168.139.1            ether   da:9b:d0:54:e0:02   C                     eth0
+</code></pre>
+<p>traceroute 查看也是一样，虽然解析的 ip 不同但不影响</p>
+<pre><code class="language-plain_text">$ sudo traceroute -n -I example.com
+traceroute to example.com (23.220.75.232), 30 hops max, 60 byte packets
+ 1  192.168.139.1  0.036 ms  0.014 ms  0.005 ms
+ 2  192.168.1.1  4.661 ms  4.647 ms  4.642 ms
+ 3  * 100.101.0.1  12.028 ms *
+ 4  * * *
+ 5  * * *
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  * * *
+13  * * *
+14  23.220.75.232  186.684 ms  186.577 ms  260.319 ms
+</code></pre>
+<p>推荐使用 <a href="https://github.com/nxtrace/NTrace-core">NextTrace</a></p>
+<p>在服务器上测试中间设备会响应 icmp 协议，可能是个人住址经过的设备屏蔽了 icmp</p>
+<pre><code class="language-plain_text">$ traceroute -I -n -m 50 example.com
+traceroute to example.com (23.220.75.245), 50 hops max, 60 byte packets
+ 1  10.59.252.86  1.378 ms  1.446 ms  1.442 ms
+ 2  11.73.60.253  1.937 ms * *
+ 3  26.25.187.33  1.519 ms  1.529 ms  1.630 ms
+ 4  10.216.220.118  3.104 ms  3.179 ms  3.160 ms
+ 5  10.216.229.106  3.177 ms  3.178 ms  3.232 ms
+ 6  * * *
+ 7  * * *
+ 8  * * *
+ 9  * * *
+10  * * *
+11  * * *
+12  219.158.5.174  178.130 ms  178.125 ms  178.145 ms
+13  * * *
+14  154.54.77.53  162.103 ms  162.088 ms  162.185 ms
+15  154.54.63.70  157.864 ms  157.916 ms  157.911 ms
+16  154.54.47.165  238.095 ms  238.125 ms  243.526 ms
+17  154.54.169.178  260.650 ms  260.635 ms  260.638 ms
+18  154.54.29.134  249.462 ms  249.394 ms  248.589 ms
+19  154.54.40.249  249.505 ms  249.495 ms *
+20  154.54.165.26  247.671 ms  249.877 ms  250.234 ms
+21  154.54.166.58  251.909 ms  252.616 ms  252.628 ms
+22  154.54.44.86  254.282 ms  254.289 ms  254.572 ms
+23  154.54.27.118  250.352 ms  252.829 ms  252.919 ms
+24  38.104.84.101  236.554 ms  236.499 ms  236.548 ms
+25  218.30.54.6  242.952 ms  242.911 ms  242.916 ms
+26  * * *
+27  * * *
+28  * * *
+29  23.220.75.245  239.147 ms  236.590 ms  239.235 ms
+</code></pre>
+<h2><a id="%E6%8E%A8%E8%8D%90%E6%A1%88%E4%BE%8B" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>推荐案例</h2>
+<p>分析了下此篇文章的问题，很有趣 <a href="https://www.kawabangga.com/posts/7066">0.01% 的概率超时问题</a></p>
+<p>我的回答是：</p>
+<pre><code class="language-plain_text">两个包还有个区别
+
+正常的：server 会给 client 发 zerowindow 随后又发 window update，server 处理的慢但节奏在 server 这里。
+
+超时的：没看到窗口更新的包 都是 client 给 server 发送，2136 包到 2149包能看到重试 15次。
+
+要说 server 处理的慢，只看到一次超时后面全部正常，你说中间设备处理的有问题吧 它还只有0.01的超时概率
+</code></pre>
+<p>作者给了回复：</p>
+<pre><code class="language-plain_text">zero window 在这里其实是一个好的现象。
+
+数据进入的处理路径是：
+
+NIC -&gt; Kernel process -&gt; tcp connection buffer -&gt; 应用程序读取
+
+正常的：
+
+正是因为 kernel 处理的速度够快，才能填满 buffer，应用程序处理的不够快，导致 buffer 填满了，接收端发送 zero window 让发送端暂停发送。
+
+超时的：
+
+因为 kernel 处理的带宽（由于没有开启 LRO）变慢，导致无法填满 buffer，所以不会出现 zero window。同时，由于 NIC 收包比较快，很可呢是 kernel 处理不过来，导致了丢包。
+</code></pre>
+<p>当时看到<a href="https://www.kawabangga.com/posts/7066#comment-63396">这个分析</a>又重新对比了两个包，确实是像关了网卡 Offload 功能，关于 Offload 之前测试时碰到过在这里 <a href="17627609182209.html">TCP 数据的发送和接收</a>，同时又能看到数据包里都是 vxlan 封装了一层发送的数据，分析下来就会认为是 server 的处理能力不够导致，后面作者回复后又想了想，为什么 server 处理能力不够呢 其实并不是，因为之前没替换设备是正常的，所以是因为 NIC 收包快 kernal 处理变慢，才会以为是 server 处理能力不够。</p>
+<p>借助 zero window 看到的现象，直接进行分析得出的结论还是太草率，不是根本原因。</p>
+</div>
+            <a class="echo-readmore" href="17634557278324.html">阅读全文 →</a>
+
+            <div class="echo-tags">
+                
+                <a href="tag_http.html">#http</a>
+                
+                <a href="tag_tcp.html">#tcp</a>
+                
+            </div>
+        </article>
         
         <article class="echo">
             <div class="echo-meta">
@@ -795,172 +1000,6 @@ tcp        0      0 192.168.139.151:33360   192.168.139.111:9527    FIN_WAIT2   
         
         <article class="echo">
             <div class="echo-meta">
-                <time datetime="2025-11-04T14:52:59+08:00">2025/11/04</time>
-                
-            </div>
-
-            <h3 class="echo-title"><a href="17622391793233.html">机器初始化</a></h3>
-
-            <div class="echo-excerpt"><h2><a id="linux" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>linux</h2>
-<pre><code class="language-plain_text">sudo apt update
-sudo apt install -y tcpdump net-tools iptables wget nmap telnet man lsof ipvsadm ipset btop git ca-certificates tmux jq curl gpg file
-</code></pre>
-<h2><a id="cloud-init" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>cloud-init</h2>
-<pre><code class="language-plain_text">#cloud-config
-package_update: true
-package_upgrade: true
-
-packages:
-  - bridge-utils
-  - make
-  - cmake
-  - pkg-config
-  - build-essential
-  - wget
-  - net-tools
-  - inetutils-ping
-  - dnsutils
-  - vim
-  - unzip
-  - zip
-  - sysstat
-  - git
-  - iproute2
-  - ca-certificates
-  - telnet
-  - curl
-  - htop
-  - tcpdump
-  - gnupg
-  - lsb-release
-  - btrfs-progs
-  - libssl-dev
-  - m4
-  - gcc
-  - g++
-  - clang
-  - fuse
-  - tree
-  - iftop
-  - jq
-  - gpg
-  - man
-  - tmux
-  - traceroute
-  - ethtool
-  - lz4
-  - btop
-  - gh
-  - qemu-guest-agent
-  - supervisor
-
-bootcmd:
-  - mkdir -p /opt/docker/cadvisor
-  - mkdir -p /opt/docker/node_exporter
-
-write_files:
-  - path: /opt/docker/node_exporter/compose.yaml
-    owner: root:root
-    permissions: 0o755
-    defer: true
-    content: |
-      services:
-        node_exporter:
-          image: quay.io/prometheus/node-exporter:latest
-          container_name: node_exporter
-          command:
-            - '--web.listen-address=:10000'
-            - '--path.rootfs=/host'
-          network_mode: host
-          pid: host
-          restart: unless-stopped
-          volumes:
-            - '/:/host:ro,rslave'
-  
-  - path: /opt/docker/cadvisor/compose.yaml
-    owner: root:root
-    permissions: 0o755
-    content: |
-      services:
-        cadvisor:
-          image: gcr.io/cadvisor/cadvisor:latest
-          container_name: cadvisor
-          privileged: true
-          devices:
-            - /dev/kmsg:/dev/kmsg
-          volumes:
-            - /:/rootfs:ro
-            - /var/run:/var/run:ro
-            - /sys:/sys:ro
-            - /var/lib/docker/:/var/lib/docker:ro
-            - /dev/disk/:/dev/disk:ro
-          ports:
-            - &quot;10001:8080&quot;
-          restart: unless-stopped
-
-runcmd:
-  - install -m 0755 -d /etc/apt/keyrings
-  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-  - chmod a+r /etc/apt/keyrings/docker.asc
-  - echo &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;) stable&quot; | tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
-  - apt update
-  - apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-  - systemctl enable docker
-  - systemctl enable qemu-guest-agent
-  - systemctl start qemu-guest-agent
-  - systemctl start docker
-  - docker compose -f /opt/docker/node_exporter/compose.yaml up -d
-  - docker compose -f /opt/docker/cadvisor/compose.yaml up -d
-
-users:
-  - default
-  - name: orange723
-    sudo: &quot;ALL=(ALL) NOPASSWD:ALL&quot;
-    groups: sudo, sys, root, adm, docker
-    shell: /bin/bash
-    homedir: /home/orange723
-    lock_passwd: true
-    ssh_authorized_keys:
-      - ssh-ed25519 AAAAC
-
-no_ssh_fingerprints: true
-
-ssh:
-  emit_keys_to_console: false
-</code></pre>
-<h2><a id="golang" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>golang</h2>
-<p><a href="https://github.com/voidint/g">g</a></p>
-<pre><code class="language-plain_text"># It is recommended to clear the `GOROOT`, `GOBIN`, and other environment variables before installation.
-$ curl -sSL https://raw.githubusercontent.com/voidint/g/master/install.sh | bash
-$ cat &lt;&lt; 'EOF' &gt;&gt; ~/.bashrc
-# Check if the alias 'g' exists before trying to unalias it
-if [[ -n $(alias g 2&gt;/dev/null) ]]; then
-    unalias g
-fi
-EOF
-$ source &quot;$HOME/.g/env&quot;
-
-$ g ls-remote stable
-$ g install stable
-</code></pre>
-<h2><a id="node" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>node</h2>
-<p><a href="https://github.com/nvm-sh/nvm">nvm</a></p>
-<pre><code class="language-plain_text">$ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
-
-$ nvm install --lts
-$ nvm use --lts
-</code></pre>
-<p>使用 nvm 要注意多版本，比如 gemini 装到 A 版本 node，但目前是在用 B 版本 node，调用会提示找不到</p>
-</div>
-            <a class="echo-readmore" href="17622391793233.html">阅读全文 →</a>
-
-            <div class="echo-tags">
-                
-            </div>
-        </article>
-        
-        <article class="echo">
-            <div class="echo-meta">
                 <time datetime="2025-11-04T14:49:40+08:00">2025/11/04</time>
                 
             </div>
@@ -1387,67 +1426,11 @@ $ netstat -s|grep -E &quot;LISTEN|overflow&quot;
             </div>
         </article>
         
-        <article class="echo">
-            <div class="echo-meta">
-                <time datetime="2025-11-04T13:06:21+08:00">2025/11/04</time>
-                
-            </div>
-
-            <h3 class="echo-title"><a href="17622327813502.html">ssh 使用</a></h3>
-
-            <div class="echo-excerpt"><h2><a id="server" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>server</h2>
-<h3><a id="%E7%A6%81%E7%94%A8%E5%AF%86%E7%A0%81%E7%99%BB%E5%BD%95" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>禁用密码登录</h3>
-<p>/etc/ssh/sshd_config</p>
-<pre><code class="language-plain_text">UsePAM no
-PasswordAuthentication no
-</code></pre>
-<p>/etc/ssh/sshd_config.d/50-cloud-init.conf</p>
-<pre><code class="language-plain_text"># 示例，禁用密码登录要改成 no，cloudcone 使用 cloud-init 添加文件启用了密码登录
-PasswordAuthentication yes
-</code></pre>
-<p>有些服务商会不修改 sshd_config 文件，而是在 sshd_config.d 目录下添加新文件进行覆盖。</p>
-<p>如果改了 sshd_config 文件重启发现没有生效，要检查 sshd_config.d 目录</p>
-<h2><a id="client" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>client</h2>
-<p>~/.ssh/config</p>
-<pre><code class="language-plain_text"># 通过跳板机做转发
-Host beszel
-  Hostname localhost
-  User root
-  ProxyJump orange723
-  LocalForward 8090 localhost:8090
-
-Host *
-  IdentityAgent agent.sock
-  UserKnownHostsFile /dev/null
-  StrictHostKeyChecking no
-  ServerAliveInterval 15
-</code></pre>
-<p>正常连接 server 后长时间不操作，就会卡住然后只能重新连接，根据 <a href="https://plantegg.github.io/2019/06/02/%E5%8F%B2%E4%B8%8A%E6%9C%80%E5%85%A8_SSH_%E6%9A%97%E9%BB%91%E6%8A%80%E5%B7%A7%E8%AF%A6%E8%A7%A3--%E6%94%B6%E8%97%8F%E4%BF%9D%E5%B9%B3%E5%AE%89/">plantegg</a> 看到</p>
-<p>&quot;ServerAliveInterval [seconds]&quot; configuration in the SSH configuration so that your ssh client sends a &quot;dummy packet&quot; on a regular interval so that the router thinks that the connection is active even if it's particularly quiet</p>
-<p>client 会每隔多少s 发送一个 packet 到 server</p>
-<p>抓包看看</p>
-<p>no-time</p>
-<p><img src="media/17622327813502/17622338351423.png" alt="" /></p>
-<p>会发现连接后，长时间不操作 client 再去连接 server 已经连不上了，重新传输 server 都无响应，跟我们碰到的情况一样，只能重新连接</p>
-<p>time</p>
-<p><img src="media/17622327813502/17622344062844.png" alt="" /></p>
-<p>设置的 15s 可以看到连接后，在 16.923s 是 ssh 协议 client 发送一个包到 server，server 也响应了</p>
-<h2><a id="ssh-local-forward" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>ssh-local-forward</h2>
-<pre><code class="language-plain_text">ssh -f -N -L 8090:localhost:8090 orange723
-</code></pre>
-</div>
-            <a class="echo-readmore" href="17622327813502.html">阅读全文 →</a>
-
-            <div class="echo-tags">
-                
-            </div>
-        </article>
-        
     </div>
 
     <div class="pager">
-        <a href="all_1.html" class="pager-prev">← 上一页</a>
-        <a href="all_3.html" class="pager-next">下一页 →</a>
+        <a href="" class="pager-prev">← 上一页</a>
+        <a href="" class="pager-next">下一页 →</a>
     </div>
 </div>
  <aside class="sidebar">
