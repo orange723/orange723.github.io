@@ -4,7 +4,7 @@
     <subtitle></subtitle>
     <link href="https://orange723.github.io/atom.xml" rel="self"/>
     <link href="https://orange723.github.io/"/>
-    <updated>2026-05-04T20:27:20+08:00</updated>
+    <updated>2026-05-05T16:46:12+08:00</updated>
     <id>https://orange723.github.io/</id>
     <author>
         <name>orange723</name>
@@ -1098,12 +1098,13 @@ Status code distribution:
     </entry>
     
     <entry>
-        <title>Claude code 使用 Doubao-Seed-Code</title>
+        <title>[不推荐]Claude code 使用 Doubao-Seed-Code</title>
         <link href="https://orange723.github.io/17685326962696.html"/>
         <id>https://orange723.github.io/17685326962696.html</id>
         <published>2026-01-16T11:04:56+08:00</published>
         <updated>2026-01-16T11:04:56+08:00</updated>
-        <summary type="html"><![CDATA[<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+        <summary type="html"><![CDATA[<p><strong>直接用 <a href="https://github.com/yetone/alma-releases">alma</a> 省事</strong></p>
+<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
 <h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
 <p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
 <pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
@@ -1126,7 +1127,8 @@ $ npm install -g @anthropic-ai/claude-code
 <li>本地执行 ccr code</li>
 </ul>
 ]]></summary>
-        <content type="html"><![CDATA[<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
+        <content type="html"><![CDATA[<p><strong>直接用 <a href="https://github.com/yetone/alma-releases">alma</a> 省事</strong></p>
+<p><a href="https://x.com/oran_ge/status/2005419365450252425">开源模型质变：Claude Code 超级小白入门指南 </a></p>
 <h2><a id="%E5%AE%89%E8%A3%85" class="anchor" aria-hidden="true"><span class="octicon octicon-link"></span></a>安装</h2>
 <p><a href="https://github.com/musistudio/claude-code-router">claude-code-router</a></p>
 <pre><code class="language-plain_text">$ npm install -g @musistudio/claude-code-router
